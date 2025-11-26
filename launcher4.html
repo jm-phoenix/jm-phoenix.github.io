@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta property="og:title" content="Web Apps">
+<meta property="og:image" content="GirlScouts204.jpg">
+<link rel="apple-touch-icon" sizes="180x180" href="icon/flor180.png">
+<link rel="apple-touch-icon" sizes="167x167" href="icon/flor167.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icon/flor152.png">
+<link rel="apple-touch-icon" sizes="120x120" href="icon/flor120.png">
+<link rel="manifest" href="manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inriris App Launcher</title>
+<style>
+    :root{
+        --bg:#f0f0f0; --text:#000; --icon-bg:#fff; --border:#ccc;
+        --accent:#0ea5a4;
+    }
+    [data-theme="dark"]{
+        --bg:#121212; --text:#eee; --icon-bg:#1e1e1e; --border:#333; --accent:#22c1c1;
+    }
+    *{box-sizing:border-box}
+    body{
+        font-family:Arial, Helvetica, sans-serif;
+        margin:0; padding:20px; min-height:100vh;
+        background:var(--bg); color:var(--text);
+        display:flex; flex-direction:column; align-items:center;
+    }
+    header{width:100%; max-width:900px; display:flex; justify-content:space-between; align-items:center; margin-bottom:18px}
+    .header-controls{display:flex; gap:8px}
+    .button{cursor:pointer;padding:8px 12px;border:1px solid var(--border);background:var(--icon-bg);color:var(--text);border-radius:6px}
+    .launcher-grid{width:100%; max-width:900px; display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:18px; align-items:start}
+    .icon{
+        width:100%; aspect-ratio:1/1; min-height:96px; border-radius:12px; background:var(--icon-bg);
+        border:1px solid var(--border); display:flex; flex-direction:column; align-items:center; justify-content:center;
+        gap:6px; padding:10px; position:relative; cursor:pointer; transition:transform .18s ease, box-shadow .18s ease;
+    }
+    .icon img{width:46%; height:46%; object-fit:contain; pointer-events:none}
+    .icon span{font-size:13px; text-align:center; word-break:break-word}
+    .icon .tooltip{position:absolute; bottom:100%; left:50%; transform:translateX(-50%); visibility:hidden;
+        background:rgba(0,0,0,.8); color:#fff; padding:6px 8px; border-radius:6px; white-space:nowrap; font-size:12px}
+    .icon:hover .tooltip{visibility:visible; opacity:1; transition:opacity .12s}
+    /* hover lift */
+    .icon:hover{transform:translateY(-8px) scale(1.02); box-shadow:0 18px 30px rgba(0,0,0,0.12)}
+    /* edit buttons */
+    .edit-buttons{display:none; gap:6px; position:absolute; bottom:8px}
+    .edit-mode .edit-buttons{display:flex}
+    /* add icon */
+    .add-icon{display:flex; align-items:center; justify-content:center; font-weight:600; font-size:14px}
+    /* preview popup */
+    .preview-popup{
+        position:fixed; z-index:9999; width:320px; max-width:40vw; border-radius:8px; overflow:hidden;
+        background:#fff; border:1px solid var(--border); box-shadow:0 10px 30px rgba(0,0,0,0.2);
+        transform-origin:left top; transform:scale(.96); opacity:0; transition:opacity .12s, transform .12s;
+    }
+    .preview-popup.visible{opacity:1; transform:scale(1)}
+    .preview-popup img{display:block; width:100%; height:180px; object-fit:cover}
+    .preview-meta{padding:8px; font-size:13px}
+    .preview-meta .title{font-weight:700; margin-bottom:6px}
+    .preview-meta .desc{color:#444; font-size:12px; max-height:42px; overflow:hidden}
+
+    /* drop zone */
+    #dropZone{
+        position:fixed; left:0; right:0; bottom:-140px; height:120px; display:flex; align-items:center; justify-content:center;
+        background:linear-gradient(90deg,var(--accent), #6ee7b7); color:#fff; z-index:9000; transition:bottom .36s cubic-bezier(.2,.9,.2,1), box-shadow .18s;
+        font-size:18px; box-shadow:0 -8px 30px rgba(0,0,0,0.12);
+    }
+    #dropZone.visible{bottom:0}
+    #dropZone.pulse{animation:dropPulse 1.6s infinite}
+    @keyframes dropPulse{
+        0%{box-shadow:0 0 0 0 rgba(255,255,255,0.18)}
+        70%{box-shadow:0 0 0 20px rgba(255,255,255,0)}
+        100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}
+    }
+
+    /* new item pop animation */
+    @keyframes popIn{
+        0%{transform:scale(.2); opacity:0}
+        60%{transform:scale(1.08); opacity:1}
+        100%{transform:scale(1)}
+    }
+    .new-pop{animation:popIn .42s cubic-bezier(.2,.9,.2,1)}
+
+    /* delete animation */
+    @keyframes shrinkOut{
+        0%{opacity:1; transform:scale(1)}
+        100%{opacity:0; transform:scale(.3)}
+    }
+    .shrink-out{animation:shrinkOut .36s forwards}
+
+    /* custom context menu */
+    .context-menu{
+        position:fixed; z-index:12000; background:var(--icon-bg); border:1px solid var(--border); border-radius:6px; padding:6px;
+        box-shadow:0 10px 30px rgba(0,0,0,0.18); display:none; min-width:180px;
+    }
+    .context-menu .item{padding:8px 10px; cursor:pointer; border-radius:4px; font-size:13px}
+    .context-menu .item:hover{background:var(--border)}
+    footer{margin-top:18px; display:none}
+    .edit-mode footer{display:block}
+</style>
+</head>
+<body data-theme="light">
+    <header>
+        <h1>Inriris App Launcher</h1>
+        <div class="header-controls">
+            <button class="button" id="editButton">Edit</button>
+            <button class="button" id="modeToggle">Theme</button>
+        </div>
+    </header>
+
+    <div class="launcher-grid" id="launcherGrid"></div>
+
+    <footer>
+        <a href="javascript:void(0)" onclick="backupShortcuts()">Backup Settings</a> |
+        <a href="javascript:void(0)" onclick="restoreShortcuts()">Restore from Backup</a> |
+        <a href="javascript:void(0)" onclick="powerWash()">Power Wash</a>
+    </footer>
+
+    <!-- Drop zone -->
+    <div id="dropZone">Drop a website URL here to create a shortcut</div>
+
+    <!-- Preview popup -->
+    <div id="previewPopup" class="preview-popup" aria-hidden="true">
+        <img id="previewImage" src="" alt="site preview">
+        <div class="preview-meta">
+            <div class="title" id="previewTitle"></div>
+            <div class="desc" id="previewDesc"></div>
+        </div>
+    </div>
+
+    <!-- Custom context menu -->
+    <div id="contextMenu" class="context-menu" role="menu"></div>
+
+<script>
+/* =========================
+   Storage + basics (cookies)
+   ========================= */
+const launcherGrid = document.getElementById('launcherGrid');
+const editButton = document.getElementById('editButton');
+const modeToggle = document.getElementById('modeToggle');
+const dropZone = document.getElementById('dropZone');
+const previewPopup = document.getElementById('previewPopup');
+const previewImage = document.getElementById('previewImage');
+const previewTitle = document.getElementById('previewTitle');
+const previewDesc = document.getElementById('previewDesc');
+const contextMenu = document.getElementById('contextMenu');
+
+let editMode = false;
+const shortcuts = loadShortcuts();
+
+function saveShortcuts(){
+    document.cookie = "shortcuts=" + encodeURIComponent(JSON.stringify(shortcuts)) + "; path=/";
+}
+
+function loadShortcuts(){
+    const matches = document.cookie.match(new RegExp(
+      "(?:^|; )" + "shortcuts".replace(/([\.$?*|{}\\\\()\\[\\]\\/\\+^])/g, '\\$1') + "=([^;]*)"
+    ));
+    try{
+        return matches ? JSON.parse(decodeURIComponent(matches[1])) : defaultShortcuts();
+    }catch(e){
+        return defaultShortcuts();
+    }
+}
+function defaultShortcuts(){
+    return [
+        { name: 'Gmail', url: 'https://mail.google.com', iconUrl: 'https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico', description: 'Access Gmail' },
+        { name: 'Photos', url: 'https://photos.google.com', iconUrl: 'https://ssl.gstatic.com/images/branding/product/1x/photos_64dp.png', description: 'View Photos' },
+        { name: 'Drive', url: 'https://drive.google.com', iconUrl: 'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_64dp.png', description: 'Open Drive' },
+        { name: 'Docs', url: 'https://docs.google.com', iconUrl: 'https://ssl.gstatic.com/images/branding/product/1x/docs_2020q4_64dp.png', description: 'Edit Documents' },
+        { name: 'Sheets', url: 'https://sheets.google.com', iconUrl: 'https://ssl.gstatic.com/images/branding/product/1x/sheets_2020q4_64dp.png', description: 'Edit Sheets' }
+    ];
+}
+
+/* =========================
+   Rendering shortcuts grid
+   ========================= */
+function renderShortcuts(){
+    launcherGrid.innerHTML = '';
+    shortcuts.forEach((s, idx) => {
+        const icon = document.createElement('div');
+        icon.className = 'icon';
+        icon.dataset.index = idx;
+        icon.innerHTML = `
+            <img src="${escapeHtml(s.iconUrl || fallbackFavicon(s.url))}" alt="${escapeHtml(s.name)}" loading="lazy">
+            <span>${escapeHtml(s.name)}</span>
+            <div class="tooltip">${escapeHtml(s.description || s.url)}</div>
+            <div class="edit-buttons">
+                <button class="button small" data-action="edit">Edit</button>
+                <button class="button small" data-action="delete">Delete</button>
+            </div>
+        `;
+        // click behavior
+        icon.addEventListener('click', (e) => {
+            if (editMode) return;
+            window.open(s.url, '_blank');
+        });
+
+        // hover preview: show on hover after short delay
+        let hoverTimer;
+        icon.addEventListener('mouseenter', (e) => {
+            hoverTimer = setTimeout(() => showPreviewFor(s, icon), 300);
+        });
+        icon.addEventListener('mouseleave', (e) => {
+            clearTimeout(hoverTimer);
+            hidePreview();
+        });
+
+        // edit buttons
+        icon.querySelectorAll('.edit-buttons button').forEach(btn => {
+            btn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                const action = btn.dataset.action;
+                if (action === 'edit') editShortcut(idx);
+                if (action === 'delete') deleteShortcut(idx, icon);
+            });
+        });
+
+        // context menu (right-click)
+        icon.addEventListener('contextmenu', (ev) => {
+            ev.preventDefault();
+            showContextMenu(ev.clientX, ev.clientY, idx);
+        });
+
+        launcherGrid.appendChild(icon);
+    });
+
+    // Add "Add new" when in edit mode
+    if (editMode){
+        const addIcon = document.createElement('div');
+        addIcon.className = 'icon add-icon';
+        addIcon.innerHTML = `<span>+ Add new</span>`;
+        addIcon.addEventListener('click', () => {
+            manualAddShortcut();
+        });
+        launcherGrid.appendChild(addIcon);
+    }
+}
+
+/* =========================
+   Editing / Add / Delete
+   ========================= */
+function toggleEditMode(){
+    editMode = !editMode;
+    document.body.classList.toggle('edit-mode', editMode);
+    if (editMode){
+        dropZone.classList.add('visible','pulse');
+    } else {
+        dropZone.classList.remove('visible','pulse');
+    }
+    renderShortcuts();
+}
+
+function editShortcut(index){
+    const s = shortcuts[index];
+    const newName = prompt('Edit Name', s.name);
+    if (newName !== null) s.name = newName;
+    const newUrl = prompt('Edit URL', s.url);
+    if (newUrl !== null) s.url = newUrl;
+    const newIcon = prompt('Edit Icon URL', s.iconUrl);
+    if (newIcon !== null) s.iconUrl = newIcon;
+    const newDesc = prompt('Edit Description', s.description);
+    if (newDesc !== null) s.description = newDesc;
+    saveShortcuts();
+    renderShortcuts();
+}
+
+function deleteShortcut(index, element){
+    // animation then remove
+    if (element){
+        element.classList.add('shrink-out');
+        setTimeout(() => {
+            shortcuts.splice(index,1);
+            saveShortcuts();
+            renderShortcuts();
+        }, 360);
+    } else {
+        shortcuts.splice(index,1);
+        saveShortcuts();
+        renderShortcuts();
+    }
+}
+
+function manualAddShortcut(){
+    const name = prompt('Enter Name');
+    const url = prompt('Enter URL (include https://)');
+    if (!name || !url) return alert('Name and URL required');
+    const iconUrl = prompt('Enter Icon URL (or leave blank to auto)') || fallbackFavicon(url);
+    const description = prompt('Enter Description') || '';
+    const newS = { name, url, iconUrl, description };
+    shortcuts.push(newS);
+    saveShortcuts();
+    renderShortcuts();
+}
+
+/* =========================
+   Drag & Drop: create shortcut
+   ========================= */
+function normaliseUrlMaybe(raw){
+    try {
+        if (!raw) return null;
+        // some drags give title + newline + url; test for lines
+        const lines = raw.split(/\\r?\\n/).map(l=>l.trim()).filter(Boolean);
+        for(const l of lines){
+            if (l.startsWith('http')) return l;
+            // sometimes 'text/plain' contains URL inside angle brackets
+            const m = l.match(/https?:\\/\\/[^\\s>]+/);
+            if (m) return m[0];
+        }
+        if (raw.startsWith('http')) return raw;
+        return null;
+    } catch(e){ return null }
+}
+
+dropZone.addEventListener('dragover', (e)=> {
+    e.preventDefault();
+    dropZone.classList.add('pulse');
+    dropZone.textContent = 'Release to drop and create shortcut';
+    dropZone.style.transform = 'translateY(-6px)';
+});
+dropZone.addEventListener('dragleave', ()=> {
+    dropZone.classList.remove('pulse');
+    dropZone.textContent = 'Drop a website URL here to create a shortcut';
+    dropZone.style.transform = '';
+});
+
+dropZone.addEventListener('drop', async (e)=> {
+    e.preventDefault();
+    dropZone.classList.remove('pulse');
+    dropZone.textContent = 'Drop a website URL here to create a shortcut';
+    dropZone.style.transform = '';
+    const rawUrl = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text');
+    const url = normaliseUrlMaybe(rawUrl) || (e.dataTransfer.files && e.dataTransfer.files.length ? null : null);
+    if (!url) return alert('Please drag a URL or a browser tab (drag the tab).');
+
+    // visually show we are adding
+    const placeholder = { name: 'Adding...', url, iconUrl: fallbackFavicon(url), description: ''};
+    shortcuts.push(placeholder);
+    saveShortcuts();
+    renderShortcuts();
+
+    // fetch metadata
+    try {
+        const meta = await fetchMetadata(url);
+        const newItem = {
+            name: meta.title || domainName(url),
+            url,
+            iconUrl: meta.icon || ogImageOrFavicon(meta, url),
+            description: meta.description || (meta.ogTitle?meta.ogTitle:meta.ogDescription)||domainName(url)
+        };
+        // replace last placeholder
+        shortcuts[shortcuts.length - 1] = newItem;
+        saveShortcuts();
+        renderShortcuts();
+        // add pop animation to last item
+        const el = launcherGrid.lastElementChild;
+        if (el) el.classList.add('new-pop');
+        alert(`Shortcut added for ${newItem.name}`);
+    } catch (err){
+        // fallback: set basic item (already had placeholder)
+        shortcuts[shortcuts.length - 1].name = domainName(url);
+        shortcuts[shortcuts.length - 1].iconUrl = fallbackFavicon(url);
+        shortcuts[shortcuts.length - 1].description = url;
+        saveShortcuts();
+        renderShortcuts();
+        alert('Added shortcut (metadata fetch failed; using basic info).');
+    }
+});
+
+/* =========================
+   Metadata fetching + helpers
+   ========================= */
+function domainName(url){
+    try{
+        const u = new URL(url);
+        return u.hostname.replace(/^www\\./,'').split('.')[0] || u.hostname;
+    }catch(e){ return url }
+}
+function fallbackFavicon(url){
+    try {
+        return 'https://www.google.com/s2/favicons?sz=128&domain_url=' + encodeURIComponent(url);
+    } catch(e){ return '' }
+}
+function ogImageOrFavicon(meta, url){
+    return meta.ogImage || meta.image || fallbackFavicon(url);
+}
+
+async function fetchMetadata(url){
+    // Try direct fetch first
+    try{
+        const res = await fetch(url, { method:'GET' });
+        if (!res.ok) throw new Error('Not OK');
+        const html = await res.text();
+        return parseMetaFromHtml(html, url);
+    }catch(err){
+        // CORS likely. Try public proxy (AllOrigins)
+        try{
+            const proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+            const res2 = await fetch(proxy);
+            if (!res2.ok) throw new Error('proxy fail');
+            const html2 = await res2.text();
+            return parseMetaFromHtml(html2, url);
+        }catch(err2){
+            // final fallback: return minimal
+            return { title: domainName(url), description: '', ogImage: null };
+        }
+    }
+}
+
+function parseMetaFromHtml(html, url){
+    try{
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const titleEl = doc.querySelector('title');
+        const title = titleEl ? titleEl.innerText.trim() : '';
+        const descMeta = doc.querySelector('meta[name="description"]') || doc.querySelector('meta[property="description"]') || doc.querySelector('meta[property="og:description"]');
+        const description = descMeta ? (descMeta.getAttribute('content') || '').trim() : '';
+        const ogTitle = doc.querySelector('meta[property="og:title"]')?.getAttribute('content') || '';
+        const ogDesc = doc.querySelector('meta[property="og:description"]')?.getAttribute('content') || '';
+        const ogImage = doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || doc.querySelector('meta[name="twitter:image"]')?.getAttribute('content') || '';
+        // favicon detection - check for link rel icons
+        let icon = '';
+        const icons = doc.querySelectorAll('link[rel~="icon"], link[rel="shortcut icon"], link[rel~="apple-touch-icon"]');
+        if (icons && icons.length){
+            icon = icons[0].getAttribute('href') || '';
+            if (icon && !icon.match(/^https?:\\/\\//)) {
+                // make absolute
+                try {
+                    const base = new URL(url).origin;
+                    icon = new URL(icon, base).href;
+                } catch(e){}
+            }
+        }
+        return {
+            title: ogTitle || title || domainName(url),
+            description: description || ogDesc || '',
+            ogTitle, ogDescription: ogDesc,
+            ogImage: ogImage || '',
+            image: ogImage || '',
+            icon
+        };
+    }catch(e){
+        return { title: domainName(url), description:'', ogImage: null };
+    }
+}
+
+/* =========================
+   Preview popup (hover)
+   ========================= */
+let previewVisibleFor = null;
+function showPreviewFor(shortcut, element){
+    previewVisibleFor = shortcut;
+    // create screenshot URL (thum.io). Adjust width as desired
+    const screenshotUrl = 'https://image.thum.io/get/width/600/' + encodeURIComponent(shortcut.url);
+
+    previewImage.src = screenshotUrl;
+    previewImage.alt = 'Preview of ' + shortcut.name;
+    previewTitle.textContent = shortcut.name || domainName(shortcut.url);
+    previewDesc.textContent = shortcut.description || shortcut.url;
+
+    // position near element (to the right if space, otherwise left)
+    const r = element.getBoundingClientRect();
+    const popupWidth = 320;
+    let left = r.right + 12;
+    if (left + popupWidth > window.innerWidth - 10) left = r.left - popupWidth - 12;
+    if (left < 6) left = 6;
+    let top = Math.max(10, r.top);
+    previewPopup.style.left = left + 'px';
+    previewPopup.style.top = top + 'px';
+    previewPopup.classList.add('visible');
+    previewPopup.setAttribute('aria-hidden','false');
+}
+function hidePreview(){
+    previewVisibleFor = null;
+    previewPopup.classList.remove('visible');
+    previewPopup.setAttribute('aria-hidden','true');
+}
+
+/* =========================
+   Context menu implementation
+   ========================= */
+function showContextMenu(x,y,index){
+    const s = shortcuts[index];
+    contextMenu.innerHTML = '';
+    const items = [
+        {label:'Open', action:()=>window.open(s.url,'_self')},
+        {label:'Open in new tab', action:()=>window.open(s.url,'_blank')},
+        {label:'Edit shortcut', action:()=>editShortcut(index)},
+        {label:'Generate preview screenshot', action:()=>regenScreenshot(index)},
+        {label:'Delete', action:()=>{ if(confirm('Delete this shortcut?')) deleteShortcut(index)}}
+    ];
+    items.forEach(it => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.textContent = it.label;
+        div.addEventListener('click',(ev)=>{ ev.stopPropagation(); hideContextMenu(); it.action(); });
+        contextMenu.appendChild(div);
+    });
+    // position and show
+    contextMenu.style.left = Math.min(x, window.innerWidth - 220) + 'px';
+    contextMenu.style.top = Math.min(y, window.innerHeight - 200) + 'px';
+    contextMenu.style.display = 'block';
+    // hide on next click
+    setTimeout(()=> {
+        document.addEventListener('click', hideContextMenuOnce);
+    }, 50);
+}
+function hideContextMenuOnce(e){
+    hideContextMenu();
+    document.removeEventListener('click', hideContextMenuOnce);
+}
+function hideContextMenu(){
+    contextMenu.style.display = 'none';
+}
+
+/* regenerate screenshot by resetting image src for preview (no persistent storage needed) */
+function regenScreenshot(index){
+    const s = shortcuts[index];
+    // quick feedback
+    alert('Generating preview screenshot (will open preview on hover).');
+    // nothing else required — preview fetches live screenshot on hover
+}
+
+/* hide preview if user scrolls or resizes */
+window.addEventListener('scroll', hidePreview, true);
+window.addEventListener('resize', hidePreview);
+
+/* close context menu on ESC */
+window.addEventListener('keydown', (e)=> {
+    if (e.key === 'Escape') {
+        hideContextMenu();
+        if (editMode) toggleEditMode();
+    }
+});
+
+/* =========================
+   Utilities: backup / restore / powerwash
+   ========================= */
+function backupShortcuts(){
+    const shortcutsBackup = JSON.stringify(shortcuts, null, 2);
+    const blob = new Blob([shortcutsBackup], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'shortcuts_backup.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+function restoreShortcuts(){
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try{
+                const restored = JSON.parse(event.target.result);
+                shortcuts.length = 0;
+                shortcuts.push(...restored);
+                saveShortcuts();
+                renderShortcuts();
+                alert('Shortcuts restored');
+            }catch(err){
+                alert('Invalid JSON file');
+            }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+function powerWash(){
+    if (confirm('This will erase all custom shortcuts. Continue?')){
+        document.cookie = "shortcuts=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        location.reload();
+    }
+}
+
+/* =========================
+   Small helpers
+   ========================= */
+function escapeHtml(s){ return String(s || '').replace(/[&<>"']/g, (m)=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+/* =========================
+   Init + event wiring
+   ========================= */
+editButton.onclick = toggleEditMode;
+modeToggle.onclick = () => {
+    const cur = document.body.getAttribute('data-theme');
+    document.body.setAttribute('data-theme', cur === 'light' ? 'dark' : 'light');
+};
+renderShortcuts();
+
+/* Hide preview & context menu if clicking outside */
+document.addEventListener('click', (e)=> {
+    hidePreview();
+    // context menu has own handler
+});
+
+/* Prevent native drop opening of URL on body */
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => {
+    // We only want drop to be handled by dropZone; prevent default global navigation
+    const url = (e.dataTransfer && (e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain')));
+    if (url) e.preventDefault();
+}, { passive:false });
+
+/* Ensure dropzone toggles when edit mode changes externally */
+document.addEventListener('visibilitychange', ()=> { if (!document.hidden) renderShortcuts(); });
+
+</script>
+</body>
+</html>
