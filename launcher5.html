@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Inriris Launcher — Full (GitHub)</title>
+<style>
+  :root{--bg:#f6f7fb;--card:#fff;--muted:#666;--accent:#0ea5a4;--border:#e6e9ef}
+  [data-theme="dark"]{--bg:#0f1113;--card:#121517;--muted:#bbb;--accent:#22c1c1;--border:#222}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:#0b0b0b;padding:18px;display:flex;flex-direction:column;align-items:center;min-height:100vh}
+  header{width:100%;max-width:980px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  h1{margin:0;font-size:18px}
+  .controls{display:flex;gap:8px}
+  .btn{padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);cursor:pointer}
+  .grid{width:100%;max-width:980px;display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:16px}
+  .tile{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:transform .18s,box-shadow .18s}
+  .tile:hover{transform:translateY(-6px);box-shadow:0 18px 30px rgba(2,6,23,.08)}
+  .tile img{width:46%;height:46%;object-fit:contain;border-radius:8px}
+  .tile .name{font-size:13px;text-align:center;word-break:break-word}
+  .edit-controls{display:flex;gap:6px;position:absolute;bottom:8px}
+  .add-tile{display:flex;align-items:center;justify-content:center;font-weight:600}
+  #dropZone{position:fixed;left:0;right:0;bottom:-160px;height:120px;display:flex;align-items:center;justify-content:center;background:linear-gradient(90deg,var(--accent),#6ee7b7);color:white;font-weight:600;border-radius:12px 12px 0 0;z-index:999;transition:bottom .36s}
+  #dropZone.visible{bottom:0}
+  .preview{position:fixed;z-index:1200;width:340px;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:none;box-shadow:0 20px 40px rgba(2,6,23,.12)}
+  .preview.visible{display:block}
+  .preview img{width:100%;height:170px;object-fit:cover;background:#ddd}
+  .preview .meta{padding:8px}
+  .preview .meta .title{font-weight:700;margin-bottom:6px}
+  .context-menu{position:fixed;z-index:1300;background:var(--card);border:1px solid var(--border);border-radius:8px;display:none;min-width:180px}
+  .context-menu .it{padding:8px 10px;cursor:pointer}
+  .context-menu .it:hover{background:var(--bg)}
+  footer{width:100%;max-width:980px;margin-top:16px;display:none}
+  .edit-mode footer{display:block}
+  /* animations */
+  @keyframes popIn{0%{transform:scale(.2);opacity:0}60%{transform:scale(1.06);opacity:1}100%{transform:scale(1)}}
+  .pop{animation:popIn .42s ease}
+  @keyframes shrinkOut{to{transform:scale(.3);opacity:0}}
+  .shrinkOut{animation:shrinkOut .36s forwards}
+</style>
+</head>
+<body data-theme="light">
+<header>
+  <h1>Inriris Launcher — Full</h1>
+  <div class="controls">
+    <button id="editBtn" class="btn">Edit</button>
+    <button id="themeBtn" class="btn">Theme</button>
+  </div>
+</header>
+
+<main class="grid" id="grid"></main>
+
+<footer>
+  <a href="#" id="backupLink">Backup</a> |
+  <a href="#" id="restoreLink">Restore</a> |
+  <a href="#" id="pw">Power Wash</a>
+</footer>
+
+<div id="dropZone">Drop a website tab or URL here to create a shortcut</div>
+
+<div id="preview" class="preview" aria-hidden="true">
+  <img id="previewImg" src="" alt="preview">
+  <div class="meta">
+    <div class="title" id="previewTitle"></div>
+    <div class="desc" id="previewDesc"></div>
+  </div>
+</div>
+
+<div id="context" class="context-menu" role="menu"></div>
+
+<script>
+/*
+  Full launcher for GitHub Pages.
+  - Uses localStorage
+  - Uses Microlink (HTTPS) for metadata & screenshot
+  - Drag-and-drop, preview on hover, context menu
+*/
+
+const STORAGE_KEY = 'inriris_shortcuts_full_v1';
+const grid = document.getElementById('grid');
+const editBtn = document.getElementById('editBtn');
+const themeBtn = document.getElementById('themeBtn');
+const dropZone = document.getElementById('dropZone');
+const preview = document.getElementById('preview');
+const previewImg = document.getElementById('previewImg');
+const previewTitle = document.getElementById('previewTitle');
+const previewDesc = document.getElementById('previewDesc');
+const context = document.getElementById('context');
+
+let editMode = false;
+let shortcuts = load();
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultShortcuts();
+    return JSON.parse(raw);
+  }catch(e){ return defaultShortcuts(); }
+}
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(shortcuts)); }
+function defaultShortcuts(){
+  return [
+    { name: 'Gmail', url: 'https://mail.google.com', icon: 'https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico', desc: 'Gmail' },
+    { name: 'Photos', url: 'https://photos.google.com', icon: 'https://ssl.gstatic.com/images/branding/product/1x/photos_64dp.png', desc: 'Photos' }
+  ];
+}
+
+/* Render grid */
+function render(){
+  grid.innerHTML = '';
+  shortcuts.forEach((s, idx) => {
+    const el = document.createElement('div');
+    el.className = 'tile';
+    el.dataset.idx = idx;
+    el.innerHTML = `
+      <img src="${escapeHtml(s.icon)}" alt="${escapeHtml(s.name)}" loading="lazy">
+      <div class="name">${escapeHtml(s.name)}</div>
+      <div style="position:absolute;right:8px;top:8px;display:none" class="edit-controls">
+        <button data-act="edit" class="btn">Edit</button>
+        <button data-act="del" class="btn">Del</button>
+      </div>
+    `;
+    el.addEventListener('click', (ev) => {
+      if (editMode) return;
+      window.open(s.url, '_blank');
+    });
+
+    // hover preview (delayed)
+    let hoverTimer = null;
+    el.addEventListener('mouseenter', () => {
+      if (previewVisibleBlocking()) return;
+      hoverTimer = setTimeout(()=> showPreview(s, el), 300);
+    });
+    el.addEventListener('mouseleave', () => {
+      clearTimeout(hoverTimer);
+      hidePreview();
+    });
+
+    // edit controls
+    const ec = el.querySelector('.edit-controls');
+    if (editMode) ec.style.display = 'flex';
+    el.querySelectorAll('[data-act]').forEach(btn=>{
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const act = btn.dataset.act;
+        if (act === 'edit') manualEdit(idx);
+        if (act === 'del') removeShortcut(idx, el);
+      });
+    });
+
+    // custom context menu
+    el.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      showContextMenu(e.clientX, e.clientY, idx);
+    });
+
+    grid.appendChild(el);
+  });
+
+  if (editMode){
+    const a = document.createElement('div');
+    a.className = 'tile add-tile';
+    a.innerHTML = '+ Add';
+    a.addEventListener('click', manualAdd);
+    grid.appendChild(a);
+  }
+}
+
+/* Preview logic */
+function showPreview(s, el){
+  // Use microlink screenshot if available in shortcut (we store screenshot URL in s.screenshot when adding)
+  const img = s.screenshot || microlinkScreenshot(s.url);
+  previewImg.src = img;
+  previewTitle.textContent = s.name || fallbackDomain(s.url);
+  previewDesc.textContent = s.desc || s.url;
+  positionPreviewNear(el);
+  preview.classList.add('visible');
+  preview.setAttribute('aria-hidden','false');
+}
+function hidePreview(){
+  preview.classList.remove('visible');
+  preview.setAttribute('aria-hidden','true');
+}
+function positionPreviewNear(el){
+  const r = el.getBoundingClientRect();
+  const width = 340;
+  let left = r.right + 12;
+  if (left + width > window.innerWidth - 8) left = r.left - width - 12;
+  if (left < 8) left = 8;
+  let top = Math.max(8, r.top);
+  preview.style.left = left + 'px';
+  preview.style.top = top + 'px';
+}
+function previewVisibleBlocking(){ return false; }
+
+/* Context menu */
+function showContextMenu(x,y,idx){
+  const s = shortcuts[idx];
+  context.innerHTML = '';
+  const actions = [
+    { t:'Open', f:()=> window.open(s.url,'_blank') },
+    { t:'Open (same tab)', f:()=> window.open(s.url,'_self') },
+    { t:'Edit', f:()=> manualEdit(idx) },
+    { t:'Generate preview', f:()=> regenPreview(idx) },
+    { t:'Delete', f:()=> { if(confirm('Delete?')) removeShortcut(idx) } }
+  ];
+  actions.forEach(a => {
+    const d = document.createElement('div');
+    d.className = 'it';
+    d.textContent = a.t;
+    d.addEventListener('click', (ev)=>{ ev.stopPropagation(); hideContextMenu(); a.f(); });
+    context.appendChild(d);
+  });
+  context.style.left = Math.min(x, window.innerWidth - 220) + 'px';
+  context.style.top = Math.min(y, window.innerHeight - 160) + 'px';
+  context.style.display = 'block';
+  setTimeout(()=> document.addEventListener('click', hideContextMenuOnce), 60);
+}
+function hideContextMenuOnce(){ hideContextMenu(); document.removeEventListener('click', hideContextMenuOnce); }
+function hideContextMenu(){ context.style.display = 'none'; }
+
+/* Add / Edit / Delete */
+function manualAdd(){
+  const name = prompt('Name (optional)');
+  const url = prompt('URL (include https://)');
+  if (!url) return alert('URL required');
+  const placeholder = { name: name || fallbackDomain(url), url, icon: fallbackFavicon(url), desc: '', screenshot: '' };
+  shortcuts.push(placeholder);
+  save();
+  render();
+  // async fetch metadata via Microlink
+  enrichWithMicrolink(shortcuts.length - 1);
+}
+function manualEdit(i){
+  const s = shortcuts[i];
+  const newName = prompt('Name', s.name);
+  if (newName !== null) s.name = newName;
+  const newUrl = prompt('URL', s.url);
+  if (newUrl !== null) s.url = newUrl;
+  const newIcon = prompt('Icon URL', s.icon);
+  if (newIcon !== null) s.icon = newIcon;
+  const newDesc = prompt('Description', s.desc);
+  if (newDesc !== null) s.desc = newDesc;
+  save(); render();
+}
+function removeShortcut(i, el){
+  if (el) el.classList.add('shrinkOut');
+  setTimeout(()=> { shortcuts.splice(i,1); save(); render(); }, 360);
+}
+
+/* Enrich metadata with Microlink */
+async function enrichWithMicrolink(index){
+  try {
+    const s = shortcuts[index];
+    const micUrl = 'https://api.microlink.io?url=' + encodeURIComponent(s.url) + '&meta=true&screenshot=true&video=false';
+    const res = await fetch(micUrl);
+    if (!res.ok) throw new Error('mic fail');
+    const json = await res.json();
+    const data = json.data || {};
+    const title = data.title || s.name || fallbackDomain(s.url);
+    const desc = data.description || s.desc || '';
+    const screenshot = (data.screenshot && data.screenshot.url) || (data.image && data.image.url) || '';
+    const logo = (data.logo && data.logo.url) || (data.image && data.image.url) || fallbackFavicon(s.url);
+    shortcuts[index] = {
+      name: title,
+      url: s.url,
+      icon: logo,
+      desc,
+      screenshot
+    };
+    save(); render();
+    // add small pop animation to last element
+    const last = grid.querySelector('[data-idx="'+index+'"]');
+    if (last) last.classList.add('pop');
+  } catch(e){
+    // fallback: keep simple info
+    shortcuts[index].icon = shortcuts[index].icon || fallbackFavicon(shortcuts[index].url);
+    shortcuts[index].name = shortcuts[index].name || fallbackDomain(shortcuts[index].url);
+    save(); render();
+  }
+}
+function regenPreview(idx){
+  // triggers fetching again and updates stored screenshot
+  enrichWithMicrolink(idx);
+}
+
+/* Helper utilities */
+function fallbackDomain(url){
+  try { return new URL(url).hostname.replace(/^www\./,'').split('.')[0]; } catch(e){return url}
+}
+function fallbackFavicon(url){ return 'https://www.google.com/s2/favicons?sz=128&domain_url=' + encodeURIComponent(url); }
+function microlinkScreenshot(url){ return 'https://image.microlink.io?url=' + encodeURIComponent(url) + '&screenshot=true&meta=false'; }
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+/* Drag & Drop handlers */
+function normalizeUrl(raw){
+  if (!raw) return null;
+  const lines = raw.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  for(const l of lines){
+    const m = l.match(/https?:\/\/[^\s]+/);
+    if (m) return m[0];
+  }
+  if (raw.startsWith('http')) return raw;
+  return null;
+}
+dropZone.addEventListener('dragover', (e)=>{ e.preventDefault(); dropZone.classList.add('visible'); dropZone.textContent = 'Release to drop'; });
+dropZone.addEventListener('dragleave', ()=>{ dropZone.classList.remove('visible'); dropZone.textContent = 'Drop a website tab or URL here to create a shortcut'; });
+dropZone.addEventListener('drop', async (e)=> {
+  e.preventDefault(); dropZone.classList.remove('visible');
+  const raw = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text');
+  const url = normalizeUrl(raw);
+  if (!url) return alert('Drop a URL or drag a tab into the drop zone');
+  const idx = shortcuts.push({ name: 'Adding...', url, icon: fallbackFavicon(url), desc:'', screenshot:'' }) - 1;
+  save(); render();
+  await enrichWithMicrolink(idx);
+  alert('Shortcut added');
+});
+
+/* Theme toggle */
+themeBtn.addEventListener('click', ()=>{
+  const cur = document.body.getAttribute('data-theme') || 'light';
+  document.body.setAttribute('data-theme', cur === 'light' ? 'dark' : 'light');
+});
+
+/* Edit toggle */
+editBtn.addEventListener('click', ()=>{
+  editMode = !editMode;
+  document.body.classList.toggle('edit-mode', editMode);
+  if (editMode) { dropZone.classList.add('visible'); } else { dropZone.classList.remove('visible'); }
+  render();
+});
+
+/* backup/restore/powerwash using localStorage */
+document.getElementById('backupLink').addEventListener('click',(e)=>{ e.preventDefault(); const data = JSON.stringify(shortcuts, null, 2); const blob = new Blob([data], {type:'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'shortcuts_backup.json'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); });
+document.getElementById('restoreLink').addEventListener('click',(e)=>{ e.preventDefault(); const input = document.createElement('input'); input.type='file'; input.accept='.json'; input.onchange = (ev)=>{ const f = ev.target.files[0]; const r = new FileReader(); r.onload = ()=>{ try{ const arr = JSON.parse(r.result); shortcuts = arr; save(); render(); alert('Restored'); }catch(err){ alert('Invalid file'); } }; r.readAsText(f); }; input.click(); });
+document.getElementById('pw').addEventListener('click', (e)=>{ e.preventDefault(); if(confirm('Erase shortcuts?')){ localStorage.removeItem(STORAGE_KEY); shortcuts = defaultShortcuts(); save(); render(); } });
+
+/* Prevent navigation on drop */
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => {
+  const raw = e.dataTransfer && (e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain'));
+  if (raw) e.preventDefault();
+}, { passive:false });
+
+/* close preview/context on click */
+document.addEventListener('click', ()=>{ hidePreview(); hideContextMenu(); });
+window.addEventListener('resize', hidePreview);
+
+/* init */
+render();
+</script>
+</body>
+</html>
