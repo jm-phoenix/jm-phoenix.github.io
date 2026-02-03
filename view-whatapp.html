@@ -2,29 +2,94 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Viewer Final</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WhatsApp Viewer Mobile</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root { --wa-header: #008069; --wa-bg: #efeae2; }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: -apple-system, sans-serif; background-color: #111b21; display: flex; justify-content: center; }
-        .chat-container { width: 100%; max-width: 500px; background-color: var(--wa-bg); background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); display: flex; flex-direction: column; height: 100vh; position: relative; }
-        header { background: var(--wa-header); color: white; padding: 15px; z-index: 10; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        #chat-window { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
-        .message { max-width: 85%; padding: 8px 12px; border-radius: 8px; font-size: 14.5px; background: white; align-self: flex-start; box-shadow: 0 1px 1px rgba(0,0,0,0.1); word-wrap: break-word; position: relative; color: #111b21; }
-        .msg-author { font-size: 12.5px; font-weight: bold; display: block; margin-bottom: 3px; }
-        .msg-time { font-size: 10px; color: #667781; float: right; margin-top: 5px; margin-left: 10px; }
-        .media-content { width: 100%; border-radius: 6px; margin: 5px 0; display: block; background: #0001; }
-        footer { background: #f0f2f5; padding: 10px; border-top: 1px solid #ddd; }
-        .upload-btn { background: white; border: none; border-radius: 25px; width: 100%; padding: 12px; cursor: pointer; display: flex; justify-content: space-between; font-size: 15px; color: #54656f; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        #status-msg { text-align: center; padding: 20px; color: #666; font-size: 14px; }
+        
+        * { box-sizing: border-box; } /* Crucial para que nada se salga */
+
+        body, html { 
+            margin: 0; padding: 0; 
+            height: 100%; width: 100%;
+            font-family: -apple-system, sans-serif; 
+            background-color: #111b21; 
+            display: flex; justify-content: center;
+            overflow: hidden; /* Evita rebotes extraños */
+        }
+
+        .chat-container { 
+            width: 100%; 
+            max-width: 500px; 
+            background-color: var(--wa-bg); 
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); 
+            display: flex; flex-direction: column; 
+            height: 100dvh; /* Usa dynamic viewport height para móviles */
+            position: relative; 
+        }
+
+        header { 
+            background: var(--wa-header); color: white; 
+            padding: 10px 15px; z-index: 10; 
+            font-weight: bold; flex-shrink: 0;
+            display: flex; align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+        }
+
+        #chat-window { 
+            flex: 1; overflow-y: auto; 
+            padding: 10px; display: flex; 
+            flex-direction: column; gap: 8px; 
+            width: 100%;
+        }
+
+        .message { 
+            max-width: 85%; /* Las burbujas no ocupan todo el ancho */
+            padding: 8px 10px; border-radius: 8px; 
+            font-size: 14.5px; background: white; 
+            align-self: flex-start; 
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1); 
+            word-wrap: break-word; /* Rompe palabras largas */
+            color: #111b21; 
+            position: relative;
+        }
+
+        .msg-author { font-size: 12px; font-weight: bold; display: block; margin-bottom: 3px; }
+        .msg-time { font-size: 10px; color: #667781; float: right; margin-top: 4px; margin-left: 10px; }
+
+        /* Corrección de Media */
+        .media-content { 
+            width: 100%; 
+            max-width: 100%; /* No puede ser más ancha que la burbuja */
+            height: auto; 
+            border-radius: 6px; 
+            margin: 4px 0; 
+            display: block; 
+            background: #0001; 
+        }
+        
+        footer { 
+            background: #f0f2f5; padding: 10px; 
+            border-top: 1px solid #ddd; flex-shrink: 0;
+        }
+
+        .upload-btn { 
+            background: white; border: none; 
+            border-radius: 25px; width: 100%; 
+            padding: 10px 15px; cursor: pointer; 
+            display: flex; justify-content: space-between; 
+            font-size: 14px; color: #54656f; 
+        }
     </style>
 </head>
 <body>
     <div class="chat-container">
         <header id="chat-header">Visor de WhatsApp</header>
         <div id="chat-window">
-            <div id="status-msg">Carga el archivo .zip para comenzar</div>
+            <div style="text-align:center; margin-top:50px; color:#666; font-size: 14px;">
+                Carga el archivo .zip para visualizar el chat
+            </div>
         </div>
         <footer>
             <input type="file" id="file-input" accept=".zip" style="display:none">
@@ -40,31 +105,26 @@
         document.getElementById('file-input').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
             const chatWindow = document.getElementById('chat-window');
-            chatWindow.innerHTML = '<div id="status-msg">Procesando archivos multimedia...</div>';
+            chatWindow.innerHTML = '<div style="text-align:center; padding:20px;">Procesando archivos...</div>';
 
             try {
                 const zip = new JSZip();
                 const content = await zip.loadAsync(file);
                 mediaMap = {};
 
-                // 1. Mapear archivos multimedia
-                const files = Object.keys(content.files);
-                for (let f of files) {
+                for (let f in content.files) {
                     if (f.match(/\.(jpg|jpeg|png|gif|mp4|mov|webp)$/i)) {
                         const blob = await content.files[f].async("blob");
                         mediaMap[f] = URL.createObjectURL(blob);
                     }
                 }
 
-                // 2. Buscar archivo de texto
                 const txtFile = Object.values(content.files).find(f => f.name.endsWith('.txt') && !f.name.includes('MACOSX'));
                 if (!txtFile) throw new Error("No se encontró el chat (.txt)");
 
                 const rawText = await txtFile.async("string");
                 renderChat(rawText);
-                
                 document.getElementById('chat-header').innerText = "Chat Cargado";
 
             } catch (err) {
@@ -76,9 +136,6 @@
             const container = document.getElementById('chat-window');
             container.innerHTML = "";
             const lines = text.split('\n');
-            
-            // REGEX CORREGIDO: Soporta [3/7/25, 3:38:00 p.m.] con o sin paréntesis extra
-            // Detecta la fecha, la hora, el p.m. y separa el autor del mensaje
             const regex = /^[\u200e\u200f]*[\(\[]?(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*([apAP]\.?\s*[mM]\.?)[\)\]]?\s*(.*?):\s*(.*)$/;
 
             let htmlBuffer = "";
@@ -87,7 +144,6 @@
             lines.forEach(line => {
                 const cleanLine = line.trim();
                 if (!cleanLine) return;
-
                 const m = cleanLine.match(regex);
 
                 if (m) {
@@ -117,20 +173,12 @@
                             <div class="msg-time">${time}</div>
                         </div>`;
                 } else if (messageCount > 0) {
-                    // Es una continuación del mensaje anterior
                     htmlBuffer = htmlBuffer.replace(/(<\/span>)\s*(<div class="msg-time">)/, `$1<br>${cleanLine}$2`);
                 }
             });
 
-            if (messageCount === 0) {
-                container.innerHTML = `<div style="background:white; padding:15px; border-radius:8px; font-size:12px; margin:10px; border:1px solid red;">
-                    <strong>Formato no detectado aún.</strong><br><br>
-                    Primera línea:<br><code>${lines[0].substring(0,100)}</code>
-                </div>`;
-            } else {
-                container.innerHTML = htmlBuffer;
-                container.scrollTop = container.scrollHeight;
-            }
+            container.innerHTML = htmlBuffer || '<div style="padding:20px;">No se encontraron mensajes.</div>';
+            container.scrollTop = container.scrollHeight;
         }
 
         function getColor(str) {
