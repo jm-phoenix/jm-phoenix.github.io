@@ -3,98 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WhatsApp Viewer Mobile</title>
+    <title>WhatsApp Viewer Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root { --wa-header: #008069; --wa-bg: #efeae2; }
-        
-        * { box-sizing: border-box; } /* Crucial para que nada se salga */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body, html { 
-            margin: 0; padding: 0; 
-            height: 100%; width: 100%;
-            font-family: -apple-system, sans-serif; 
-            background-color: #111b21; 
-            display: flex; justify-content: center;
-            overflow: hidden; /* Evita rebotes extraños */
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            font-family: -apple-system, sans-serif; background-color: #111b21; 
+            display: flex; justify-content: center; overflow: hidden;
         }
 
         .chat-container { 
-            width: 100%; 
-            max-width: 500px; 
-            background-color: var(--wa-bg); 
+            width: 100%; max-width: 500px; background-color: var(--wa-bg); 
             background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); 
-            display: flex; flex-direction: column; 
-            height: 100dvh; /* Usa dynamic viewport height para móviles */
-            position: relative; 
+            display: flex; flex-direction: column; height: 100dvh;
         }
 
         header { 
-            background: var(--wa-header); color: white; 
-            padding: 10px 15px; z-index: 10; 
-            font-weight: bold; flex-shrink: 0;
-            display: flex; align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+            background: var(--wa-header); color: white; padding: 10px 15px; 
+            font-weight: bold; flex-shrink: 0; z-index: 10;
         }
 
         #chat-window { 
-            flex: 1; overflow-y: auto; 
-            padding: 10px; display: flex; 
-            flex-direction: column; gap: 8px; 
-            width: 100%;
+            flex: 1; overflow-y: auto; padding: 12px; 
+            display: flex; flex-direction: column; gap: 6px; width: 100%;
         }
 
+        /* Burbujas al 80% para asegurar margen */
         .message { 
-            max-width: 85%; /* Las burbujas no ocupan todo el ancho */
-            padding: 8px 10px; border-radius: 8px; 
-            font-size: 14.5px; background: white; 
-            align-self: flex-start; 
-            box-shadow: 0 1px 1px rgba(0,0,0,0.1); 
-            word-wrap: break-word; /* Rompe palabras largas */
-            color: #111b21; 
-            position: relative;
+            max-width: 80%; padding: 6px 8px; border-radius: 8px; 
+            font-size: 14px; background: white; align-self: flex-start; 
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1); word-wrap: break-word; 
+            color: #111b21; position: relative;
         }
 
-        .msg-author { font-size: 12px; font-weight: bold; display: block; margin-bottom: 3px; }
-        .msg-time { font-size: 10px; color: #667781; float: right; margin-top: 4px; margin-left: 10px; }
+        .msg-author { font-size: 11px; font-weight: bold; display: block; margin-bottom: 2px; }
+        .msg-time { font-size: 9px; color: #667781; float: right; margin-top: 4px; margin-left: 8px; }
 
-        /* Corrección de Media */
         .media-content { 
-            width: 100%; 
-            max-width: 100%; /* No puede ser más ancha que la burbuja */
-            height: auto; 
-            border-radius: 6px; 
-            margin: 4px 0; 
-            display: block; 
-            background: #0001; 
+            width: 100%; max-width: 100%; height: auto; 
+            border-radius: 4px; margin: 3px 0; display: block; 
+            cursor: pointer; object-fit: cover;
         }
         
-        footer { 
-            background: #f0f2f5; padding: 10px; 
-            border-top: 1px solid #ddd; flex-shrink: 0;
+        /* Efecto Teatro (Modal) */
+        #theater-mode {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 100; justify-content: center; align-items: center;
         }
+        #theater-mode img, #theater-mode video { max-width: 95%; max-height: 90%; border-radius: 4px; }
+        #close-theater { position: absolute; top: 20px; right: 20px; color: white; font-size: 30px; cursor: pointer; font-weight: bold; }
 
+        footer { background: #f0f2f5; padding: 10px; border-top: 1px solid #ddd; flex-shrink: 0; }
         .upload-btn { 
-            background: white; border: none; 
-            border-radius: 25px; width: 100%; 
-            padding: 10px 15px; cursor: pointer; 
-            display: flex; justify-content: space-between; 
+            background: white; border: none; border-radius: 20px; width: 100%; 
+            padding: 10px; cursor: pointer; display: flex; justify-content: space-between; 
             font-size: 14px; color: #54656f; 
         }
     </style>
 </head>
 <body>
+
+    <div id="theater-mode" onclick="this.style.display='none'">
+        <span id="close-theater">&times;</span>
+        <div id="theater-content" onclick="event.stopPropagation()"></div>
+    </div>
+
     <div class="chat-container">
         <header id="chat-header">Visor de WhatsApp</header>
-        <div id="chat-window">
-            <div style="text-align:center; margin-top:50px; color:#666; font-size: 14px;">
-                Carga el archivo .zip para visualizar el chat
-            </div>
-        </div>
+        <div id="chat-window"><div style="text-align:center; padding:50px; color:#666;">Carga tu .zip</div></div>
         <footer>
             <input type="file" id="file-input" accept=".zip" style="display:none">
             <button class="upload-btn" onclick="document.getElementById('file-input').click()">
-                <span>Cargar nuevo backup</span><span>📎</span>
+                <span>Seleccionar Backup</span><span>📎</span>
             </button>
         </footer>
     </div>
@@ -102,11 +85,22 @@
     <script>
         let mediaMap = {};
 
+        function openTheater(url, type) {
+            const theater = document.getElementById('theater-mode');
+            const content = document.getElementById('theater-content');
+            theater.style.display = 'flex';
+            if (type === 'video') {
+                content.innerHTML = `<video src="${url}" controls autoplay style="width:100%"></video>`;
+            } else {
+                content.innerHTML = `<img src="${url}">`;
+            }
+        }
+
         document.getElementById('file-input').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
             const chatWindow = document.getElementById('chat-window');
-            chatWindow.innerHTML = '<div style="text-align:center; padding:20px;">Procesando archivos...</div>';
+            chatWindow.innerHTML = '<div style="text-align:center; padding:20px; color:white;">Procesando...</div>';
 
             try {
                 const zip = new JSZip();
@@ -121,12 +115,10 @@
                 }
 
                 const txtFile = Object.values(content.files).find(f => f.name.endsWith('.txt') && !f.name.includes('MACOSX'));
-                if (!txtFile) throw new Error("No se encontró el chat (.txt)");
+                if (!txtFile) throw new Error("No se encontró el chat");
 
                 const rawText = await txtFile.async("string");
                 renderChat(rawText);
-                document.getElementById('chat-header').innerText = "Chat Cargado";
-
             } catch (err) {
                 chatWindow.innerHTML = `<div style="color:red; padding:20px;">Error: ${err.message}</div>`;
             }
@@ -148,19 +140,19 @@
 
                 if (m) {
                     messageCount++;
-                    const time = `${m[2]} ${m[3].replace(/\./g, "").toUpperCase()}`;
                     const author = m[4];
-                    let content = m[5];
+                    let msgBody = m[5];
+                    const time = `${m[2]} ${m[3].replace(/\./g, "").toUpperCase()}`;
 
                     let mediaTag = "";
                     for (let f in mediaMap) {
-                        if (content.includes(f)) {
+                        if (msgBody.includes(f)) {
                             if (f.match(/\.(mp4|mov)$/i)) {
-                                mediaTag = `<video controls class="media-content" src="${mediaMap[f]}"></video>`;
+                                mediaTag = `<video class="media-content" src="${mediaMap[f]}" onclick="openTheater('${mediaMap[f]}','video')"></video>`;
                             } else {
-                                mediaTag = `<img class="media-content" src="${mediaMap[f]}" onclick="window.open(this.src)">`;
+                                mediaTag = `<img class="media-content" src="${mediaMap[f]}" onclick="openTheater('${mediaMap[f]}','img')">`;
                             }
-                            content = content.replace(f, "").replace("<adjunto: >", "").replace("(archivo adjunto)", "").trim();
+                            msgBody = msgBody.replace(f, "").replace("<adjunto: >", "").replace("(archivo adjunto)", "").trim();
                             break;
                         }
                     }
@@ -169,7 +161,7 @@
                         <div class="message">
                             <span class="msg-author" style="color:${getColor(author)}">${author}</span>
                             ${mediaTag}
-                            <span>${content}</span>
+                            <span>${msgBody}</span>
                             <div class="msg-time">${time}</div>
                         </div>`;
                 } else if (messageCount > 0) {
@@ -177,14 +169,14 @@
                 }
             });
 
-            container.innerHTML = htmlBuffer || '<div style="padding:20px;">No se encontraron mensajes.</div>';
+            container.innerHTML = htmlBuffer;
             container.scrollTop = container.scrollHeight;
         }
 
         function getColor(str) {
             let hash = 0;
             for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            return `hsl(${Math.abs(hash) % 360}, 65%, 35%)`;
+            return `hsl(${Math.abs(hash) % 360}, 60%, 35%)`;
         }
     </script>
 </body>
