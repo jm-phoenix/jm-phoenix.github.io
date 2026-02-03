@@ -7,35 +7,29 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root { --wa-header: #008069; --wa-bg: #efeae2; }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; background-color: #111b21; display: flex; justify-content: center; }
-        .chat-container { width: 100%; max-width: 500px; background-color: var(--wa-bg); background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); display: flex; flex-direction: column; height: 100vh; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: -apple-system, sans-serif; background-color: #111b21; display: flex; justify-content: center; }
+        .chat-container { width: 100%; max-width: 500px; background-color: var(--wa-bg); background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); display: flex; flex-direction: column; height: 100vh; position: relative; }
         header { background: var(--wa-header); color: white; padding: 15px; z-index: 10; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         #chat-window { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
-        
-        /* Burbujas */
-        .message { max-width: 85%; padding: 8px 12px; border-radius: 8px; font-size: 14px; background: white; align-self: flex-start; box-shadow: 0 1px 1px rgba(0,0,0,0.1); word-wrap: break-word; position: relative; }
-        .msg-author { font-size: 12px; font-weight: bold; color: #d85d28; display: block; margin-bottom: 3px; }
-        .msg-time { font-size: 10px; color: #888; float: right; margin-top: 5px; margin-left: 10px; }
-        .media-content { width: 100%; border-radius: 6px; margin: 5px 0; display: block; background: #eee; }
-        
+        .message { max-width: 85%; padding: 8px 12px; border-radius: 8px; font-size: 14.5px; background: white; align-self: flex-start; box-shadow: 0 1px 1px rgba(0,0,0,0.1); word-wrap: break-word; position: relative; color: #111b21; }
+        .msg-author { font-size: 12.5px; font-weight: bold; display: block; margin-bottom: 3px; }
+        .msg-time { font-size: 10px; color: #667781; float: right; margin-top: 5px; margin-left: 10px; }
+        .media-content { width: 100%; border-radius: 6px; margin: 5px 0; display: block; background: #0001; }
         footer { background: #f0f2f5; padding: 10px; border-top: 1px solid #ddd; }
-        .upload-btn { background: white; border: none; border-radius: 25px; width: 100%; padding: 12px; cursor: pointer; display: flex; justify-content: space-between; font-size: 15px; color: #54656f; }
-        #loading { display: none; text-align: center; padding: 20px; background: rgba(255,255,255,0.8); border-radius: 10px; margin: 20px; }
+        .upload-btn { background: white; border: none; border-radius: 25px; width: 100%; padding: 12px; cursor: pointer; display: flex; justify-content: space-between; font-size: 15px; color: #54656f; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        #status-msg { text-align: center; padding: 20px; color: #666; font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="chat-container">
         <header id="chat-header">Visor de WhatsApp</header>
         <div id="chat-window">
-            <div id="loading">Procesando mensajes...</div>
-            <div id="intro" style="text-align:center; margin-top:50px; color:#666;">
-                <p>El historial se verá aquí después de cargar el ZIP.</p>
-            </div>
+            <div id="status-msg">Carga el archivo .zip para comenzar</div>
         </div>
         <footer>
             <input type="file" id="file-input" accept=".zip" style="display:none">
             <button class="upload-btn" onclick="document.getElementById('file-input').click()">
-                <span>Cargar chat (.zip)</span><span>📎</span>
+                <span>Cargar nuevo backup</span><span>📎</span>
             </button>
         </footer>
     </div>
@@ -47,24 +41,24 @@
             const file = e.target.files[0];
             if (!file) return;
 
-            const loader = document.getElementById('loading');
-            loader.style.display = 'block';
-            document.getElementById('intro').style.display = 'none';
+            const chatWindow = document.getElementById('chat-window');
+            chatWindow.innerHTML = '<div id="status-msg">Procesando archivos multimedia...</div>';
 
             try {
                 const zip = new JSZip();
                 const content = await zip.loadAsync(file);
                 mediaMap = {};
 
-                // 1. Guardar archivos de imagen/video
-                for (let filename in content.files) {
-                    if (filename.match(/\.(jpg|jpeg|png|gif|mp4|mov|webp)$/i)) {
-                        const blob = await content.files[filename].async("blob");
-                        mediaMap[filename] = URL.createObjectURL(blob);
+                // 1. Mapear archivos multimedia
+                const files = Object.keys(content.files);
+                for (let f of files) {
+                    if (f.match(/\.(jpg|jpeg|png|gif|mp4|mov|webp)$/i)) {
+                        const blob = await content.files[f].async("blob");
+                        mediaMap[f] = URL.createObjectURL(blob);
                     }
                 }
 
-                // 2. Buscar el archivo de texto
+                // 2. Buscar archivo de texto
                 const txtFile = Object.values(content.files).find(f => f.name.endsWith('.txt') && !f.name.includes('MACOSX'));
                 if (!txtFile) throw new Error("No se encontró el chat (.txt)");
 
@@ -72,11 +66,9 @@
                 renderChat(rawText);
                 
                 document.getElementById('chat-header').innerText = "Chat Cargado";
-                loader.style.display = 'none';
 
             } catch (err) {
-                alert("Error: " + err.message);
-                loader.style.display = 'none';
+                chatWindow.innerHTML = `<div style="color:red; padding:20px;">Error: ${err.message}</div>`;
             }
         });
 
@@ -85,24 +77,25 @@
             container.innerHTML = "";
             const lines = text.split('\n');
             
-            // Este Regex es mucho más potente para tu formato ([M/D/A, h:m:s p.m.])
-            // Ahora ignora caracteres invisibles iniciales \u200E y \u200F
-            const regex = /^[\u200e\u200f]*[\(\[](\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*([apAP]\.?\s*[mM]\.?)[\)\]]\s*(.*?):\s*(.*)$/;
+            // REGEX CORREGIDO: Soporta [3/7/25, 3:38:00 p.m.] con o sin paréntesis extra
+            // Detecta la fecha, la hora, el p.m. y separa el autor del mensaje
+            const regex = /^[\u200e\u200f]*[\(\[]?(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*([apAP]\.?\s*[mM]\.?)[\)\]]?\s*(.*?):\s*(.*)$/;
 
-            let currentHTML = "";
+            let htmlBuffer = "";
+            let messageCount = 0;
 
             lines.forEach(line => {
                 const cleanLine = line.trim();
                 if (!cleanLine) return;
 
-                const match = cleanLine.match(regex);
+                const m = cleanLine.match(regex);
 
-                if (match) {
-                    const time = match[2] + " " + match[3].replace(/\./g, "").toUpperCase();
-                    const author = match[4];
-                    let content = match[5];
+                if (m) {
+                    messageCount++;
+                    const time = `${m[2]} ${m[3].replace(/\./g, "").toUpperCase()}`;
+                    const author = m[4];
+                    let content = m[5];
 
-                    // Buscar media
                     let mediaTag = "";
                     for (let f in mediaMap) {
                         if (content.includes(f)) {
@@ -111,32 +104,39 @@
                             } else {
                                 mediaTag = `<img class="media-content" src="${mediaMap[f]}" onclick="window.open(this.src)">`;
                             }
-                            // Limpiar texto basura del mensaje
-                            content = content.split(f)[0]; 
+                            content = content.replace(f, "").replace("<adjunto: >", "").replace("(archivo adjunto)", "").trim();
                             break;
                         }
                     }
 
-                    currentHTML += `
+                    htmlBuffer += `
                         <div class="message">
-                            <span class="msg-author">${author}</span>
+                            <span class="msg-author" style="color:${getColor(author)}">${author}</span>
                             ${mediaTag}
                             <span>${content}</span>
                             <div class="msg-time">${time}</div>
                         </div>`;
+                } else if (messageCount > 0) {
+                    // Es una continuación del mensaje anterior
+                    htmlBuffer = htmlBuffer.replace(/(<\/span>)\s*(<div class="msg-time">)/, `$1<br>${cleanLine}$2`);
                 }
             });
 
-            if (currentHTML === "") {
-                container.innerHTML = `<div style="background:white; padding:15px; border-radius:8px; font-size:12px;">
-                    <strong>No se reconoció el formato de los mensajes.</strong><br><br>
-                    Copia esta línea y envíamela para arreglarlo:<br>
-                    <code style="display:block; background:#eee; padding:5px; margin-top:5px;">${lines[0].substring(0,100)}</code>
+            if (messageCount === 0) {
+                container.innerHTML = `<div style="background:white; padding:15px; border-radius:8px; font-size:12px; margin:10px; border:1px solid red;">
+                    <strong>Formato no detectado aún.</strong><br><br>
+                    Primera línea:<br><code>${lines[0].substring(0,100)}</code>
                 </div>`;
             } else {
-                container.innerHTML = currentHTML;
+                container.innerHTML = htmlBuffer;
                 container.scrollTop = container.scrollHeight;
             }
+        }
+
+        function getColor(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            return `hsl(${Math.abs(hash) % 360}, 65%, 35%)`;
         }
     </script>
 </body>
