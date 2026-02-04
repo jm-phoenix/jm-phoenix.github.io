@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WhatsApp Viewer Personalizado</title>
+    <title>WhatsApp Viewer Pro - Selección de Usuario</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root { --wa-header: #008069; --wa-bg: #efeae2; --my-msg: #d9fdd3; --other-msg: #ffffff; }
@@ -13,56 +13,56 @@
         .chat-container { 
             width: 100%; max-width: 500px; margin: 0 auto; background-color: var(--wa-bg); 
             background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); 
-            display: flex; flex-direction: column; height: 100dvh;
+            display: flex; flex-direction: column; height: 100dvh; position: relative;
         }
 
-        header { background: var(--wa-header); color: white; padding: 12px 15px; font-weight: bold; flex-shrink: 0; z-index: 20; }
-        
-        /* Selector de Usuario con Scroll */
-        #user-selector {
-            background: #fff; padding: 15px; border-bottom: 1px solid #ccc; display: none; flex-direction: column; gap: 10px;
+        header { background: var(--wa-header); color: white; padding: 12px 15px; font-weight: bold; flex-shrink: 0; z-index: 10; }
+
+        /* Pantalla de Selección (Overlay Vertical) */
+        #user-modal {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(17, 27, 33, 0.95); z-index: 100;
+            flex-direction: column; align-items: center; justify-content: center; padding: 20px;
         }
-        .selector-label { font-size: 13px; color: #54656f; font-weight: bold; }
-        .buttons-scroll { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 5px; scrollbar-width: thin; }
-        .user-btn { 
-            flex-shrink: 0; padding: 8px 16px; border-radius: 20px; border: 1px solid var(--wa-header);
-            background: #fff; color: var(--wa-header); cursor: pointer; font-size: 13px; font-weight: 500;
+        .modal-content {
+            background: white; width: 100%; max-height: 80%; border-radius: 12px;
+            display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
-        .user-btn.active { background: var(--wa-header); color: #fff; }
+        .modal-header { padding: 20px; border-bottom: 1px solid #eee; text-align: center; }
+        .modal-header h3 { color: #111b21; font-size: 18px; }
+        .user-list { overflow-y: auto; padding: 10px; }
+        .user-item {
+            display: block; width: 100%; padding: 15px; text-align: left;
+            background: none; border: none; border-bottom: 1px solid #f0f0f0;
+            font-size: 16px; color: var(--wa-header); cursor: pointer; font-weight: 500;
+        }
+        .user-item:last-child { border: none; }
+        .user-item:active { background: #f0f2f5; }
 
         #chat-window { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
 
-        .date-divider {
-            align-self: center; background: rgba(225, 245, 254, 0.95); color: #54656f;
-            font-size: 11px; padding: 5px 15px; border-radius: 8px; margin: 15px 0; 
-            text-transform: uppercase; font-weight: 600; box-shadow: 0 1px 1px rgba(0,0,0,0.1);
-        }
-
-        /* Burbujas dinámicas */
+        /* Burbujas */
         .message { 
-            max-width: 80%; width: fit-content; padding: 6px 9px; border-radius: 8px; 
+            max-width: 80%; width: fit-content; padding: 8px 10px; border-radius: 8px; 
             font-size: 14.5px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); word-wrap: break-word; position: relative;
         }
         .message.incoming { align-self: flex-start; background: var(--other-msg); border-top-left-radius: 0; }
         .message.outgoing { align-self: flex-end; background: var(--my-msg); border-top-right-radius: 0; }
 
+        .date-divider {
+            align-self: center; background: rgba(225, 245, 254, 0.95); color: #54656f;
+            font-size: 11px; padding: 5px 15px; border-radius: 8px; margin: 15px 0; font-weight: 600;
+        }
+
         .msg-author { font-size: 11px; font-weight: bold; display: block; margin-bottom: 3px; }
         .msg-time { font-size: 9px; color: #667781; display: block; text-align: right; margin-top: 4px; }
         .media-content { display: block; width: 100%; border-radius: 6px; margin-bottom: 5px; cursor: pointer; }
 
-        .file-attach {
-            display: flex; align-items: center; background: rgba(0,0,0,0.05); 
-            padding: 10px; border-radius: 8px; text-decoration: none; color: #111b21; margin: 5px 0;
-        }
-
-        #theater {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: black; z-index: 1000; justify-content: center; align-items: center;
-        }
-        #theater img, #theater video { max-width: 100%; max-height: 100%; }
-
         footer { background: #f0f2f5; padding: 10px; border-top: 1px solid #ddd; flex-shrink: 0; }
         .upload-btn { background: white; border: none; border-radius: 20px; width: 100%; padding: 12px; cursor: pointer; display: flex; justify-content: space-between; font-size: 14px; color: #54656f; }
+        
+        #theater { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; justify-content: center; align-items: center; }
+        #theater img, #theater video { max-width: 100%; max-height: 100%; }
     </style>
 </head>
 <body>
@@ -72,21 +72,26 @@
     </div>
 
     <div class="chat-container">
-        <header id="chat-header">Visor Pro</header>
-        
-        <div id="user-selector">
-            <span class="selector-label">¿Quién eres tú? (Selecciona para alinear a la derecha)</span>
-            <div id="users-list" class="buttons-scroll"></div>
+        <div id="user-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>¿Quién eres tú?</h3>
+                    <p style="font-size: 12px; color: #666; margin-top: 5px;">Selecciona tu nombre para alinear tus mensajes a la derecha.</p>
+                </div>
+                <div id="user-list-target" class="user-list"></div>
+            </div>
         </div>
 
+        <header id="chat-header">Historial de WhatsApp</header>
+        
         <div id="chat-window">
-            <div style="text-align:center; margin-top:50px; color:#666;">Carga el archivo .zip para empezar</div>
+            <div style="text-align:center; margin-top:50px; color:#666;">Carga el archivo .zip para comenzar</div>
         </div>
 
         <footer>
             <input type="file" id="file-input" accept=".zip" style="display:none">
             <button class="upload-btn" onclick="document.getElementById('file-input').click()">
-                <span>Cargar Chat ZIP</span><span>📎</span>
+                <span>Cargar Backup</span><span>📎</span>
             </button>
         </footer>
     </div>
@@ -94,12 +99,11 @@
     <script>
         let allFilesMap = {};
         let rawTextGlobal = "";
-        let currentUser = null;
 
         document.getElementById('file-input').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            document.getElementById('chat-window').innerHTML = '<div style="text-align:center; padding:20px;">Analizando...</div>';
+            document.getElementById('chat-window').innerHTML = '<div style="text-align:center; padding:20px;">Analizando archivo...</div>';
 
             try {
                 const zip = new JSZip();
@@ -113,13 +117,13 @@
                 const txtFile = Object.values(content.files).find(f => f.name.endsWith('.txt') && !f.name.includes('MACOSX'));
                 rawTextGlobal = await txtFile.async("string");
                 
-                detectUsers(rawTextGlobal);
-            } catch (err) { alert(err.message); }
+                showUserSelection();
+            } catch (err) { alert("Error al procesar: " + err.message); }
         });
 
-        function detectUsers(text) {
+        function showUserSelection() {
             const regex = /^[\u200e\u200f]*[\(\[]?\d{1,2}\/\d{1,2}\/\d{2,4},.*?[apAP]\.?\s*[mM]\.?[\)\]]?\s*(.*?):\s*/;
-            const lines = text.split('\n');
+            const lines = rawTextGlobal.split('\n');
             const users = new Set();
             
             lines.forEach(line => {
@@ -127,25 +131,24 @@
                 if (m) users.add(m[1].trim());
             });
 
-            const list = document.getElementById('users-list');
-            list.innerHTML = "";
+            const listTarget = document.getElementById('user-list-target');
+            listTarget.innerHTML = "";
+            
             users.forEach(user => {
                 const btn = document.createElement('button');
-                btn.className = 'user-btn';
+                btn.className = 'user-item';
                 btn.innerText = user;
                 btn.onclick = () => {
-                    document.querySelectorAll('.user-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentUser = user;
-                    renderChat();
+                    document.getElementById('user-modal').style.display = 'none';
+                    renderChat(user);
                 };
-                list.appendChild(btn);
+                listTarget.appendChild(btn);
             });
-            document.getElementById('user-selector').style.display = 'flex';
-            document.getElementById('chat-window').innerHTML = '<div style="text-align:center; padding:20px;">Selecciona tu nombre arriba para ver el chat.</div>';
+
+            document.getElementById('user-modal').style.display = 'flex';
         }
 
-        function renderChat() {
+        function renderChat(currentUser) {
             const container = document.getElementById('chat-window');
             container.innerHTML = "";
             const lines = rawTextGlobal.split('\n');
@@ -173,27 +176,28 @@
 
                     messageCount++;
                     const isMe = (author === currentUser);
-                    let attachmentsHTML = "";
+                    let mediaHTML = "";
                     
                     for (let fName in allFilesMap) {
                         if (body.toLowerCase().includes(fName.toLowerCase())) {
                             const fileObj = allFilesMap[fName];
                             if (fName.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-                                attachmentsHTML += `<img class="media-content" src="${fileObj.url}" onclick="openTheater('${fileObj.url}',false)">`;
+                                mediaHTML = `<img class="media-content" src="${fileObj.url}" onclick="openTheater('${fileObj.url}',false)">`;
                             } else if (fName.match(/\.(mp4|mov)$/i)) {
-                                attachmentsHTML += `<video class="media-content" src="${fileObj.url}" onclick="openTheater('${fileObj.url}',true)"></video>`;
+                                mediaHTML = `<video class="media-content" src="${fileObj.url}" onclick="openTheater('${fileObj.url}',true)"></video>`;
                             } else {
                                 let icon = fName.endsWith('.pdf') ? "📕" : (fName.endsWith('.opus') ? "🎤" : "📄");
-                                attachmentsHTML += `<a href="${fileObj.url}" download="${fName}" class="file-attach"><span>${icon}</span> <span style="font-size:11px; margin-left:5px;">${fName}</span></a>`;
+                                mediaHTML = `<a href="${fileObj.url}" download="${fName}" class="file-attach"><span>${icon}</span> <span style="font-size:11px; margin-left:8px;">${fName}</span></a>`;
                             }
                             body = body.replace(new RegExp(fName, 'gi'), "").replace("<adjunto: >", "").trim();
+                            break;
                         }
                     }
 
                     html += `
                         <div class="message ${isMe ? 'outgoing' : 'incoming'}">
                             ${!isMe ? `<span class="msg-author" style="color:${getColor(author)}">${author}</span>` : ''}
-                            ${attachmentsHTML}
+                            ${mediaHTML}
                             <span>${body}</span>
                             <span class="msg-time">${time}</span>
                         </div>`;
@@ -201,7 +205,8 @@
             });
 
             container.innerHTML = html;
-            container.scrollTop = container.scrollHeight;
+            container.scrollTop = 0; // Empieza desde arriba
+            document.getElementById('chat-header').innerText = "Chat de " + currentUser;
         }
 
         function openTheater(url, isVid) {
