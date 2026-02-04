@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WhatsApp Viewer Cronológico</title>
+    <title>WhatsApp Viewer Pro v3</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        :root { --wa-header: #008069; --wa-bg: #efeae2; --date-bg: rgba(225, 245, 254, 0.9); }
+        :root { --wa-header: #008069; --wa-bg: #efeae2; --date-bg: rgba(225, 245, 254, 0.95); }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body, html { height: 100%; width: 100%; font-family: -apple-system, sans-serif; background-color: #111b21; overflow: hidden; }
         
@@ -19,12 +19,11 @@
         header { background: var(--wa-header); color: white; padding: 12px 15px; font-weight: bold; flex-shrink: 0; z-index: 20; }
         #chat-window { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
 
-        /* Burbuja de Fecha Centralizada */
         .date-divider {
             align-self: center; background: var(--date-bg); color: #54656f;
-            font-size: 11px; padding: 5px 12px; border-radius: 7px;
-            margin: 10px 0; text-transform: uppercase; font-weight: 500;
-            box-shadow: 0 1px 0.5px rgba(0,0,0,0.1);
+            font-size: 11px; padding: 5px 15px; border-radius: 8px;
+            margin: 15px 0; text-transform: uppercase; font-weight: 600;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1); sticky: top;
         }
 
         .message { 
@@ -36,7 +35,15 @@
         .msg-author { font-size: 11px; font-weight: bold; display: block; margin-bottom: 3px; color: #d85d28; }
         .msg-time { font-size: 9px; color: #667781; display: block; text-align: right; margin-top: 4px; }
         .media-content { display: block; width: 100%; border-radius: 6px; margin-bottom: 5px; cursor: pointer; }
-        
+
+        /* Estilo para archivos descargables (PDF, VCF, OPUS) */
+        .file-attach {
+            display: flex; align-items: center; background: #f0f2f5; 
+            padding: 10px; border-radius: 6px; text-decoration: none; 
+            color: #111b21; margin: 5px 0; border: 1px solid #ddd;
+        }
+        .file-icon { font-size: 20px; margin-right: 10px; }
+
         #theater {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: black; z-index: 1000; justify-content: center; align-items: center;
@@ -45,6 +52,8 @@
 
         footer { background: #f0f2f5; padding: 10px; border-top: 1px solid #ddd; flex-shrink: 0; }
         .upload-btn { background: white; border: none; border-radius: 20px; width: 100%; padding: 12px; cursor: pointer; display: flex; justify-content: space-between; font-size: 14px; color: #54656f; }
+        
+        a.chat-link { color: #007bff; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -54,20 +63,20 @@
     </div>
 
     <div class="chat-container">
-        <header id="chat-header">WhatsApp Viewer</header>
+        <header id="chat-header">WhatsApp Viewer Pro</header>
         <div id="chat-window">
-            <div style="text-align:center; margin-top:50px; color:#666;">Carga el archivo .zip</div>
+            <div style="text-align:center; margin-top:50px; color:#666;">Selecciona el archivo .zip de tu exportación</div>
         </div>
         <footer>
             <input type="file" id="file-input" accept=".zip" style="display:none">
             <button class="upload-btn" onclick="document.getElementById('file-input').click()">
-                <span>Seleccionar Backup</span><span>📎</span>
+                <span>Cargar Chat ZIP</span><span>📎</span>
             </button>
         </footer>
     </div>
 
     <script>
-        let mediaMap = {};
+        let allFilesMap = {};
 
         function openTheater(url, isVid) {
             const t = document.getElementById('theater');
@@ -75,22 +84,28 @@
             t.style.display = 'flex';
         }
 
+        // Función para convertir URLs en texto a enlaces clickeables
+        function linkify(text) {
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            return text.replace(urlRegex, (url) => {
+                return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="chat-link">${url}</a>`;
+            });
+        }
+
         document.getElementById('file-input').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
             const win = document.getElementById('chat-window');
-            win.innerHTML = '<div style="text-align:center; padding:20px;">Procesando...</div>';
+            win.innerHTML = '<div style="text-align:center; padding:20px;">Extrayendo archivos del ZIP...</div>';
 
             try {
                 const zip = new JSZip();
                 const content = await zip.loadAsync(file);
-                mediaMap = {};
+                allFilesMap = {};
 
                 for (let f in content.files) {
-                    if (f.match(/\.(jpg|jpeg|png|gif|mp4|mov|webp)$/i)) {
-                        const blob = await content.files[f].async("blob");
-                        mediaMap[f] = URL.createObjectURL(blob);
-                    }
+                    const blob = await content.files[f].async("blob");
+                    allFilesMap[f] = URL.createObjectURL(blob);
                 }
 
                 const txtFile = Object.values(content.files).find(f => f.name.endsWith('.txt') && !f.name.includes('MACOSX'));
@@ -117,25 +132,39 @@
                 const m = cleanLine.match(regex);
 
                 if (m) {
-                    const currentDate = m[1]; // La fecha capturada: M/D/A
+                    const currentDate = m[1];
                     const time = `${m[2]} ${m[3].replace(/\./g, "").toUpperCase()}`;
                     const author = m[4];
                     let body = m[5];
 
-                    // INSERTAR DIVISOR DE FECHA
+                    // Divisor de fecha corregido
                     if (currentDate !== lastDate) {
                         html += `<div class="date-divider">${currentDate}</div>`;
                         lastDate = currentDate;
                     }
 
                     messageCount++;
-                    let mediaPart = "";
-                    for (let f in mediaMap) {
+                    let attachmentHTML = "";
+                    
+                    // Buscar adjuntos de todo tipo
+                    for (let f in allFilesMap) {
                         if (body.includes(f)) {
-                            if (f.match(/\.(mp4|mov)$/i)) {
-                                mediaPart = `<video class="media-content" src="${mediaMap[f]}" onclick="event.stopPropagation(); openTheater('${mediaMap[f]}',true)"></video>`;
+                            if (f.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                                attachmentHTML = `<img class="media-content" src="${allFilesMap[f]}" onclick="openTheater('${allFilesMap[f]}',false)">`;
+                            } else if (f.match(/\.(mp4|mov)$/i)) {
+                                attachmentHTML = `<video class="media-content" src="${allFilesMap[f]}" onclick="openTheater('${allFilesMap[f]}',true)"></video>`;
                             } else {
-                                mediaPart = `<img class="media-content" src="${mediaMap[f]}" onclick="event.stopPropagation(); openTheater('${mediaMap[f]}',false)">`;
+                                // PDF, VCF, OPUS, etc.
+                                let icon = "📄";
+                                if (f.endsWith('.opus')) icon = "🎤";
+                                if (f.endsWith('.vcf')) icon = "👤";
+                                if (f.endsWith('.pdf')) icon = "📕";
+                                
+                                attachmentHTML = `
+                                    <a href="${allFilesMap[f]}" download="${f}" class="file-attach">
+                                        <span class="file-icon">${icon}</span>
+                                        <span style="font-size:12px; overflow:hidden; text-overflow:ellipsis;">${f}</span>
+                                    </a>`;
                             }
                             body = body.replace(f, "").replace("<adjunto: >", "").replace("(archivo adjunto)", "").trim();
                             break;
@@ -145,24 +174,19 @@
                     html += `
                         <div class="message">
                             <span class="msg-author">${author}</span>
-                            ${mediaPart}
-                            <span>${body}</span>
+                            ${attachmentHTML}
+                            <span>${linkify(body)}</span>
                             <span class="msg-time">${time}</span>
                         </div>`;
                 } else if (messageCount > 0) {
-                    html = html.replace(/(<\/span>)\s*(<span class="msg-time">)/, `$1<br>${cleanLine}$2`);
+                    // Continuación de mensajes multilínea
+                    html = html.replace(/(<\/span>)\s*(<span class="msg-time">)/, `$1<br>${linkify(cleanLine)}$2`);
                 }
             });
 
             container.innerHTML = html;
             container.scrollTop = container.scrollHeight;
-            document.getElementById('chat-header').innerText = "Chat Cargado";
-        }
-
-        function getColor(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            return `hsl(${Math.abs(hash) % 360}, 60%, 35%)`;
+            document.getElementById('chat-header').innerText = "Historial Completo";
         }
     </script>
 </body>
