@@ -3,7 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WhatsApp Viewer Pro - Fixed</title>
+    
+    <title>Visor de Chats de WhatsApp | Privado y Online</title>
+    <meta name="description" content="La herramienta más segura para visualizar tus chats de WhatsApp exportados. Recrea la interfaz original, descarga PDFs y audios directamente desde tu ZIP de forma privada.">
+    
+    <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="none"/><path d="M256 96C176 96 112 154 112 230c0 36 14 68 36 92l-12 64 64-12c22 12 44 18 68 18 80 0 144-58 144-134S336 96 256 96z" fill="%2325D366"/><text x="256" y="270" text-anchor="middle" font-size="96" font-weight="700" font-family="Arial, Helvetica, sans-serif" fill="%23FFFFFF">zip</text></svg>'>
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jm-phoenix.github.io/">
+    <meta property="og:title" content="Visor de Chats de WhatsApp Pro">
+    <meta property="og:description" content="Visualiza tus conversaciones exportadas con su diseño original. Privacidad total: tus datos no salen de tu dispositivo.">
+    <meta property="og:image" content="https://i.postimg.cc/hjTMg3Jz/IMG-2113.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://i.postimg.cc/hjTMg3Jz/IMG-2113.jpg">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root { --wa-header: #008069; --wa-bg: #efeae2; --my-msg: #d9fdd3; --other-msg: #ffffff; }
@@ -18,6 +33,7 @@
 
         header { background: var(--wa-header); color: white; padding: 12px 15px; font-weight: bold; flex-shrink: 0; z-index: 10; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
+        /* Modal de Selección */
         #user-modal {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(17, 27, 33, 0.95); z-index: 100;
@@ -45,7 +61,6 @@
         .upload-btn { background: white; border: none; border-radius: 20px; width: 100%; padding: 12px; cursor: pointer; display: flex; justify-content: space-between; font-size: 14px; color: #54656f; }
         
         #theater { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; justify-content: center; align-items: center; }
-        #theater img, #theater video { max-width: 100%; max-height: 100%; }
     </style>
 </head>
 <body>
@@ -62,13 +77,15 @@
             </div>
         </div>
 
-        <header id="chat-header">Esperando chat...</header>
-        <div id="chat-window"><div style="text-align:center; margin-top:50px; color:#666;">Carga el archivo .zip</div></div>
+        <header id="chat-header">Esperando backup...</header>
+        <div id="chat-window">
+            <div style="text-align:center; margin-top:50px; color:#666;">Carga el archivo .zip para comenzar</div>
+        </div>
 
         <footer>
             <input type="file" id="file-input" accept=".zip" style="display:none">
             <button class="upload-btn" onclick="document.getElementById('file-input').click()">
-                <span>Cargar Backup</span><span>📎</span>
+                <span>Cargar Chat ZIP</span><span>📎</span>
             </button>
         </footer>
     </div>
@@ -85,7 +102,7 @@
         document.getElementById('file-input').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            document.getElementById('chat-window').innerHTML = '<div style="text-align:center; padding:20px;">Analizando...</div>';
+            document.getElementById('chat-window').innerHTML = '<div style="text-align:center; padding:20px;">Abriendo ZIP...</div>';
 
             try {
                 const zip = new JSZip();
@@ -99,27 +116,24 @@
                 const txtFile = Object.values(content.files).find(f => f.name.endsWith('.txt') && !f.name.includes('MACOSX'));
                 rawTextGlobal = await txtFile.async("string");
                 
-                // TITULO CORREGIDO: Busca el primer nombre real después de la fecha/hora
+                // Título dinámico basado en el primer mensaje real
                 const lines = rawTextGlobal.split('\n');
                 const titleRegex = /^[\u200e\u200f]*[\(\[]?\d{1,2}\/\d{1,2}\/\d{2,4},.*?[apAP]\.?\s*[mM]\.?[\)\]]?\s*(.*?):\s*/;
                 for(let line of lines) {
                     const match = line.match(titleRegex);
                     if(match && match[1]) {
-                        // En tu caso detectará "Wilden U 2025"
                         document.getElementById('chat-header').innerText = "Chat de " + match[1].trim();
                         break;
                     }
                 }
-
                 showUserSelection();
-            } catch (err) { alert(err.message); }
+            } catch (err) { alert("Error: " + err.message); }
         });
 
         function showUserSelection() {
             const regex = /^[\u200e\u200f]*[\(\[]?.*?,.*?[apAP]\.?\s*[mM]\.?[\)\]]?\s*(.*?):\s*/;
-            const lines = rawTextGlobal.split('\n');
             const users = new Set();
-            lines.forEach(line => {
+            rawTextGlobal.split('\n').forEach(line => {
                 const m = line.match(regex);
                 if (m) users.add(m[1].trim());
             });
@@ -184,12 +198,11 @@
                         <div class="message ${isMe ? 'outgoing' : 'incoming'}">
                             ${!isMe ? `<span class="msg-author" style="color:${getColor(cleanAuthor)}">${cleanAuthor}</span>` : ''}
                             ${mediaHTML}
-                            <span class="body-text">${linkify(body)}</span>
+                            <span>${linkify(body)}</span>
                             <span class="msg-time">${time}</span>
                         </div>`;
                 }
             });
-
             container.innerHTML = html;
             container.scrollTop = 0;
         }
