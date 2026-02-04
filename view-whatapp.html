@@ -3,93 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WhatsApp Viewer Fix</title>
+    <title>WhatsApp Viewer Cronológico</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        :root { --wa-header: #008069; --wa-bg: #efeae2; }
-        
-        /* Reset total para evitar desbordamientos */
+        :root { --wa-header: #008069; --wa-bg: #efeae2; --date-bg: rgba(225, 245, 254, 0.9); }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-        body, html { 
-            height: 100%; width: 100%; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #111b21; overflow: hidden;
-        }
-
+        body, html { height: 100%; width: 100%; font-family: -apple-system, sans-serif; background-color: #111b21; overflow: hidden; }
+        
         .chat-container { 
-            width: 100%; max-width: 500px; margin: 0 auto;
-            background-color: var(--wa-bg); 
+            width: 100%; max-width: 500px; margin: 0 auto; background-color: var(--wa-bg); 
             background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); 
             display: flex; flex-direction: column; height: 100dvh;
         }
 
-        header { 
-            background: var(--wa-header); color: white; padding: 12px 15px; 
-            font-weight: bold; flex-shrink: 0; z-index: 20;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        header { background: var(--wa-header); color: white; padding: 12px 15px; font-weight: bold; flex-shrink: 0; z-index: 20; }
+        #chat-window { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+
+        /* Burbuja de Fecha Centralizada */
+        .date-divider {
+            align-self: center; background: var(--date-bg); color: #54656f;
+            font-size: 11px; padding: 5px 12px; border-radius: 7px;
+            margin: 10px 0; text-transform: uppercase; font-weight: 500;
+            box-shadow: 0 1px 0.5px rgba(0,0,0,0.1);
         }
 
-        #chat-window { 
-            flex: 1; overflow-y: auto; padding: 10px; 
-            display: flex; flex-direction: column; gap: 8px;
-        }
-
-        /* Burbuja al 80% y forzada a no desbordar */
         .message { 
-            max-width: 80%; width: fit-content;
-            padding: 8px 10px; border-radius: 8px; 
+            max-width: 80%; width: fit-content; padding: 8px 10px; border-radius: 8px; 
             font-size: 14px; background: white; align-self: flex-start; 
-            box-shadow: 0 1px 1px rgba(0,0,0,0.1); 
-            word-wrap: break-word; overflow-wrap: break-word;
-            color: #111b21; position: relative;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1); word-wrap: break-word; color: #111b21;
         }
 
         .msg-author { font-size: 11px; font-weight: bold; display: block; margin-bottom: 3px; color: #d85d28; }
         .msg-time { font-size: 9px; color: #667781; display: block; text-align: right; margin-top: 4px; }
-
-        /* Media dentro de la burbuja */
-        .media-content { 
-            display: block; width: 100%; max-width: 100%; 
-            height: auto; border-radius: 6px; margin-bottom: 5px; 
-            cursor: pointer; object-fit: contain;
-        }
+        .media-content { display: block; width: 100%; border-radius: 6px; margin-bottom: 5px; cursor: pointer; }
         
-        /* MODO TEATRO CORREGIDO */
-        #theater-overlay {
-            display: none; position: fixed; top: 0; left: 0; 
-            width: 100%; height: 100%; background: black; 
-            z-index: 1000; justify-content: center; align-items: center;
+        #theater {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: black; z-index: 1000; justify-content: center; align-items: center;
         }
-        #theater-overlay img, #theater-overlay video { 
-            max-width: 100%; max-height: 100%; 
-        }
-        #close-theater {
-            position: absolute; top: 20px; right: 20px; 
-            color: white; font-size: 35px; z-index: 1001;
-        }
+        #theater img, #theater video { max-width: 100%; max-height: 100%; }
 
         footer { background: #f0f2f5; padding: 10px; border-top: 1px solid #ddd; flex-shrink: 0; }
-        .upload-btn { 
-            background: white; border: none; border-radius: 20px; width: 100%; 
-            padding: 12px; cursor: pointer; display: flex; justify-content: space-between; 
-            font-size: 14px; color: #54656f; box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
+        .upload-btn { background: white; border: none; border-radius: 20px; width: 100%; padding: 12px; cursor: pointer; display: flex; justify-content: space-between; font-size: 14px; color: #54656f; }
     </style>
 </head>
 <body>
 
-    <div id="theater-overlay" onclick="closeTheater()">
-        <div id="close-theater">&times;</div>
-        <div id="theater-target" style="width:100%; height:100%; display:flex; justify-content:center; align-items:center;"></div>
+    <div id="theater" onclick="this.style.display='none'; this.querySelector('div').innerHTML=''">
+        <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center;"></div>
     </div>
 
     <div class="chat-container">
-        <header id="chat-header">WhatsApp Archive</header>
+        <header id="chat-header">WhatsApp Viewer</header>
         <div id="chat-window">
-            <div id="init-msg" style="text-align:center; margin-top:50px; color:#666;">
-                Esperando archivo .zip...
-            </div>
+            <div style="text-align:center; margin-top:50px; color:#666;">Carga el archivo .zip</div>
         </div>
         <footer>
             <input type="file" id="file-input" accept=".zip" style="display:none">
@@ -102,46 +69,35 @@
     <script>
         let mediaMap = {};
 
-        function openTheater(url, isVideo) {
-            const overlay = document.getElementById('theater-overlay');
-            const target = document.getElementById('theater-target');
-            target.innerHTML = isVideo ? 
-                `<video src="${url}" controls autoplay></video>` : 
-                `<img src="${url}">`;
-            overlay.style.display = 'flex';
-        }
-
-        function closeTheater() {
-            const overlay = document.getElementById('theater-overlay');
-            const target = document.getElementById('theater-target');
-            target.innerHTML = "";
-            overlay.style.display = 'none';
+        function openTheater(url, isVid) {
+            const t = document.getElementById('theater');
+            t.querySelector('div').innerHTML = isVid ? `<video src="${url}" controls autoplay></video>` : `<img src="${url}">`;
+            t.style.display = 'flex';
         }
 
         document.getElementById('file-input').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            const chatWindow = document.getElementById('chat-window');
-            chatWindow.innerHTML = '<div style="text-align:center; padding:20px; color:#54656f;">Cargando archivos...</div>';
+            const win = document.getElementById('chat-window');
+            win.innerHTML = '<div style="text-align:center; padding:20px;">Procesando...</div>';
 
             try {
                 const zip = new JSZip();
-                const zipContent = await zip.loadAsync(file);
+                const content = await zip.loadAsync(file);
                 mediaMap = {};
 
-                const files = Object.keys(zipContent.files);
-                for (let f of files) {
+                for (let f in content.files) {
                     if (f.match(/\.(jpg|jpeg|png|gif|mp4|mov|webp)$/i)) {
-                        const blob = await zipContent.files[f].async("blob");
+                        const blob = await content.files[f].async("blob");
                         mediaMap[f] = URL.createObjectURL(blob);
                     }
                 }
 
-                const txtFile = Object.values(zipContent.files).find(f => f.name.endsWith('.txt') && !f.name.includes('MACOSX'));
+                const txtFile = Object.values(content.files).find(f => f.name.endsWith('.txt') && !f.name.includes('MACOSX'));
                 const rawText = await txtFile.async("string");
                 renderChat(rawText);
             } catch (err) {
-                chatWindow.innerHTML = `<div style="color:red; padding:20px;">Error: ${err.message}</div>`;
+                win.innerHTML = `<div style="color:red; padding:20px;">Error: ${err.message}</div>`;
             }
         });
 
@@ -152,6 +108,7 @@
             const regex = /^[\u200e\u200f]*[\(\[]?(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*([apAP]\.?\s*[mM]\.?)[\)\]]?\s*(.*?):\s*(.*)$/;
 
             let html = "";
+            let lastDate = "";
             let messageCount = 0;
 
             lines.forEach(line => {
@@ -160,18 +117,25 @@
                 const m = cleanLine.match(regex);
 
                 if (m) {
-                    messageCount++;
+                    const currentDate = m[1]; // La fecha capturada: M/D/A
+                    const time = `${m[2]} ${m[3].replace(/\./g, "").toUpperCase()}`;
                     const author = m[4];
                     let body = m[5];
-                    const time = `${m[2]} ${m[3].replace(/\./g, "").toUpperCase()}`;
 
+                    // INSERTAR DIVISOR DE FECHA
+                    if (currentDate !== lastDate) {
+                        html += `<div class="date-divider">${currentDate}</div>`;
+                        lastDate = currentDate;
+                    }
+
+                    messageCount++;
                     let mediaPart = "";
                     for (let f in mediaMap) {
                         if (body.includes(f)) {
                             if (f.match(/\.(mp4|mov)$/i)) {
-                                mediaPart = `<video class="media-content" src="${mediaMap[f]}" onclick="event.stopPropagation(); openTheater('${mediaMap[f]}', true)"></video>`;
+                                mediaPart = `<video class="media-content" src="${mediaMap[f]}" onclick="event.stopPropagation(); openTheater('${mediaMap[f]}',true)"></video>`;
                             } else {
-                                mediaPart = `<img class="media-content" src="${mediaMap[f]}" onclick="event.stopPropagation(); openTheater('${mediaMap[f]}', false)">`;
+                                mediaPart = `<img class="media-content" src="${mediaMap[f]}" onclick="event.stopPropagation(); openTheater('${mediaMap[f]}',false)">`;
                             }
                             body = body.replace(f, "").replace("<adjunto: >", "").replace("(archivo adjunto)", "").trim();
                             break;
@@ -193,6 +157,12 @@
             container.innerHTML = html;
             container.scrollTop = container.scrollHeight;
             document.getElementById('chat-header').innerText = "Chat Cargado";
+        }
+
+        function getColor(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            return `hsl(${Math.abs(hash) % 360}, 60%, 35%)`;
         }
     </script>
 </body>
