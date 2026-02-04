@@ -3,43 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
     <title>Visor de Chats de WhatsApp | Pro</title>
     
     <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="none"/><path d="M256 96C176 96 112 154 112 230c0 36 14 68 36 92l-12 64 64-12c22 12 44 18 68 18 80 0 144-58 144-134S336 96 256 96z" fill="%2325D366"/><text x="256" y="270" text-anchor="middle" font-size="96" font-weight="700" font-family="Arial, Helvetica, sans-serif" fill="%23FFFFFF">zip</text></svg>'>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        :root { --wa-header: #008069; --wa-bg: #efeae2; --my-msg: #d9fdd3; --other-msg: #ffffff; }
+        :root { --wa-header: #008069; --wa-bg: #efeae2; --my-msg: #d9fdd3; --other-msg: #ffffff; --link-color: #027eb5; }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body, html { height: 100%; width: 100%; font-family: -apple-system, sans-serif; background-color: #111b21; overflow: hidden; }
+        .chat-container { width: 100%; max-width: 500px; margin: 0 auto; background-color: var(--wa-bg); background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); display: flex; flex-direction: column; height: 100dvh; position: relative; }
+        header { background: var(--wa-header); color: white; padding: 12px 15px; font-weight: bold; flex-shrink: 0; z-index: 100; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
-        .chat-container { 
-            width: 100%; max-width: 500px; margin: 0 auto; background-color: var(--wa-bg); 
-            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); 
-            display: flex; flex-direction: column; height: 100dvh; position: relative;
-        }
-
-        header { 
-            background: var(--wa-header); color: white; padding: 12px 15px; 
-            font-weight: bold; flex-shrink: 0; z-index: 100; font-size: 16px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-        }
-
-        #chat-area-wrapper {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
+        #chat-area-wrapper { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+        
+        /* Scrollbar estilo WhatsApp.html */
         #chat-window { 
-            flex: 1; overflow-y: scroll; overflow-x: hidden; padding: 10px; display: flex; flex-direction: column; gap: 8px; 
-            scroll-behavior: smooth; 
-            -webkit-overflow-scrolling: touch;
+            flex: 1; overflow-y: scroll; padding: 10px; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; 
         }
-
         #chat-window::-webkit-scrollbar { width: 14px !important; display: block !important; }
         #chat-window::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
         #chat-window::-webkit-scrollbar-thumb { 
@@ -47,69 +28,58 @@
             border: 2px solid rgba(255,255,255,0.1); background-clip: content-box; 
         }
 
+        /* Indicador flotante dinámico */
         #scroll-date-indicator {
-            position: absolute; 
-            right: 20px; 
-            top: 0; 
-            background: rgba(0, 0, 0, 0.85); color: white; padding: 6px 14px;
-            border-radius: 20px; font-size: 12px; font-weight: bold;
-            opacity: 0; transition: opacity 0.3s ease; pointer-events: none; z-index: 50;
-            white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            position: absolute; right: 20px; top: 10px; background: rgba(0, 0, 0, 0.85); color: white; padding: 6px 14px;
+            border-radius: 20px; font-size: 12px; font-weight: bold; opacity: 0; transition: opacity 0.3s ease; 
+            pointer-events: none; z-index: 50; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.4);
         }
-
-        #user-modal {
-            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(17, 27, 33, 0.95); z-index: 200;
-            flex-direction: column; align-items: center; justify-content: center; padding: 20px;
-        }
+        
+        .message { max-width: 82%; width: fit-content; padding: 8px 10px; border-radius: 8px; font-size: 14.5px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative; word-wrap: break-word; display: flex; flex-direction: column; }
+        .message.incoming { align-self: flex-start; background: var(--other-msg); border-top-left-radius: 0; }
+        .message.outgoing { align-self: flex-end; background: var(--my-msg); border-top-right-radius: 0; }
+        
+        .media-content { display: block; max-width: 100%; height: auto; border-radius: 6px; margin-bottom: 5px; cursor: pointer; object-fit: contain; }
+        .file-card { display: flex; align-items: center; background: rgba(0,0,0,0.08); padding: 12px; border-radius: 6px; margin-bottom: 8px; text-decoration: none !important; color: #111b21 !important; border: 1px solid rgba(0,0,0,0.1); min-width: 200px; }
+        .file-icon { font-size: 28px; margin-right: 12px; }
+        .file-info { display: flex; flex-direction: column; overflow: hidden; flex: 1; }
+        .file-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .file-ext { font-size: 10px; text-transform: uppercase; color: #667781; font-weight: bold; }
+        
+        .chat-link { color: var(--link-color) !important; text-decoration: underline !important; font-weight: 500; }
+        .date-divider { align-self: center; background: rgba(225, 245, 254, 0.95); color: #54656f; font-size: 11px; padding: 5px 15px; border-radius: 8px; margin: 15px 0; font-weight: 600; }
+        .msg-author { font-size: 11px; font-weight: bold; display: block; margin-bottom: 3px; }
+        .msg-time { font-size: 9px; color: #667781; display: block; text-align: right; margin-top: 4px; }
+        
+        #user-modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 27, 33, 0.95); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: white; width: 100%; max-height: 80%; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
         .user-list { overflow-y: auto; padding: 10px; }
         .user-item { display: block; width: 100%; padding: 15px; text-align: left; background: none; border: none; border-bottom: 1px solid #f0f0f0; font-size: 16px; color: var(--wa-header); cursor: pointer; font-weight: 500; }
-
-        .message { 
-            max-width: 82%; width: fit-content; padding: 8px 10px; border-radius: 8px; 
-            font-size: 14.5px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative;
-            word-wrap: break-word; 
-            overflow-wrap: break-word;
-            /* SOLUCIÓN AL BUG DE SALTOS DE LÍNEA */
-            white-space: pre-wrap; 
-        }
-        .message.incoming { align-self: flex-start; background: var(--other-msg); border-top-left-radius: 0; }
-        .message.outgoing { align-self: flex-end; background: var(--my-msg); border-top-right-radius: 0; }
-
-        .date-divider { align-self: center; background: rgba(225, 245, 254, 0.95); color: #54656f; font-size: 11px; padding: 5px 15px; border-radius: 8px; margin: 15px 0; font-weight: 600; white-space: normal; }
-        .msg-author { font-size: 11px; font-weight: bold; display: block; margin-bottom: 3px; white-space: nowrap; }
-        .msg-time { font-size: 9px; color: #667781; display: block; text-align: right; margin-top: 4px; white-space: nowrap; }
         
         footer { background: #f0f2f5; padding: 10px; border-top: 1px solid #ddd; flex-shrink: 0; }
         .upload-btn { background: white; border: none; border-radius: 20px; width: 100%; padding: 12px; cursor: pointer; display: flex; justify-content: space-between; font-size: 14px; color: #54656f; }
         #theater { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; justify-content: center; align-items: center; }
-        .media-content { display: block; width: 100%; border-radius: 6px; margin-bottom: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
-
     <div id="theater" onclick="this.style.display='none'; this.querySelector('div').innerHTML=''">
         <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center;"></div>
     </div>
 
     <div class="chat-container">
         <header id="chat-header">Visor de WhatsApp</header>
-
         <div id="chat-area-wrapper">
             <div id="scroll-date-indicator">Fecha</div>
             <div id="chat-window">
                 <div style="text-align:center; margin-top:50px; color:#666;">Carga el archivo .zip para comenzar</div>
             </div>
         </div>
-
         <div id="user-modal">
             <div class="modal-content">
-                <div style="padding:20px; border-bottom:1px solid #eee;"><h3>Selecciona tu usuario</h3></div>
+                <div style="padding:20px; border-bottom:1px solid #eee;"><h3>¿Quién eres tú?</h3></div>
                 <div id="user-list-target" class="user-list"></div>
             </div>
         </div>
-
         <footer>
             <input type="file" id="file-input" accept=".zip" style="display:none">
             <button class="upload-btn" onclick="document.getElementById('file-input').click()">
@@ -126,41 +96,36 @@
         const chatWindow = document.getElementById('chat-window');
         const dateIndicator = document.getElementById('scroll-date-indicator');
 
+        // Lógica de scroll e indicador dinámico combinada
         chatWindow.addEventListener('scroll', () => {
             clearTimeout(scrollTimeout);
             dateIndicator.style.opacity = '1';
 
             const scrollTotal = chatWindow.scrollHeight - chatWindow.clientHeight;
             if (scrollTotal > 0) {
-                const scrollCurrent = chatWindow.scrollTop;
-                const scrollPercent = scrollCurrent / scrollTotal;
-                const indicatorHeight = dateIndicator.offsetHeight;
-                const windowHeight = chatWindow.clientHeight;
-                const topPos = (scrollPercent * (windowHeight - indicatorHeight - 20)) + 10;
+                const scrollPercent = chatWindow.scrollTop / scrollTotal;
+                const topPos = (scrollPercent * (chatWindow.clientHeight - dateIndicator.offsetHeight - 20)) + 10;
                 dateIndicator.style.top = `${topPos}px`;
             }
 
             const dividers = chatWindow.querySelectorAll('.date-divider');
             let currentDate = "";
             dividers.forEach(div => {
-                const rect = div.getBoundingClientRect();
-                if (rect.top < (chatWindow.getBoundingClientRect().top + (chatWindow.clientHeight / 2))) {
+                if (div.getBoundingClientRect().top < (chatWindow.offsetTop + 150)) {
                     currentDate = div.innerText;
                 }
             });
-
             if(currentDate) dateIndicator.innerText = currentDate;
 
-            scrollTimeout = setTimeout(() => {
-                dateIndicator.style.opacity = '0';
-            }, 1000);
+            scrollTimeout = setTimeout(() => { dateIndicator.style.opacity = '0'; }, 1000);
         });
 
-        document.getElementById('file-input').addEventListener('change', async (e) => {
+        const MSG_REGEX = /^[\u200e\u200f\u202a-\u202e]*[\(\[]?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}),?\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*([apAP]\.?\s*[mM]\.?)?[\)\]]?[\s\-\:]+([^:]+):\s*([\s\S]*)$/;
+        const SPLIT_PATTERN = /[\u200e\u200f\u202a-\u202e]*(?=[\(\[]?\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4},?\s*\d{1,2}:\d{2})/g;
+
+        document.getElementById('file-input').onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            chatWindow.innerHTML = '<div style="text-align:center; padding:20px;">Abriendo ZIP...</div>';
-
             try {
                 const zip = new JSZip();
                 const content = await zip.loadAsync(file);
@@ -168,97 +133,129 @@
                 for (let f in content.files) {
                     if (content.files[f].dir) continue;
                     const blob = await content.files[f].async("blob");
-                    allFilesMap[f] = { url: URL.createObjectURL(blob), name: f };
+                    allFilesMap[f.toLowerCase()] = { url: URL.createObjectURL(blob), originalName: f };
                 }
                 const txtFile = Object.values(content.files).find(f => f.name.endsWith('.txt') && !f.name.includes('MACOSX'));
                 rawTextGlobal = await txtFile.async("string");
-                
-                const lines = rawTextGlobal.split('\n');
-                const titleRegex = /^[\u200e\u200f]*[\(\[]?\d{1,2}\/\d{1,2}\/\d{2,4},.*?[apAP]\.?\s*[mM]\.?[\)\]]?\s*(.*?):\s*/;
-                for(let line of lines) {
-                    const match = line.match(titleRegex);
-                    if(match && match[1]) {
-                        document.getElementById('chat-header').innerText = "Chat de " + match[1].trim();
-                        break;
-                    }
-                }
                 showUserSelection();
-            } catch (err) { alert("Error: " + err.message); }
-        });
+            } catch (err) { alert("Error al procesar el ZIP"); }
+        };
+
+        function linkify(text) {
+            const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+            return text.replace(urlPattern, '<a class="chat-link" href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+        }
+
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const icons = { pdf:'📕', vcf:'👤', doc:'📄', docx:'📄', xls:'📊', xlsx:'📊', txt:'📝', zip:'📦' };
+            return icons[ext] || '📄';
+        }
 
         function showUserSelection() {
-            const regex = /^[\u200e\u200f]*[\(\[]?.*?,.*?[apAP]\.?\s*[mM]\.?[\)\]]?\s*(.*?):\s*/;
             const users = new Set();
-            rawTextGlobal.split('\n').forEach(line => {
-                const m = line.match(regex);
-                if (m) users.add(m[1].trim());
+            const blocks = rawTextGlobal.split(SPLIT_PATTERN);
+            let firstFoundName = "";
+
+            blocks.forEach(block => {
+                const m = block.match(MSG_REGEX);
+                if (m && m[4]) {
+                    const name = m[4].trim();
+                    if (name.length < 50) {
+                        users.add(name);
+                        if (!firstFoundName) firstFoundName = name;
+                    }
+                }
             });
-            const listTarget = document.getElementById('user-list-target');
-            listTarget.innerHTML = "";
+
+            const target = document.getElementById('user-list-target');
+            target.innerHTML = "";
             users.forEach(user => {
                 const btn = document.createElement('button');
                 btn.className = 'user-item';
                 btn.innerText = user;
                 btn.onclick = () => {
                     document.getElementById('user-modal').style.display = 'none';
+                    let chatPartner = firstFoundName;
+                    for (let u of users) {
+                        if (u !== user) { chatPartner = u; break; }
+                    }
+                    document.getElementById('chat-header').innerText = chatPartner;
                     renderChat(user);
                 };
-                listTarget.appendChild(btn);
+                target.appendChild(btn);
             });
             document.getElementById('user-modal').style.display = 'flex';
         }
 
         function renderChat(currentUser) {
             chatWindow.innerHTML = "";
-            const lines = rawTextGlobal.split('\n');
-            const regex = /^[\u200e\u200f]*[\(\[]?(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*([apAP]\.?\s*[mM]\.?)[\)\]]?\s*(.*?):\s*(.*)$/;
             let html = "";
             let lastDate = "";
 
-            lines.forEach(line => {
-                const m = line.trim().match(regex);
+            rawTextGlobal.split(SPLIT_PATTERN).forEach(block => {
+                if (!block.trim()) return;
+                const m = block.match(MSG_REGEX);
                 if (m) {
-                    const [full, date, timeStr, ampm, author, bodyRaw] = m;
+                    const [_, date, time, ampm, author, bodyRaw] = m;
                     const cleanAuthor = author.trim();
-                    let body = bodyRaw;
-                    const time = `${timeStr} ${ampm.replace(/\./g, "").toUpperCase()}`;
-                    if (date !== lastDate) {
-                        html += `<div class="date-divider">${date}</div>`;
-                        lastDate = date;
+                    let body = bodyRaw.trim();
+                    const fullTime = (time + (ampm ? ' ' + ampm : '')).replace(/\./g, "").toUpperCase();
+
+                    if (date !== lastDate) { 
+                        html += `<div class="date-divider">${date}</div>`; 
+                        lastDate = date; 
                     }
-                    const isMe = (cleanAuthor === currentUser);
+                    
+                    const isMe = cleanAuthor === currentUser;
                     let mediaHTML = "";
-                    for (let fName in allFilesMap) {
-                        if (body.toLowerCase().includes(fName.toLowerCase())) {
-                            const fileObj = allFilesMap[fName];
-                            if (fName.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-                                mediaHTML = `<img class="media-content" src="${fileObj.url}" onclick="openTheater('${fileObj.url}',false)">`;
+                    const bodyLower = body.toLowerCase();
+
+                    for (let fKey in allFilesMap) {
+                        if (bodyLower.includes(fKey)) {
+                            const fileData = allFilesMap[fKey];
+                            const fName = fileData.originalName;
+                            const url = fileData.url;
+
+                            if (fName.match(/\.(jpg|jpeg|png|webp|gif)$/i)) {
+                                mediaHTML = `<img class="media-content" src="${url}" onclick="openTheater('${url}',false)">`;
                             } else if (fName.match(/\.(mp4|mov)$/i)) {
-                                mediaHTML = `<video class="media-content" src="${fileObj.url}" onclick="openTheater('${fileObj.url}',true)"></video>`;
+                                mediaHTML = `<video class="media-content" src="${url}" onclick="openTheater('${url}',true)"></video>`;
                             } else {
-                                let icon = fName.endsWith('.pdf') ? "📕" : (fName.endsWith('.opus') ? "🎤" : "📄");
-                                mediaHTML = `<a href="${fileObj.url}" download="${fName}" style="text-decoration:none; color:inherit;"><div class="file-attach"><span>${icon}</span> <span style="font-size:11px; margin-left:8px;">${fName}</span></div></a>`;
+                                mediaHTML = `
+                                    <a href="${url}" download="${fName}" class="file-card">
+                                        <span class="file-icon">${getFileIcon(fName)}</span>
+                                        <div class="file-info">
+                                            <span class="file-name">${fName}</span>
+                                            <span class="file-ext">${fName.split('.').pop()}</span>
+                                        </div>
+                                    </a>`;
                             }
-                            body = body.replace(new RegExp(fName, 'gi'), "").replace("<adjunto: >", "").trim();
+                            body = body.replace(new RegExp(fName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), "").replace(/<adjunto:?>/gi, "").trim();
                             break;
                         }
                     }
-                    html += `<div class="message ${isMe ? 'outgoing' : 'incoming'}">${!isMe ? `<span class="msg-author" style="color:${getColor(cleanAuthor)}">${cleanAuthor}</span>` : ''}${mediaHTML}<span>${body}</span><span class="msg-time">${time}</span></div>`;
+
+                    html += `<div class="message ${isMe ? 'outgoing' : 'incoming'}">
+                        ${!isMe ? `<span class="msg-author" style="color:${getColor(cleanAuthor)}">${cleanAuthor}</span>` : ''}
+                        ${mediaHTML}
+                        <span style="white-space:pre-wrap">${linkify(body)}</span>
+                        <span class="msg-time">${fullTime}</span>
+                    </div>`;
                 }
             });
             chatWindow.innerHTML = html;
-            chatWindow.scrollTop = 0;
+            chatWindow.scrollTop = 0; // Inicia arriba para ver el primer mensaje
         }
 
-        function getColor(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            return `hsl(${Math.abs(hash) % 360}, 65%, 35%)`;
+        function getColor(s) {
+            let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
+            return `hsl(${Math.abs(h) % 360}, 65%, 35%)`;
         }
 
-        function openTheater(url, isVid) {
+        function openTheater(u, v) {
             const t = document.getElementById('theater');
-            t.querySelector('div').innerHTML = isVid ? `<video src="${url}" controls autoplay style="max-width:100%; max-height:100%"></video>` : `<img src="${url}" style="max-width:100%; max-height:100%">`;
+            t.querySelector('div').innerHTML = v ? `<video src="${u}" controls autoplay style="max-width:100%; max-height:100%"></video>` : `<img src="${u}" style="max-width:100%; max-height:100%">`;
             t.style.display = 'flex';
         }
     </script>
