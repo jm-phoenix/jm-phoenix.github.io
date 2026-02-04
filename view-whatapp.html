@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <title>Visor de Chats de WhatsApp | Pro</title>
+    <title>Visor de WhatsApp Pro | Multilínea Corregido</title>
     
     <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="none"/><path d="M256 96C176 96 112 154 112 230c0 36 14 68 36 92l-12 64 64-12c22 12 44 18 68 18 80 0 144-58 144-134S336 96 256 96z" fill="%2325D366"/><text x="256" y="270" text-anchor="middle" font-size="96" font-weight="700" font-family="Arial, Helvetica, sans-serif" fill="%23FFFFFF">zip</text></svg>'>
 
@@ -20,26 +19,16 @@
             display: flex; flex-direction: column; height: 100dvh; position: relative;
         }
 
-        header { 
-            background: var(--wa-header); color: white; padding: 12px 15px; 
-            font-weight: bold; flex-shrink: 0; z-index: 100; font-size: 16px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-        }
+        header { background: var(--wa-header); color: white; padding: 12px 15px; font-weight: bold; flex-shrink: 0; z-index: 100; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-        #chat-area-wrapper {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
+        #chat-area-wrapper { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; }
 
         #chat-window { 
             flex: 1; overflow-y: scroll; overflow-x: hidden; padding: 10px; display: flex; flex-direction: column; gap: 8px; 
-            scroll-behavior: smooth; 
-            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
         }
 
+        /* Barra de Scroll Gruesa */
         #chat-window::-webkit-scrollbar { width: 14px !important; display: block !important; }
         #chat-window::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
         #chat-window::-webkit-scrollbar-thumb { 
@@ -48,19 +37,14 @@
         }
 
         #scroll-date-indicator {
-            position: absolute; 
-            right: 20px; 
-            top: 0; 
-            background: rgba(0, 0, 0, 0.85); color: white; padding: 6px 14px;
-            border-radius: 20px; font-size: 12px; font-weight: bold;
-            opacity: 0; transition: opacity 0.3s ease; pointer-events: none; z-index: 50;
-            white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            position: absolute; right: 20px; top: 0; background: rgba(0, 0, 0, 0.85); color: white; padding: 6px 14px;
+            border-radius: 20px; font-size: 12px; font-weight: bold; opacity: 0; transition: opacity 0.3s ease; 
+            pointer-events: none; z-index: 50; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.4);
         }
 
         #user-modal {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(17, 27, 33, 0.95); z-index: 200;
-            flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+            background: rgba(17, 27, 33, 0.95); z-index: 200; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
         }
         .modal-content { background: white; width: 100%; max-height: 80%; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
         .user-list { overflow-y: auto; padding: 10px; }
@@ -69,17 +53,15 @@
         .message { 
             max-width: 82%; width: fit-content; padding: 8px 10px; border-radius: 8px; 
             font-size: 14.5px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative;
-            word-wrap: break-word; 
-            overflow-wrap: break-word;
-            /* SOLUCIÓN AL BUG DE SALTOS DE LÍNEA */
-            white-space: pre-wrap; 
+            word-wrap: break-word; overflow-wrap: break-word;
+            white-space: pre-wrap; /* Mantiene saltos de línea visuales */
         }
         .message.incoming { align-self: flex-start; background: var(--other-msg); border-top-left-radius: 0; }
         .message.outgoing { align-self: flex-end; background: var(--my-msg); border-top-right-radius: 0; }
 
-        .date-divider { align-self: center; background: rgba(225, 245, 254, 0.95); color: #54656f; font-size: 11px; padding: 5px 15px; border-radius: 8px; margin: 15px 0; font-weight: 600; white-space: normal; }
-        .msg-author { font-size: 11px; font-weight: bold; display: block; margin-bottom: 3px; white-space: nowrap; }
-        .msg-time { font-size: 9px; color: #667781; display: block; text-align: right; margin-top: 4px; white-space: nowrap; }
+        .date-divider { align-self: center; background: rgba(225, 245, 254, 0.95); color: #54656f; font-size: 11px; padding: 5px 15px; border-radius: 8px; margin: 15px 0; font-weight: 600; }
+        .msg-author { font-size: 11px; font-weight: bold; display: block; margin-bottom: 3px; }
+        .msg-time { font-size: 9px; color: #667781; display: block; text-align: right; margin-top: 4px; }
         
         footer { background: #f0f2f5; padding: 10px; border-top: 1px solid #ddd; flex-shrink: 0; }
         .upload-btn { background: white; border: none; border-radius: 20px; width: 100%; padding: 12px; cursor: pointer; display: flex; justify-content: space-between; font-size: 14px; color: #54656f; }
@@ -95,21 +77,18 @@
 
     <div class="chat-container">
         <header id="chat-header">Visor de WhatsApp</header>
-
         <div id="chat-area-wrapper">
             <div id="scroll-date-indicator">Fecha</div>
             <div id="chat-window">
                 <div style="text-align:center; margin-top:50px; color:#666;">Carga el archivo .zip para comenzar</div>
             </div>
         </div>
-
         <div id="user-modal">
             <div class="modal-content">
                 <div style="padding:20px; border-bottom:1px solid #eee;"><h3>Selecciona tu usuario</h3></div>
                 <div id="user-list-target" class="user-list"></div>
             </div>
         </div>
-
         <footer>
             <input type="file" id="file-input" accept=".zip" style="display:none">
             <button class="upload-btn" onclick="document.getElementById('file-input').click()">
@@ -129,38 +108,27 @@
         chatWindow.addEventListener('scroll', () => {
             clearTimeout(scrollTimeout);
             dateIndicator.style.opacity = '1';
-
             const scrollTotal = chatWindow.scrollHeight - chatWindow.clientHeight;
             if (scrollTotal > 0) {
                 const scrollCurrent = chatWindow.scrollTop;
                 const scrollPercent = scrollCurrent / scrollTotal;
-                const indicatorHeight = dateIndicator.offsetHeight;
-                const windowHeight = chatWindow.clientHeight;
-                const topPos = (scrollPercent * (windowHeight - indicatorHeight - 20)) + 10;
+                const topPos = (scrollPercent * (chatWindow.clientHeight - dateIndicator.offsetHeight - 20)) + 10;
                 dateIndicator.style.top = `${topPos}px`;
             }
-
             const dividers = chatWindow.querySelectorAll('.date-divider');
             let currentDate = "";
             dividers.forEach(div => {
                 const rect = div.getBoundingClientRect();
-                if (rect.top < (chatWindow.getBoundingClientRect().top + (chatWindow.clientHeight / 2))) {
-                    currentDate = div.innerText;
-                }
+                if (rect.top < (chatWindow.getBoundingClientRect().top + 150)) currentDate = div.innerText;
             });
-
             if(currentDate) dateIndicator.innerText = currentDate;
-
-            scrollTimeout = setTimeout(() => {
-                dateIndicator.style.opacity = '0';
-            }, 1000);
+            scrollTimeout = setTimeout(() => { dateIndicator.style.opacity = '0'; }, 1000);
         });
 
         document.getElementById('file-input').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
             chatWindow.innerHTML = '<div style="text-align:center; padding:20px;">Abriendo ZIP...</div>';
-
             try {
                 const zip = new JSZip();
                 const content = await zip.loadAsync(file);
@@ -172,25 +140,16 @@
                 }
                 const txtFile = Object.values(content.files).find(f => f.name.endsWith('.txt') && !f.name.includes('MACOSX'));
                 rawTextGlobal = await txtFile.async("string");
-                
-                const lines = rawTextGlobal.split('\n');
-                const titleRegex = /^[\u200e\u200f]*[\(\[]?\d{1,2}\/\d{1,2}\/\d{2,4},.*?[apAP]\.?\s*[mM]\.?[\)\]]?\s*(.*?):\s*/;
-                for(let line of lines) {
-                    const match = line.match(titleRegex);
-                    if(match && match[1]) {
-                        document.getElementById('chat-header').innerText = "Chat de " + match[1].trim();
-                        break;
-                    }
-                }
                 showUserSelection();
             } catch (err) { alert("Error: " + err.message); }
         });
 
         function showUserSelection() {
-            const regex = /^[\u200e\u200f]*[\(\[]?.*?,.*?[apAP]\.?\s*[mM]\.?[\)\]]?\s*(.*?):\s*/;
+            const regex = /^[\u200e\u200f]*[\(\[]?(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*\d{1,2}:\d{2}/;
+            const userRegex = /^[\u200e\u200f]*[\(\[]?.*?,.*?[apAP]\.?\s*[mM]\.?[\)\]]?\s*(.*?):\s*/;
             const users = new Set();
             rawTextGlobal.split('\n').forEach(line => {
-                const m = line.match(regex);
+                const m = line.match(userRegex);
                 if (m) users.add(m[1].trim());
             });
             const listTarget = document.getElementById('user-list-target');
@@ -199,10 +158,7 @@
                 const btn = document.createElement('button');
                 btn.className = 'user-item';
                 btn.innerText = user;
-                btn.onclick = () => {
-                    document.getElementById('user-modal').style.display = 'none';
-                    renderChat(user);
-                };
+                btn.onclick = () => { document.getElementById('user-modal').style.display = 'none'; renderChat(user); };
                 listTarget.appendChild(btn);
             });
             document.getElementById('user-modal').style.display = 'flex';
@@ -211,43 +167,71 @@
         function renderChat(currentUser) {
             chatWindow.innerHTML = "";
             const lines = rawTextGlobal.split('\n');
-            const regex = /^[\u200e\u200f]*[\(\[]?(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*([apAP]\.?\s*[mM]\.?)[\)\]]?\s*(.*?):\s*(.*)$/;
+            // Regex para detectar el inicio de un mensaje nuevo
+            const msgStartRegex = /^[\u200e\u200f]*[\(\[]?(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*([apAP]\.?\s*[mM]\.?)[\)\]]?\s*(.*?):\s*(.*)$/;
+            
+            let messages = [];
+            let lastMsg = null;
+
+            lines.forEach(line => {
+                const match = line.match(msgStartRegex);
+                if (match) {
+                    // Es un mensaje nuevo
+                    lastMsg = {
+                        date: match[1],
+                        time: `${match[2]} ${match[3].replace(/\./g, "").toUpperCase()}`,
+                        author: match[4].trim(),
+                        body: match[5]
+                    };
+                    messages.push(lastMsg);
+                } else if (lastMsg && line.trim() !== "") {
+                    // Es continuación del mensaje anterior
+                    lastMsg.body += "\n" + line;
+                }
+            });
+
             let html = "";
             let lastDate = "";
 
-            lines.forEach(line => {
-                const m = line.trim().match(regex);
-                if (m) {
-                    const [full, date, timeStr, ampm, author, bodyRaw] = m;
-                    const cleanAuthor = author.trim();
-                    let body = bodyRaw;
-                    const time = `${timeStr} ${ampm.replace(/\./g, "").toUpperCase()}`;
-                    if (date !== lastDate) {
-                        html += `<div class="date-divider">${date}</div>`;
-                        lastDate = date;
-                    }
-                    const isMe = (cleanAuthor === currentUser);
-                    let mediaHTML = "";
-                    for (let fName in allFilesMap) {
-                        if (body.toLowerCase().includes(fName.toLowerCase())) {
-                            const fileObj = allFilesMap[fName];
-                            if (fName.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-                                mediaHTML = `<img class="media-content" src="${fileObj.url}" onclick="openTheater('${fileObj.url}',false)">`;
-                            } else if (fName.match(/\.(mp4|mov)$/i)) {
-                                mediaHTML = `<video class="media-content" src="${fileObj.url}" onclick="openTheater('${fileObj.url}',true)"></video>`;
-                            } else {
-                                let icon = fName.endsWith('.pdf') ? "📕" : (fName.endsWith('.opus') ? "🎤" : "📄");
-                                mediaHTML = `<a href="${fileObj.url}" download="${fName}" style="text-decoration:none; color:inherit;"><div class="file-attach"><span>${icon}</span> <span style="font-size:11px; margin-left:8px;">${fName}</span></div></a>`;
-                            }
-                            body = body.replace(new RegExp(fName, 'gi'), "").replace("<adjunto: >", "").trim();
-                            break;
-                        }
-                    }
-                    html += `<div class="message ${isMe ? 'outgoing' : 'incoming'}">${!isMe ? `<span class="msg-author" style="color:${getColor(cleanAuthor)}">${cleanAuthor}</span>` : ''}${mediaHTML}<span>${body}</span><span class="msg-time">${time}</span></div>`;
+            messages.forEach(msg => {
+                if (msg.date !== lastDate) {
+                    html += `<div class="date-divider">${msg.date}</div>`;
+                    lastDate = msg.date;
                 }
+
+                const isMe = (msg.author === currentUser);
+                let body = msg.body;
+                let mediaHTML = "";
+
+                // Buscar archivos adjuntos en el cuerpo
+                for (let fName in allFilesMap) {
+                    if (body.toLowerCase().includes(fName.toLowerCase())) {
+                        const fileObj = allFilesMap[fName];
+                        if (fName.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                            mediaHTML = `<img class="media-content" src="${fileObj.url}" onclick="openTheater('${fileObj.url}',false)">`;
+                        } else if (fName.match(/\.(mp4|mov)$/i)) {
+                            mediaHTML = `<video class="media-content" src="${fileObj.url}" onclick="openTheater('${fileObj.url}',true)"></video>`;
+                        } else {
+                            let icon = fName.endsWith('.pdf') ? "📕" : (fName.endsWith('.opus') ? "🎤" : "📄");
+                            mediaHTML = `<a href="${fileObj.url}" download="${fName}" style="text-decoration:none; color:inherit;"><div class="file-attach"><span>${icon}</span> <span style="font-size:11px; margin-left:8px;">${fName}</span></div></a>`;
+                        }
+                        body = body.replace(new RegExp(fName, 'gi'), "").replace("<adjunto: >", "").trim();
+                        break;
+                    }
+                }
+
+                html += `
+                    <div class="message ${isMe ? 'outgoing' : 'incoming'}">
+                        ${!isMe ? `<span class="msg-author" style="color:${getColor(msg.author)}">${msg.author}</span>` : ''}
+                        ${mediaHTML}
+                        <span>${body}</span>
+                        <span class="msg-time">${msg.time}</span>
+                    </div>`;
             });
+
             chatWindow.innerHTML = html;
             chatWindow.scrollTop = 0;
+            if(messages.length > 0) document.getElementById('chat-header').innerText = "Chat de " + messages[0].author;
         }
 
         function getColor(str) {
