@@ -33,30 +33,41 @@
 
         header { background: var(--wa-header); color: white; padding: 12px 15px; font-weight: bold; flex-shrink: 0; z-index: 10; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-        /* Barra de Scroll - Optimizada Verticalmente */
+        /* Barra de Scroll - Optimizada para iOS y Desktop */
         #chat-window { 
             flex: 1; overflow-y: scroll; overflow-x: hidden; padding: 10px; display: flex; flex-direction: column; gap: 8px; 
             scroll-behavior: smooth; position: relative;
-            scrollbar-width: auto; scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+            /* Forzar scrollbar en iOS */
+            -webkit-overflow-scrolling: touch; 
         }
-        #chat-window::-webkit-scrollbar { width: 10px; }
-        #chat-window::-webkit-scrollbar-track { background: rgba(0,0,0,0.03); }
+
+        /* Estilos Webkit (Chrome, Safari, iOS) */
+        #chat-window::-webkit-scrollbar { 
+            width: 10px !important; 
+            display: block !important;
+        }
+        #chat-window::-webkit-scrollbar-track { 
+            background: rgba(0,0,0,0.05); 
+            border-radius: 10px;
+        }
         #chat-window::-webkit-scrollbar-thumb { 
-            background-color: rgba(0, 0, 0, 0.3); border-radius: 5px; 
-            border: 2px solid transparent; background-clip: content-box; 
+            background-color: rgba(0, 0, 0, 0.4); 
+            border-radius: 10px; 
+            border: 2px solid transparent; 
+            background-clip: content-box;
+            min-height: 40px; /* Evita que el thumb sea minúsculo en chats largos */
         }
-        #chat-window::-webkit-scrollbar-thumb:hover { background-color: rgba(0, 0, 0, 0.5); }
 
         /* Indicador de Fecha al Scroll */
         #scroll-date-indicator {
             position: absolute; right: 25px; top: 50%; transform: translateY(-50%);
-            background: rgba(0, 0, 0, 0.8); color: white; padding: 6px 14px;
+            background: rgba(0, 0, 0, 0.85); color: white; padding: 6px 14px;
             border-radius: 20px; font-size: 12px; font-weight: bold;
             opacity: 0; transition: opacity 0.3s ease; pointer-events: none; z-index: 50;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
 
-        /* Modal de Selección de Usuario */
+        /* Modal de Selección */
         #user-modal {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(17, 27, 33, 0.95); z-index: 100;
@@ -66,9 +77,9 @@
         .user-list { overflow-y: auto; padding: 10px; }
         .user-item { display: block; width: 100%; padding: 15px; text-align: left; background: none; border: none; border-bottom: 1px solid #f0f0f0; font-size: 16px; color: var(--wa-header); cursor: pointer; font-weight: 500; }
 
-        /* Mensajes y Burbujas */
+        /* Mensajes */
         .message { 
-            max-width: 85%; width: fit-content; padding: 8px 10px; border-radius: 8px; 
+            max-width: 82%; width: fit-content; padding: 8px 10px; border-radius: 8px; 
             font-size: 14.5px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative;
             word-wrap: break-word; overflow-wrap: break-word;
         }
@@ -126,7 +137,6 @@
         const chatWindow = document.getElementById('chat-window');
         const dateIndicator = document.getElementById('scroll-date-indicator');
 
-        // Lógica de Scroll y Detección de Fecha
         chatWindow.addEventListener('scroll', () => {
             clearTimeout(scrollTimeout);
             dateIndicator.style.opacity = '1';
@@ -144,7 +154,7 @@
 
             scrollTimeout = setTimeout(() => {
                 dateIndicator.style.opacity = '0';
-            }, 1000);
+            }, 1200);
         });
 
         function linkify(text) {
@@ -169,7 +179,6 @@
                 const txtFile = Object.values(content.files).find(f => f.name.endsWith('.txt') && !f.name.includes('MACOSX'));
                 rawTextGlobal = await txtFile.async("string");
                 
-                // Título dinámico: toma el primer nombre que aparece como autor
                 const lines = rawTextGlobal.split('\n');
                 const titleRegex = /^[\u200e\u200f]*[\(\[]?\d{1,2}\/\d{1,2}\/\d{2,4},.*?[apAP]\.?\s*[mM]\.?[\)\]]?\s*(.*?):\s*/;
                 for(let line of lines) {
