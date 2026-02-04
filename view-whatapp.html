@@ -26,7 +26,6 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
         }
 
-        /* Contenedor relativo para limitar el indicador al área del chat */
         #chat-area-wrapper {
             flex: 1;
             position: relative;
@@ -35,7 +34,6 @@
             flex-direction: column;
         }
 
-        /* Barra de Scroll Gruesa y Gris Oscuro */
         #chat-window { 
             flex: 1; overflow-y: scroll; overflow-x: hidden; padding: 10px; display: flex; flex-direction: column; gap: 8px; 
             scroll-behavior: smooth; 
@@ -49,7 +47,6 @@
             border: 2px solid rgba(255,255,255,0.1); background-clip: content-box; 
         }
 
-        /* Indicador de Fecha - Ahora dentro del wrapper */
         #scroll-date-indicator {
             position: absolute; 
             right: 20px; 
@@ -72,14 +69,17 @@
         .message { 
             max-width: 82%; width: fit-content; padding: 8px 10px; border-radius: 8px; 
             font-size: 14.5px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative;
-            word-wrap: break-word; overflow-wrap: break-word;
+            word-wrap: break-word; 
+            overflow-wrap: break-word;
+            /* SOLUCIÓN AL BUG DE SALTOS DE LÍNEA */
+            white-space: pre-wrap; 
         }
         .message.incoming { align-self: flex-start; background: var(--other-msg); border-top-left-radius: 0; }
         .message.outgoing { align-self: flex-end; background: var(--my-msg); border-top-right-radius: 0; }
 
-        .date-divider { align-self: center; background: rgba(225, 245, 254, 0.95); color: #54656f; font-size: 11px; padding: 5px 15px; border-radius: 8px; margin: 15px 0; font-weight: 600; }
-        .msg-author { font-size: 11px; font-weight: bold; display: block; margin-bottom: 3px; }
-        .msg-time { font-size: 9px; color: #667781; display: block; text-align: right; margin-top: 4px; }
+        .date-divider { align-self: center; background: rgba(225, 245, 254, 0.95); color: #54656f; font-size: 11px; padding: 5px 15px; border-radius: 8px; margin: 15px 0; font-weight: 600; white-space: normal; }
+        .msg-author { font-size: 11px; font-weight: bold; display: block; margin-bottom: 3px; white-space: nowrap; }
+        .msg-time { font-size: 9px; color: #667781; display: block; text-align: right; margin-top: 4px; white-space: nowrap; }
         
         footer { background: #f0f2f5; padding: 10px; border-top: 1px solid #ddd; flex-shrink: 0; }
         .upload-btn { background: white; border: none; border-radius: 20px; width: 100%; padding: 12px; cursor: pointer; display: flex; justify-content: space-between; font-size: 14px; color: #54656f; }
@@ -98,7 +98,6 @@
 
         <div id="chat-area-wrapper">
             <div id="scroll-date-indicator">Fecha</div>
-
             <div id="chat-window">
                 <div style="text-align:center; margin-top:50px; color:#666;">Carga el archivo .zip para comenzar</div>
             </div>
@@ -131,29 +130,21 @@
             clearTimeout(scrollTimeout);
             dateIndicator.style.opacity = '1';
 
-            // CÁLCULO DE POSICIÓN CORREGIDO
             const scrollTotal = chatWindow.scrollHeight - chatWindow.clientHeight;
             if (scrollTotal > 0) {
                 const scrollCurrent = chatWindow.scrollTop;
                 const scrollPercent = scrollCurrent / scrollTotal;
-                
-                // Calculamos basándonos en la altura del chatWindow, no de la pantalla completa
                 const indicatorHeight = dateIndicator.offsetHeight;
                 const windowHeight = chatWindow.clientHeight;
-                
-                // Mantenemos un margen de 10px arriba y abajo dentro del área de chat
                 const topPos = (scrollPercent * (windowHeight - indicatorHeight - 20)) + 10;
-                
                 dateIndicator.style.top = `${topPos}px`;
             }
 
-            // Detección de Fecha
             const dividers = chatWindow.querySelectorAll('.date-divider');
             let currentDate = "";
             dividers.forEach(div => {
                 const rect = div.getBoundingClientRect();
-                // Ajustado para detectar la fecha cerca del tope del chatWindow
-                if (rect.top < (chatWindow.offsetTop + 150)) {
+                if (rect.top < (chatWindow.getBoundingClientRect().top + (chatWindow.clientHeight / 2))) {
                     currentDate = div.innerText;
                 }
             });
@@ -165,7 +156,6 @@
             }, 1000);
         });
 
-        // Funciones de carga y renderizado (sin cambios)
         document.getElementById('file-input').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
