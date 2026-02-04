@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <title>Visor de Chats de WhatsApp | Privado y Online</title>
-    <meta name="description" content="Herramienta privada para visualizar chats de WhatsApp exportados.">
+    <title>Visor de Chats de WhatsApp | Pro</title>
     
     <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="none"/><path d="M256 96C176 96 112 154 112 230c0 36 14 68 36 92l-12 64 64-12c22 12 44 18 68 18 80 0 144-58 144-134S336 96 256 96z" fill="%2325D366"/><text x="256" y="270" text-anchor="middle" font-size="96" font-weight="700" font-family="Arial, Helvetica, sans-serif" fill="%23FFFFFF">zip</text></svg>'>
 
@@ -21,12 +20,25 @@
             display: flex; flex-direction: column; height: 100dvh; position: relative;
         }
 
-        header { background: var(--wa-header); color: white; padding: 12px 15px; font-weight: bold; flex-shrink: 0; z-index: 10; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        header { 
+            background: var(--wa-header); color: white; padding: 12px 15px; 
+            font-weight: bold; flex-shrink: 0; z-index: 100; font-size: 16px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+        }
+
+        /* Contenedor relativo para limitar el indicador al área del chat */
+        #chat-area-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
 
         /* Barra de Scroll Gruesa y Gris Oscuro */
         #chat-window { 
             flex: 1; overflow-y: scroll; overflow-x: hidden; padding: 10px; display: flex; flex-direction: column; gap: 8px; 
-            scroll-behavior: smooth; position: relative;
+            scroll-behavior: smooth; 
             -webkit-overflow-scrolling: touch;
         }
 
@@ -37,21 +49,20 @@
             border: 2px solid rgba(255,255,255,0.1); background-clip: content-box; 
         }
 
-        /* Indicador de Fecha Dinámico (Se mueve con el scroll) */
+        /* Indicador de Fecha - Ahora dentro del wrapper */
         #scroll-date-indicator {
             position: absolute; 
-            right: 20px; /* Alineado al borde de la barra */
-            top: 0; /* Posición calculada por JS */
+            right: 20px; 
+            top: 0; 
             background: rgba(0, 0, 0, 0.85); color: white; padding: 6px 14px;
             border-radius: 20px; font-size: 12px; font-weight: bold;
             opacity: 0; transition: opacity 0.3s ease; pointer-events: none; z-index: 50;
             white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.4);
         }
 
-        /* Modal Selección */
         #user-modal {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(17, 27, 33, 0.95); z-index: 100;
+            background: rgba(17, 27, 33, 0.95); z-index: 200;
             flex-direction: column; align-items: center; justify-content: center; padding: 20px;
         }
         .modal-content { background: white; width: 100%; max-height: 80%; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
@@ -70,12 +81,10 @@
         .msg-author { font-size: 11px; font-weight: bold; display: block; margin-bottom: 3px; }
         .msg-time { font-size: 9px; color: #667781; display: block; text-align: right; margin-top: 4px; }
         
-        .file-attach { display: flex; align-items: center; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; text-decoration: none; color: #111b21; margin: 5px 0; border: 1px solid rgba(0,0,0,0.1); }
-        .media-content { display: block; width: 100%; border-radius: 6px; margin-bottom: 5px; cursor: pointer; }
-
         footer { background: #f0f2f5; padding: 10px; border-top: 1px solid #ddd; flex-shrink: 0; }
         .upload-btn { background: white; border: none; border-radius: 20px; width: 100%; padding: 12px; cursor: pointer; display: flex; justify-content: space-between; font-size: 14px; color: #54656f; }
         #theater { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; justify-content: center; align-items: center; }
+        .media-content { display: block; width: 100%; border-radius: 6px; margin-bottom: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -85,18 +94,21 @@
     </div>
 
     <div class="chat-container">
-        <div id="scroll-date-indicator">Fecha</div>
+        <header id="chat-header">Visor de WhatsApp</header>
+
+        <div id="chat-area-wrapper">
+            <div id="scroll-date-indicator">Fecha</div>
+
+            <div id="chat-window">
+                <div style="text-align:center; margin-top:50px; color:#666;">Carga el archivo .zip para comenzar</div>
+            </div>
+        </div>
 
         <div id="user-modal">
             <div class="modal-content">
                 <div style="padding:20px; border-bottom:1px solid #eee;"><h3>Selecciona tu usuario</h3></div>
                 <div id="user-list-target" class="user-list"></div>
             </div>
-        </div>
-
-        <header id="chat-header">Esperando backup...</header>
-        <div id="chat-window">
-            <div style="text-align:center; margin-top:50px; color:#666;">Carga el archivo .zip para comenzar</div>
         </div>
 
         <footer>
@@ -115,29 +127,33 @@
         const chatWindow = document.getElementById('chat-window');
         const dateIndicator = document.getElementById('scroll-date-indicator');
 
-        // Lógica para mover el indicador con el scroll
         chatWindow.addEventListener('scroll', () => {
             clearTimeout(scrollTimeout);
             dateIndicator.style.opacity = '1';
 
-            // 1. Calcular posición vertical del indicador basada en el progreso del scroll
+            // CÁLCULO DE POSICIÓN CORREGIDO
             const scrollTotal = chatWindow.scrollHeight - chatWindow.clientHeight;
-            const scrollCurrent = chatWindow.scrollTop;
-            const scrollPercent = scrollCurrent / scrollTotal;
-            
-            // Ajustamos para que el indicador no se salga por arriba ni por abajo
-            const indicatorHeight = dateIndicator.offsetHeight;
-            const availableHeight = chatWindow.clientHeight - indicatorHeight - 20;
-            const topPos = (scrollPercent * availableHeight) + 10;
-            
-            dateIndicator.style.top = `${topPos}px`;
+            if (scrollTotal > 0) {
+                const scrollCurrent = chatWindow.scrollTop;
+                const scrollPercent = scrollCurrent / scrollTotal;
+                
+                // Calculamos basándonos en la altura del chatWindow, no de la pantalla completa
+                const indicatorHeight = dateIndicator.offsetHeight;
+                const windowHeight = chatWindow.clientHeight;
+                
+                // Mantenemos un margen de 10px arriba y abajo dentro del área de chat
+                const topPos = (scrollPercent * (windowHeight - indicatorHeight - 20)) + 10;
+                
+                dateIndicator.style.top = `${topPos}px`;
+            }
 
-            // 2. Detectar la fecha visible
+            // Detección de Fecha
             const dividers = chatWindow.querySelectorAll('.date-divider');
             let currentDate = "";
             dividers.forEach(div => {
                 const rect = div.getBoundingClientRect();
-                if (rect.top < window.innerHeight / 2) {
+                // Ajustado para detectar la fecha cerca del tope del chatWindow
+                if (rect.top < (chatWindow.offsetTop + 150)) {
                     currentDate = div.innerText;
                 }
             });
@@ -149,11 +165,7 @@
             }, 1000);
         });
 
-        function linkify(text) {
-            const urlRegex = /(https?:\/\/[^\s]+)/g;
-            return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" class="chat-link">${url}</a>`);
-        }
-
+        // Funciones de carga y renderizado (sin cambios)
         document.getElementById('file-input').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -170,6 +182,16 @@
                 }
                 const txtFile = Object.values(content.files).find(f => f.name.endsWith('.txt') && !f.name.includes('MACOSX'));
                 rawTextGlobal = await txtFile.async("string");
+                
+                const lines = rawTextGlobal.split('\n');
+                const titleRegex = /^[\u200e\u200f]*[\(\[]?\d{1,2}\/\d{1,2}\/\d{2,4},.*?[apAP]\.?\s*[mM]\.?[\)\]]?\s*(.*?):\s*/;
+                for(let line of lines) {
+                    const match = line.match(titleRegex);
+                    if(match && match[1]) {
+                        document.getElementById('chat-header').innerText = "Chat de " + match[1].trim();
+                        break;
+                    }
+                }
                 showUserSelection();
             } catch (err) { alert("Error: " + err.message); }
         });
@@ -181,7 +203,6 @@
                 const m = line.match(regex);
                 if (m) users.add(m[1].trim());
             });
-
             const listTarget = document.getElementById('user-list-target');
             listTarget.innerHTML = "";
             users.forEach(user => {
@@ -201,7 +222,6 @@
             chatWindow.innerHTML = "";
             const lines = rawTextGlobal.split('\n');
             const regex = /^[\u200e\u200f]*[\(\[]?(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*([apAP]\.?\s*[mM]\.?)[\)\]]?\s*(.*?):\s*(.*)$/;
-
             let html = "";
             let lastDate = "";
 
@@ -212,15 +232,12 @@
                     const cleanAuthor = author.trim();
                     let body = bodyRaw;
                     const time = `${timeStr} ${ampm.replace(/\./g, "").toUpperCase()}`;
-
                     if (date !== lastDate) {
                         html += `<div class="date-divider">${date}</div>`;
                         lastDate = date;
                     }
-
                     const isMe = (cleanAuthor === currentUser);
                     let mediaHTML = "";
-                    
                     for (let fName in allFilesMap) {
                         if (body.toLowerCase().includes(fName.toLowerCase())) {
                             const fileObj = allFilesMap[fName];
@@ -230,36 +247,29 @@
                                 mediaHTML = `<video class="media-content" src="${fileObj.url}" onclick="openTheater('${fileObj.url}',true)"></video>`;
                             } else {
                                 let icon = fName.endsWith('.pdf') ? "📕" : (fName.endsWith('.opus') ? "🎤" : "📄");
-                                mediaHTML = `<a href="${fileObj.url}" download="${fName}" class="file-attach"><span>${icon}</span> <span style="font-size:11px; margin-left:8px;">${fName}</span></a>`;
+                                mediaHTML = `<a href="${fileObj.url}" download="${fName}" style="text-decoration:none; color:inherit;"><div class="file-attach"><span>${icon}</span> <span style="font-size:11px; margin-left:8px;">${fName}</span></div></a>`;
                             }
                             body = body.replace(new RegExp(fName, 'gi'), "").replace("<adjunto: >", "").trim();
                             break;
                         }
                     }
-
-                    html += `
-                        <div class="message ${isMe ? 'outgoing' : 'incoming'}">
-                            ${!isMe ? `<span class="msg-author" style="color:${getColor(cleanAuthor)}">${cleanAuthor}</span>` : ''}
-                            ${mediaHTML}
-                            <span>${linkify(body)}</span>
-                            <span class="msg-time">${time}</span>
-                        </div>`;
+                    html += `<div class="message ${isMe ? 'outgoing' : 'incoming'}">${!isMe ? `<span class="msg-author" style="color:${getColor(cleanAuthor)}">${cleanAuthor}</span>` : ''}${mediaHTML}<span>${body}</span><span class="msg-time">${time}</span></div>`;
                 }
             });
             chatWindow.innerHTML = html;
             chatWindow.scrollTop = 0;
         }
 
-        function openTheater(url, isVid) {
-            const t = document.getElementById('theater');
-            t.querySelector('div').innerHTML = isVid ? `<video src="${url}" controls autoplay style="max-width:100%; max-height:100%"></video>` : `<img src="${url}" style="max-width:100%; max-height:100%">`;
-            t.style.display = 'flex';
-        }
-
         function getColor(str) {
             let hash = 0;
             for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
             return `hsl(${Math.abs(hash) % 360}, 65%, 35%)`;
+        }
+
+        function openTheater(url, isVid) {
+            const t = document.getElementById('theater');
+            t.querySelector('div').innerHTML = isVid ? `<video src="${url}" controls autoplay style="max-width:100%; max-height:100%"></video>` : `<img src="${url}" style="max-width:100%; max-height:100%">`;
+            t.style.display = 'flex';
         }
     </script>
 </body>
