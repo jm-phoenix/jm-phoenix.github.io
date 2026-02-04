@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WhatsApp Viewer Pro</title>
+    <title>WhatsApp Viewer Pro - Fixed</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root { --wa-header: #008069; --wa-bg: #efeae2; --my-msg: #d9fdd3; --other-msg: #ffffff; }
@@ -16,23 +16,16 @@
             display: flex; flex-direction: column; height: 100dvh; position: relative;
         }
 
-        header { background: var(--wa-header); color: white; padding: 12px 15px; font-weight: bold; flex-shrink: 0; z-index: 10; font-size: 16px; }
+        header { background: var(--wa-header); color: white; padding: 12px 15px; font-weight: bold; flex-shrink: 0; z-index: 10; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
         #user-modal {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(17, 27, 33, 0.95); z-index: 100;
             flex-direction: column; align-items: center; justify-content: center; padding: 20px;
         }
-        .modal-content {
-            background: white; width: 100%; max-height: 80%; border-radius: 12px;
-            display: flex; flex-direction: column; overflow: hidden;
-        }
+        .modal-content { background: white; width: 100%; max-height: 80%; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
         .user-list { overflow-y: auto; padding: 10px; }
-        .user-item {
-            display: block; width: 100%; padding: 15px; text-align: left;
-            background: none; border: none; border-bottom: 1px solid #f0f0f0;
-            font-size: 16px; color: var(--wa-header); cursor: pointer; font-weight: 500;
-        }
+        .user-item { display: block; width: 100%; padding: 15px; text-align: left; background: none; border: none; border-bottom: 1px solid #f0f0f0; font-size: 16px; color: var(--wa-header); cursor: pointer; font-weight: 500; }
 
         #chat-window { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
 
@@ -44,8 +37,7 @@
         .msg-author { font-size: 11px; font-weight: bold; display: block; margin-bottom: 3px; }
         .msg-time { font-size: 9px; color: #667781; display: block; text-align: right; margin-top: 4px; }
         
-        /* Links e Items de Archivo */
-        a.chat-link { color: #027eb5; text-decoration: underline; word-break: break-all; }
+        a.chat-link { color: #027eb5; text-decoration: underline; word-break: break-all; cursor: pointer; }
         .file-attach { display: flex; align-items: center; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; text-decoration: none; color: #111b21; margin: 5px 0; border: 1px solid rgba(0,0,0,0.1); }
         .media-content { display: block; width: 100%; border-radius: 6px; margin-bottom: 5px; cursor: pointer; }
 
@@ -85,10 +77,9 @@
         let allFilesMap = {};
         let rawTextGlobal = "";
 
-        // Función para enlaces clickeables
         function linkify(text) {
             const urlRegex = /(https?:\/\/[^\s]+)/g;
-            return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" class="chat-link">${url}</a>`);
+            return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer" class="chat-link">${url}</a>`);
         }
 
         document.getElementById('file-input').addEventListener('change', async (e) => {
@@ -108,10 +99,17 @@
                 const txtFile = Object.values(content.files).find(f => f.name.endsWith('.txt') && !f.name.includes('MACOSX'));
                 rawTextGlobal = await txtFile.async("string");
                 
-                // Extraer el nombre del chat (Título automático)
-                const firstLineRegex = /^[\u200e\u200f]*[\(\[]?.*?[\)\]]?\s*(.*?):\s*/;
-                const matchTitle = rawTextGlobal.split('\n')[0].match(firstLineRegex);
-                if(matchTitle) document.getElementById('chat-header').innerText = "Chat de " + matchTitle[1].trim();
+                // TITULO CORREGIDO: Busca el primer nombre real después de la fecha/hora
+                const lines = rawTextGlobal.split('\n');
+                const titleRegex = /^[\u200e\u200f]*[\(\[]?\d{1,2}\/\d{1,2}\/\d{2,4},.*?[apAP]\.?\s*[mM]\.?[\)\]]?\s*(.*?):\s*/;
+                for(let line of lines) {
+                    const match = line.match(titleRegex);
+                    if(match && match[1]) {
+                        // En tu caso detectará "Wilden U 2025"
+                        document.getElementById('chat-header').innerText = "Chat de " + match[1].trim();
+                        break;
+                    }
+                }
 
                 showUserSelection();
             } catch (err) { alert(err.message); }
@@ -186,7 +184,7 @@
                         <div class="message ${isMe ? 'outgoing' : 'incoming'}">
                             ${!isMe ? `<span class="msg-author" style="color:${getColor(cleanAuthor)}">${cleanAuthor}</span>` : ''}
                             ${mediaHTML}
-                            <span>${linkify(body)}</span>
+                            <span class="body-text">${linkify(body)}</span>
                             <span class="msg-time">${time}</span>
                         </div>`;
                 }
@@ -198,7 +196,7 @@
 
         function openTheater(url, isVid) {
             const t = document.getElementById('theater');
-            t.querySelector('div').innerHTML = isVid ? `<video src="${url}" controls autoplay></video>` : `<img src="${url}">`;
+            t.querySelector('div').innerHTML = isVid ? `<video src="${url}" controls autoplay style="max-width:100%; max-height:100%"></video>` : `<img src="${url}" style="max-width:100%; max-height:100%">`;
             t.style.display = 'flex';
         }
 
