@@ -15,7 +15,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body, html { height: 100%; width: 100%; font-family: -apple-system, sans-serif; background-color: #111b21; overflow: hidden; }
         
-        /* Pantalla de Carga / Anuncio */
+        /* Pantalla de Carga y Desbloqueo Ads */
         #ad-loader {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #111b21; z-index: 5000; flex-direction: column; align-items: center;
@@ -28,38 +28,52 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .chat-container { width: 100%; max-width: 500px; margin: 0 auto; background-color: var(--wa-bg); background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); display: flex; flex-direction: column; height: 100dvh; position: relative; }
-        header { background: var(--wa-header); color: white; padding: 12px 15px; font-weight: bold; flex-shrink: 0; z-index: 100; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        header { background: var(--wa-header); color: white; padding: 12px 15px; font-weight: bold; flex-shrink: 0; z-index: 100; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
         #chat-area-wrapper { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; }
         #chat-window { flex: 1; overflow-y: scroll; padding: 10px; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
         
-        /* Estilos de Scroll e Indicador */
-        #chat-window::-webkit-scrollbar { width: 8px; }
-        #chat-window::-webkit-scrollbar-thumb { background: #bbb; border-radius: 10px; }
-        #scroll-date-indicator { position: absolute; right: 20px; top: 10px; background: rgba(0, 0, 0, 0.8); color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; opacity: 0; transition: opacity 0.3s; z-index: 50; }
+        /* Indicador de Fecha Dinámico */
+        #scroll-date-indicator { position: absolute; right: 20px; top: 10px; background: rgba(0, 0, 0, 0.85); color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; opacity: 0; transition: opacity 0.3s; z-index: 50; pointer-events: none; }
         
-        .message { max-width: 82%; width: fit-content; padding: 8px 10px; border-radius: 8px; font-size: 14.5px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative; word-wrap: break-word; display: flex; flex-direction: column; }
+        .message { max-width: 82%; width: fit-content; padding: 8px 10px; border-radius: 8px; font-size: 14.5px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative; word-wrap: break-word; }
         .message.incoming { align-self: flex-start; background: var(--other-msg); border-top-left-radius: 0; }
         .message.outgoing { align-self: flex-end; background: var(--my-msg); border-top-right-radius: 0; }
         
         .media-content { display: block; max-width: 100%; height: auto; border-radius: 6px; margin-bottom: 5px; cursor: pointer; }
-        .file-card { display: flex; align-items: center; background: rgba(0,0,0,0.08); padding: 12px; border-radius: 6px; text-decoration: none !important; color: #111b21 !important; border: 1px solid rgba(0,0,0,0.1); }
+        .file-card { display: flex; align-items: center; background: rgba(0,0,0,0.08); padding: 10px; border-radius: 6px; text-decoration: none; color: #111b21; border: 1px solid rgba(0,0,0,0.1); margin-bottom: 5px; }
         
         .date-divider { align-self: center; background: rgba(225, 245, 254, 0.95); color: #54656f; font-size: 11px; padding: 5px 15px; border-radius: 8px; margin: 15px 0; font-weight: 600; }
+        .msg-author { font-size: 11px; font-weight: bold; display: block; margin-bottom: 3px; }
         .msg-time { font-size: 9px; color: #667781; display: block; text-align: right; margin-top: 4px; }
         
         footer { background: #f0f2f5; padding: 10px; border-top: 1px solid #ddd; }
         .upload-btn { background: white; border: none; border-radius: 20px; width: 100%; padding: 12px; cursor: pointer; display: flex; justify-content: space-between; font-size: 14px; color: #54656f; }
-        #user-modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 27, 33, 0.95); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: white; width: 100%; max-height: 80%; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+        
+        #user-modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 27, 33, 0.95); z-index: 200; align-items: center; justify-content: center; }
+        .modal-box { background: white; width: 90%; max-width: 400px; border-radius: 12px; overflow: hidden; }
+        .user-item { width: 100%; padding: 15px; text-align: left; background: none; border: none; border-bottom: 1px solid #eee; font-size: 16px; cursor: pointer; }
+        
+        #theater { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; justify-content: center; align-items: center; }
     </style>
 </head>
 <body>
 
     <div id="ad-loader">
-        <div class="spinner"></div>
-        <h3>Analizando archivos...</h3>
-        <p style="font-size: 13px; color: #8696a0; margin-top: 10px;">Esto tardará solo unos segundos.</p>
+        <div id="loader-content">
+            <div class="spinner"></div>
+            <h3>Procesando Chat...</h3>
+        </div>
+        <div id="ad-unlock-area" style="display:none;">
+            <div style="font-size: 40px; margin-bottom: 10px;">🔓</div>
+            <h3>¡Chat Analizado!</h3>
+            <p style="margin-bottom: 20px; font-size: 14px; color: #8696a0;">Haz clic abajo para desbloquear la vista.</p>
+            <button onclick="handleAdClick()" style="background:#25D366; color:white; border:none; padding:15px 40px; border-radius:30px; font-weight:bold; cursor:pointer;">DESBLOQUEAR AHORA</button>
+        </div>
+    </div>
+
+    <div id="theater" onclick="this.style.display='none'; this.querySelector('div').innerHTML=''">
+        <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center;"></div>
     </div>
 
     <div class="chat-container">
@@ -67,51 +81,43 @@
         <div id="chat-area-wrapper">
             <div id="scroll-date-indicator">Fecha</div>
             <div id="chat-window">
-                <div style="text-align:center; margin-top:50px; color:#666;">Carga el archivo .zip para comenzar</div>
+                <div style="text-align:center; margin-top:50px; color:#666;">Carga tu .zip de WhatsApp</div>
             </div>
         </div>
         
         <div id="user-modal">
-            <div class="modal-content">
-                <div style="padding:20px; border-bottom:1px solid #eee;"><h3>¿Quién eres tú?</h3></div>
-                <div id="user-list-target" style="overflow-y:auto; padding:10px;"></div>
+            <div class="modal-box">
+                <div style="padding:15px; background:#f0f2f5; font-weight:bold;">Selecciona tu nombre:</div>
+                <div id="user-list-target"></div>
             </div>
         </div>
 
         <footer>
             <input type="file" id="file-input" accept=".zip" style="display:none">
             <button class="upload-btn" onclick="document.getElementById('file-input').click()">
-                <span>Cargar Chat ZIP</span><span>by jmd</span>
+                <span>Seleccionar archivo ZIP</span><span>📎</span>
             </button>
         </footer>
     </div>
 
     <script>
-        // CONFIGURACIÓN DE MONETIZACIÓN
-        const MONETAG_DIRECT_LINK = "https://otieu.com/4/10578896"; // REEMPLAZA CON TU SMARTLINK DE MONETAG
-        const AD_DELAY_MS = 4000; // Tiempo que se muestra el loader (4 segundos)
-
+        const MONETAG_LINK = "https://otieu.com/4/10578896";
         let allFilesMap = {};
         let rawTextGlobal = "";
-        const chatWindow = document.getElementById('chat-window');
-        const dateIndicator = document.getElementById('scroll-date-indicator');
+        let scrollTimeout;
 
+        // --- MANEJO DEL ARCHIVO ---
         document.getElementById('file-input').onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            // 1. ABRIR ANUNCIO EN NUEVA PESTAÑA (Direct Link)
-            window.open(MONETAG_DIRECT_LINK, '_blank');
-
-            // 2. MOSTRAR PANTALLA DE CARGA
-            const loader = document.getElementById('ad-loader');
-            loader.style.display = 'flex';
+            document.getElementById('ad-loader').style.display = 'flex';
+            document.getElementById('loader-content').style.display = 'block';
+            document.getElementById('ad-unlock-area').style.display = 'none';
 
             try {
                 const zip = new JSZip();
                 const content = await zip.loadAsync(file);
-                
-                // Procesamiento de archivos
                 allFilesMap = {};
                 for (let f in content.files) {
                     if (content.files[f].dir) continue;
@@ -121,42 +127,41 @@
                 const txtFile = Object.values(content.files).find(f => f.name.endsWith('.txt') && !f.name.includes('MACOSX'));
                 rawTextGlobal = await txtFile.async("string");
 
-                // Esperamos el tiempo del anuncio antes de mostrar resultados
+                // Una vez procesado, mostramos el botón de desbloqueo (esto evita el bloqueo del pop-up)
                 setTimeout(() => {
-                    loader.style.display = 'none';
-                    showUserSelection();
-                }, AD_DELAY_MS);
-
+                    document.getElementById('loader-content').style.display = 'none';
+                    document.getElementById('ad-unlock-area').style.display = 'block';
+                }, 2000);
             } catch (err) {
-                loader.style.display = 'none';
-                alert("Error al procesar el archivo ZIP.");
+                alert("Error con el ZIP");
+                document.getElementById('ad-loader').style.display = 'none';
             }
         };
 
-        // El resto de funciones (showUserSelection, renderChat, linkify, etc.) se mantienen igual que en WhatsAppChat3.html
+        function handleAdClick() {
+            window.open(MONETAG_LINK, '_blank'); // Acción humana directa = No bloqueo
+            document.getElementById('ad-loader').style.display = 'none';
+            showUserSelection();
+        }
+
+        // --- LÓGICA DE VISUALIZACIÓN ---
         function showUserSelection() {
             const users = new Set();
             const blocks = rawTextGlobal.split(/[\u200e\u200f\u202a-\u202e]*(?=[\(\[]?\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4},?\s*\d{1,2}:\d{2})/g);
-            let firstFoundName = "";
-            blocks.forEach(block => {
-                const m = block.match(/^[\u200e\u200f\u202a-\u202e]*[\(\[]?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}),?\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*([apAP]\.?\s*[mM]\.?)?[\)\]]?[\s\-\:]+([^:]+):\s*([\s\S]*)$/);
-                if (m && m[4]) {
-                    const name = m[4].trim();
-                    users.add(name);
-                    if (!firstFoundName) firstFoundName = name;
-                }
+            blocks.forEach(b => {
+                const m = b.match(/^[\u200e\u200f\u202a-\u202e]*[\(\[]?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}),?\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*([apAP]\.?\s*[mM]\.?)?[\)\]]?[\s\-\:]+([^:]+):\s*([\s\S]*)$/);
+                if (m && m[4]) users.add(m[4].trim());
             });
             const target = document.getElementById('user-list-target');
             target.innerHTML = "";
-            users.forEach(user => {
+            users.forEach(u => {
                 const btn = document.createElement('button');
-                btn.style = "display:block; width:100%; padding:15px; text-align:left; background:none; border:none; border-bottom:1px solid #f0f0f0; font-size:16px; cursor:pointer;";
-                btn.innerText = user;
+                btn.className = 'user-item';
+                btn.innerText = u;
                 btn.onclick = () => {
                     document.getElementById('user-modal').style.display = 'none';
-                    let partner = [...users].find(u => u !== user) || user;
-                    document.getElementById('chat-header').innerText = partner;
-                    renderChat(user);
+                    document.getElementById('chat-header').innerText = [...users].find(x => x !== u) || u;
+                    renderChat(u);
                 };
                 target.appendChild(btn);
             });
@@ -164,12 +169,53 @@
         }
 
         function renderChat(currentUser) {
-            // Lógica de renderizado optimizada...
-            // (Igual a la versión anterior para mantener consistencia)
-            chatWindow.innerHTML = "Procesando mensajes...";
-            // ... [Insertar aquí la lógica de renderChat de tu archivo anterior] ...
-            // (Para no alargar este mensaje, asume que se copia íntegra)
+            const chatWin = document.getElementById('chat-window');
+            chatWin.innerHTML = "";
+            let html = "";
+            let lastDate = "";
+            const blocks = rawTextGlobal.split(/[\u200e\u200f\u202a-\u202e]*(?=[\(\[]?\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4},?\s*\d{1,2}:\d{2})/g);
+
+            blocks.forEach(block => {
+                const m = block.match(/^[\u200e\u200f\u202a-\u202e]*[\(\[]?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}),?\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*([apAP]\.?\s*[mM]\.?)?[\)\]]?[\s\-\:]+([^:]+):\s*([\s\S]*)$/);
+                if (m) {
+                    const [_, date, time, ampm, author, bodyRaw] = m;
+                    const cleanAuthor = author.trim();
+                    let body = bodyRaw.trim();
+                    const fullTime = (time + (ampm ? ' ' + ampm : '')).toUpperCase();
+                    if (date !== lastDate) { html += `<div class="date-divider">${date}</div>`; lastDate = date; }
+                    const isMe = cleanAuthor === currentUser;
+                    let mediaHTML = "";
+                    const bodyLower = body.toLowerCase();
+
+                    for (let f in allFilesMap) {
+                        if (bodyLower.includes(f)) {
+                            const file = allFilesMap[f];
+                            if (f.match(/\.(jpg|jpeg|png|webp|gif)$/)) mediaHTML = `<img class="media-content" src="${file.url}" onclick="openTheater('${file.url}',false)">`;
+                            else if (f.match(/\.(mp4|mov)$/)) mediaHTML = `<video class="media-content" src="${file.url}" onclick="openTheater('${file.url}',true)"></video>`;
+                            else mediaHTML = `<a href="${file.url}" download="${file.originalName}" class="file-card">📁 ${file.originalName}</a>`;
+                            body = body.replace(f, "").replace("<adjunto:>", "").trim();
+                            break;
+                        }
+                    }
+                    html += `<div class="message ${isMe ? 'outgoing' : 'incoming'}">${!isMe ? `<b class="msg-author" style="color:${getColor(cleanAuthor)}">${cleanAuthor}</b>` : ''}${mediaHTML}<div style="white-space:pre-wrap">${body}</div><span class="msg-time">${fullTime}</span></div>`;
+                }
+            });
+            chatWin.innerHTML = html;
+            chatWin.scrollTop = 0;
         }
+
+        // Scroll e Indicador de Fecha
+        document.getElementById('chat-window').addEventListener('scroll', function() {
+            const ind = document.getElementById('scroll-date-indicator');
+            ind.style.opacity = '1';
+            clearTimeout(scrollTimeout);
+            const divs = this.querySelectorAll('.date-divider');
+            divs.forEach(d => { if(d.getBoundingClientRect().top < 200) ind.innerText = d.innerText; });
+            scrollTimeout = setTimeout(() => ind.style.opacity = '0', 1000);
+        });
+
+        function getColor(s) { let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h); return `hsl(${Math.abs(h) % 360}, 65%, 35%)`; }
+        function openTheater(u, v) { const t = document.getElementById('theater'); t.querySelector('div').innerHTML = v ? `<video src="${u}" controls autoplay style="max-width:95%; max-height:95%"></video>` : `<img src="${u}" style="max-width:95%; max-height:95%">`; t.style.display = 'flex'; }
     </script>
 </body>
 </html>
