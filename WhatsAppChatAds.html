@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Visor de Chats de WhatsApp | Pro</title>
     
-    <link rel="icon" type="image/jpeg" href="https://i.postimg.cc/hjTMg3Jz/IMG-2113.jpg">
+   <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="none"/><path d="M256 96C176 96 112 154 112 230c0 36 14 68 36 92l-12 64 64-12c22 12 44 18 68 18 80 0 144-58 144-134S336 96 256 96z" fill="%2325D366"/><text x="256" y="270" text-anchor="middle" font-size="96" font-weight="700" font-family="Arial, Helvetica, sans-serif" fill="%23FFFFFF">zip</text></svg>'>
     <meta property="og:title" content="Visor de Chats de WhatsApp">
     <meta property="og:image" content="https://i.postimg.cc/hjTMg3Jz/IMG-2113.jpg">
 
@@ -15,15 +15,14 @@
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body, html { height: 100%; width: 100%; font-family: -apple-system, sans-serif; background-color: #111b21; overflow: hidden; }
         
-        /* Pantalla de Carga y Desbloqueo Ads */
         #ad-loader {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #111b21; z-index: 5000; flex-direction: column; align-items: center;
-            justify-content: center; color: white; text-align: center; padding: 20px;
+            background: #111b21; z-index: 5000; flex-direction: column; 
+            align-items: center; justify-content: center; color: white; text-align: center; padding: 20px;
         }
         .spinner {
             width: 50px; height: 50px; border: 5px solid #25D366; border-top: 5px solid transparent;
-            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;
+            border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
@@ -33,7 +32,6 @@
         #chat-area-wrapper { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; }
         #chat-window { flex: 1; overflow-y: scroll; padding: 10px; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
         
-        /* Indicador de Fecha Dinámico */
         #scroll-date-indicator { position: absolute; right: 20px; top: 10px; background: rgba(0, 0, 0, 0.85); color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; opacity: 0; transition: opacity 0.3s; z-index: 50; pointer-events: none; }
         
         .message { max-width: 82%; width: fit-content; padding: 8px 10px; border-radius: 8px; font-size: 14.5px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative; word-wrap: break-word; }
@@ -41,8 +39,10 @@
         .message.outgoing { align-self: flex-end; background: var(--my-msg); border-top-right-radius: 0; }
         
         .media-content { display: block; max-width: 100%; height: auto; border-radius: 6px; margin-bottom: 5px; cursor: pointer; }
-        .file-card { display: flex; align-items: center; background: rgba(0,0,0,0.08); padding: 10px; border-radius: 6px; text-decoration: none; color: #111b21; border: 1px solid rgba(0,0,0,0.1); margin-bottom: 5px; }
-        
+        .file-card { display: flex; flex-direction: column; background: rgba(0,0,0,0.08); padding: 10px; border-radius: 6px; text-decoration: none; color: #111b21; border: 1px solid rgba(0,0,0,0.1); margin-bottom: 5px; }
+        .file-card b { font-size: 13px; }
+        .file-card small { color: #54656f; font-size: 11px; }
+
         .date-divider { align-self: center; background: rgba(225, 245, 254, 0.95); color: #54656f; font-size: 11px; padding: 5px 15px; border-radius: 8px; margin: 15px 0; font-weight: 600; }
         .msg-author { font-size: 11px; font-weight: bold; display: block; margin-bottom: 3px; }
         .msg-time { font-size: 9px; color: #667781; display: block; text-align: right; margin-top: 4px; }
@@ -55,6 +55,9 @@
         .user-item { width: 100%; padding: 15px; text-align: left; background: none; border: none; border-bottom: 1px solid #eee; font-size: 16px; cursor: pointer; }
         
         #theater { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; justify-content: center; align-items: center; }
+        
+        /* Estilo para reproductor de audio */
+        audio.wa-audio { height: 35px; width: 200px; border-radius: 20px; margin-bottom: 5px; filter: sepia(20%) saturate(70%) grayscale(1); }
     </style>
 </head>
 <body>
@@ -64,11 +67,18 @@
             <div class="spinner"></div>
             <h3>Procesando Chat...</h3>
         </div>
+        
         <div id="ad-unlock-area" style="display:none;">
             <div style="font-size: 40px; margin-bottom: 10px;">🔓</div>
-            <h3>¡Chat Analizado!</h3>
-            <p style="margin-bottom: 20px; font-size: 14px; color: #8696a0;">Haz clic abajo para desbloquear la vista.</p>
-            <button onclick="handleAdClick()" style="background:#25D366; color:white; border:none; padding:15px 40px; border-radius:30px; font-weight:bold; cursor:pointer;">DESBLOQUEAR AHORA</button>
+            <h3 style="margin-bottom: 10px;">¡Chat Analizado!</h3>
+            <p style="margin-bottom: 25px; font-size: 14px; color: #8696a0;">Haz clic abajo para desbloquear la vista.</p>
+            <button onclick="handleAdClick()" style="background:#25D366; color:white; border:none; padding:15px 40px; border-radius:30px; font-weight:bold; cursor:pointer; font-size: 16px; box-shadow: 0 4px 15px rgba(37,211,102,0.3);">
+                DESBLOQUEAR AHORA
+            </button>
+            <p style="margin-top: 25px; font-size: 12px; color: #8696a0; line-height: 1.4; padding: 0 20px;">
+                Se abrirá un anuncio en una página nueva.<br>
+                <b>Gracias por tu patrocinio</b>, esto nos permite mantener la herramienta gratuita.
+            </p>
         </div>
     </div>
 
@@ -87,7 +97,7 @@
         
         <div id="user-modal">
             <div class="modal-box">
-                <div style="padding:15px; background:#f0f2f5; font-weight:bold;">Selecciona tu nombre:</div>
+                <div style="padding:15px; background:#f0f2f5; font-weight:bold; color:#008069;">Selecciona tu nombre:</div>
                 <div id="user-list-target"></div>
             </div>
         </div>
@@ -95,7 +105,7 @@
         <footer>
             <input type="file" id="file-input" accept=".zip" style="display:none">
             <button class="upload-btn" onclick="document.getElementById('file-input').click()">
-                <span>Seleccionar archivo ZIP</span><span>📎</span>
+                <span>Seleccionar archivo ZIP</span><span>By JMD</span>
             </button>
         </footer>
     </div>
@@ -106,7 +116,6 @@
         let rawTextGlobal = "";
         let scrollTimeout;
 
-        // --- MANEJO DEL ARCHIVO ---
         document.getElementById('file-input').onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -127,24 +136,22 @@
                 const txtFile = Object.values(content.files).find(f => f.name.endsWith('.txt') && !f.name.includes('MACOSX'));
                 rawTextGlobal = await txtFile.async("string");
 
-                // Una vez procesado, mostramos el botón de desbloqueo (esto evita el bloqueo del pop-up)
                 setTimeout(() => {
                     document.getElementById('loader-content').style.display = 'none';
                     document.getElementById('ad-unlock-area').style.display = 'block';
-                }, 2000);
+                }, 2500);
             } catch (err) {
-                alert("Error con el ZIP");
+                alert("Error al abrir el archivo ZIP.");
                 document.getElementById('ad-loader').style.display = 'none';
             }
         };
 
         function handleAdClick() {
-            window.open(MONETAG_LINK, '_blank'); // Acción humana directa = No bloqueo
+            window.open(MONETAG_LINK, '_blank');
             document.getElementById('ad-loader').style.display = 'none';
             showUserSelection();
         }
 
-        // --- LÓGICA DE VISUALIZACIÓN ---
         function showUserSelection() {
             const users = new Set();
             const blocks = rawTextGlobal.split(/[\u200e\u200f\u202a-\u202e]*(?=[\(\[]?\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4},?\s*\d{1,2}:\d{2})/g);
@@ -160,12 +167,18 @@
                 btn.innerText = u;
                 btn.onclick = () => {
                     document.getElementById('user-modal').style.display = 'none';
-                    document.getElementById('chat-header').innerText = [...users].find(x => x !== u) || u;
+                    const partner = [...users].find(x => x !== u) || u;
+                    document.getElementById('chat-header').innerText = partner;
                     renderChat(u);
                 };
                 target.appendChild(btn);
             });
             document.getElementById('user-modal').style.display = 'flex';
+        }
+
+        function linkify(text) {
+            const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+            return text.replace(urlPattern, '<a href="$1" target="_blank" style="color:var(--link-color); text-decoration:underline;">$1</a>');
         }
 
         function renderChat(currentUser) {
@@ -190,13 +203,24 @@
                     for (let f in allFilesMap) {
                         if (bodyLower.includes(f)) {
                             const file = allFilesMap[f];
-                            if (f.match(/\.(jpg|jpeg|png|webp|gif)$/)) mediaHTML = `<img class="media-content" src="${file.url}" onclick="openTheater('${file.url}',false)">`;
-                            else if (f.match(/\.(mp4|mov)$/)) mediaHTML = `<video class="media-content" src="${file.url}" onclick="openTheater('${file.url}',true)"></video>`;
-                            else mediaHTML = `<a href="${file.url}" download="${file.originalName}" class="file-card">📁 ${file.originalName}</a>`;
+                            if (f.match(/\.(jpg|jpeg|png|webp|gif)$/)) {
+                                mediaHTML = `<img class="media-content" src="${file.url}" onclick="openTheater('${file.url}',false)">`;
+                            } else if (f.match(/\.(mp4|mov)$/)) {
+                                mediaHTML = `<video class="media-content" src="${file.url}" onclick="openTheater('${file.url}',true)"></video>`;
+                            } else if (f.match(/\.(opus|ogg|mp3)$/)) {
+                                mediaHTML = `<audio controls class="wa-audio"><source src="${file.url}" type="audio/ogg"></audio>`;
+                            } else if (f.match(/\.(vcf)$/)) {
+                                mediaHTML = `<a href="${file.url}" download="${file.originalName}" class="file-card"><b>👤 ${file.originalName}</b><small>Toca para añadir a contactos</small></a>`;
+                            } else {
+                                mediaHTML = `<a href="${file.url}" download="${file.originalName}" class="file-card">📁 ${file.originalName}</a>`;
+                            }
                             body = body.replace(f, "").replace("<adjunto:>", "").trim();
                             break;
                         }
                     }
+                    
+                    body = linkify(body);
+                    
                     html += `<div class="message ${isMe ? 'outgoing' : 'incoming'}">${!isMe ? `<b class="msg-author" style="color:${getColor(cleanAuthor)}">${cleanAuthor}</b>` : ''}${mediaHTML}<div style="white-space:pre-wrap">${body}</div><span class="msg-time">${fullTime}</span></div>`;
                 }
             });
@@ -204,7 +228,6 @@
             chatWin.scrollTop = 0;
         }
 
-        // Scroll e Indicador de Fecha
         document.getElementById('chat-window').addEventListener('scroll', function() {
             const ind = document.getElementById('scroll-date-indicator');
             ind.style.opacity = '1';
