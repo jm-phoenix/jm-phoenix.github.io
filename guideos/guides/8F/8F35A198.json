@@ -1,0 +1,111 @@
+{
+  "guideSpecVersion": "1.0",
+  "guide": {
+    "id": "8F35A198",
+    "title": "Replace Diaphragm on Sample Pump",
+    "description": "Replace the worn diaphragm on the ACME SP-928 sample pump.",
+    "version": "1.0.0",
+    "language": "en",
+    "category": "Maintenance",
+    "difficulty": "Intermediate",
+    "estimatedMinutes": 45,
+    "keywords": ["pump", "diaphragm", "maintenance"],
+    "author": "GuideOS Team",
+    "created": "2025-01-01T00:00:00Z",
+    "updated": "2025-01-01T00:00:00Z"
+  },
+  "equipment": {
+    "manufacturer": "ACME",
+    "series": "SP-900",
+    "model": "SP-928",
+    "voltage": "24VDC"
+  },
+  "theme": {
+    "enabled": true,
+    "primaryColor": "#0054A6",
+    "secondaryColor": "#003E7A",
+    "accentColor": "#F59E0B"
+  },
+  "phases": [
+    {
+      "id": "phase-prep",
+      "title": "Preparation",
+      "description": "Isolate and prepare the pump for service.",
+      "estimatedMinutes": 10,
+      "steps": [
+        {
+          "id": "step-isolate",
+          "title": "Isolate the pump",
+          "instruction": "Lock out and tag out power. Close the inlet valve and bleed pressure below {pressure1}.",
+          "estimatedMinutes": 5,
+          "warnings": [
+            "Verify electrical isolation with a meter before continuing."
+          ],
+          "entities": {
+            "pressure1": { "type": "pressure", "value": 5, "unit": "psi", "precision": 0 }
+          }
+        },
+        {
+          "id": "step-drain",
+          "title": "Drain process fluid",
+          "instruction": "Open drain valve and collect process fluid in an approved container.",
+          "estimatedMinutes": 5,
+          "dependencies": ["step-isolate"]
+        }
+      ]
+    },
+    {
+      "id": "phase-replace",
+      "title": "Diaphragm Replacement",
+      "description": "Remove and replace the diaphragm assembly.",
+      "estimatedMinutes": 25,
+      "steps": [
+        {
+          "id": "step-remove",
+          "title": "Remove pump head",
+          "instruction": "Using {tool1}, remove the 6 head bolts in a star pattern.",
+          "estimatedMinutes": 10,
+          "dependencies": ["step-drain"],
+          "entities": {
+            "tool1": { "type": "tool", "name": "10 mm socket wrench" }
+          }
+        },
+        {
+          "id": "step-install",
+          "title": "Install new diaphragm",
+          "instruction": "Install {part1} and torque head bolts to {torque1} in a star pattern. Apply {chemical1} to bolt threads.",
+          "estimatedMinutes": 15,
+          "dependencies": ["step-remove"],
+          "entities": {
+            "part1": { "type": "part", "partNumber": "928-001", "description": "Diaphragm Kit" },
+            "torque1": { "type": "torque", "value": 25, "unit": "lb-ft", "precision": 0 },
+            "chemical1": { "type": "chemical", "name": "Loctite 243" }
+          }
+        }
+      ]
+    },
+    {
+      "id": "phase-verify",
+      "title": "Verification",
+      "description": "Restore service and verify operation.",
+      "estimatedMinutes": 10,
+      "steps": [
+        {
+          "id": "step-restore",
+          "title": "Restore service",
+          "instruction": "Remove lockout, open inlet valve, restore power and verify pump pressure reaches {pressure1}.",
+          "estimatedMinutes": 10,
+          "dependencies": ["step-install"],
+          "entities": {
+            "pressure1": { "type": "pressure", "value": 60, "unit": "psi", "precision": 0 }
+          }
+        }
+      ]
+    }
+  ],
+  "resources": [],
+  "metadata": {
+    "tags": ["pump", "diaphragm"],
+    "approvalStatus": "approved"
+  }
+}

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GuideOS — Acceptance Tests</title>
+<link rel="stylesheet" href="/assets/css/base.css" />
+<style>
+  main { max-width: 900px; margin: 32px auto; padding: 0 16px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--color-border); font-size: 14px; }
+  .pass { color: var(--color-success); font-weight: 600; }
+  .fail { color: var(--color-danger); font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+<h1>GuideOS Acceptance Tests</h1>
+<p class="muted">Automated subset of ACCEPTANCE_TESTS.md.</p>
+<button id="run" class="primary">Run tests</button>
+<table id="results"><thead><tr><th>ID</th><th>Description</th><th>Result</th></tr></thead><tbody></tbody></table>
+<script type="module">
+import { validateGuideSpec } from '/shared/validation.js';
+import { convertValue, convertTemperature, isUnitValid } from '/shared/units.js';
+import { resolveInstruction, isKnownEntityType } from '/shared/entities.js';
+import { isHexGuideId, generateGuideId } from '/shared/utils.js';
+
+const tests = [
+  ['GS001', 'Valid GuideSpec JSON loads', async () => {
+    const r = await fetch('/guides/8F/8F35A198.json'); const spec = await r.json();
+    return validateGuideSpec(spec).valid;
+  }],
+  ['GS002', 'Invalid JSON rejected', () => !validateGuideSpec(null).valid],
+  ['GS003', 'Missing required fields generate errors', () => {
+    const r = validateGuideSpec({ guideSpecVersion: '1.0', guide: {}, equipment: {}, phases: [] });
+    return !r.valid && r.errors.length > 0;
+  }],
+  ['GS004', 'Unknown entity type generates warning', () => {
+    const spec = makeMinimalSpec();
+    spec.phases[0].steps[0].entities = { x: { type: 'unknownType' } };
+    spec.phases[0].steps[0].instruction = 'See {x}';
+    return validateGuideSpec(spec).warnings.some(w => w.includes('unknown'));
+  }],
+  ['GS007', 'Invalid engineering unit rejected', () => {
+    const spec = makeMinimalSpec();
+    spec.phases[0].steps[0].entities = { t: { type: 'torque', value: 1, unit: 'foobar' } };
+    spec.phases[0].steps[0].instruction = 'Torque {t}';
+    return !validateGuideSpec(spec).valid;
+  }],
+  ['GS008', 'Unresolved placeholder rejected', () => {
+    const spec = makeMinimalSpec();
+    spec.phases[0].steps[0].instruction = 'See {missing}';
+    spec.phases[0].steps[0].entities = {};
+    return !validateGuideSpec(spec).valid;
+  }],
+  ['GS006', 'Circular dependency detected', () => {
+    const spec = makeMinimalSpec();
+    spec.phases[0].steps = [
+      { id: 'a', title: 'A', instruction: 'a', dependencies: ['b'] },
+      { id: 'b', title: 'B', instruction: 'b', dependencies: ['a'] },
+    ];
+    return !validateGuideSpec(spec).valid;
+  }],
+  ['U001', 'Pressure psi → bar', () => Math.abs(convertValue('pressure', 14.5038, 'psi', 'bar') - 1) < 0.001],
+  ['U002', 'Torque lb-ft → N-m', () => Math.abs(convertValue('torque', 1, 'lb-ft', 'N-m') - 1.3558) < 0.01],
+  ['U003', 'Temperature °C → °F', () => convertTemperature(100, '°C', '°F') === 212],
+  ['U004', 'isUnitValid accepts known unit', () => isUnitValid('pressure', 'bar')],
+  ['U005', 'isUnitValid rejects unknown', () => !isUnitValid('pressure', 'xx')],
+  ['E001', 'Entity placeholder resolves', () => {
+    const out = resolveInstruction('Torque {t}.', { t: { type: 'torque', value: 25, unit: 'lb-ft', precision: 0 } }, 'auto');
+    return out.includes('25 lb-ft');
+  }],
+  ['E002', 'Engineering types recognized', () => isKnownEntityType('pressure') && isKnownEntityType('tool')],
+  ['ID001', 'Guide ID generator produces 8 hex chars', () => isHexGuideId(generateGuideId())],
+];
+
+function makeMinimalSpec() {
+  return {
+    guideSpecVersion: '1.0',
+    guide: { id: generateGuideId(), title: 't', description: 'd', version: '1.0.0', language: 'en', category: 'c', difficulty: 'd', estimatedMinutes: 1, keywords: [], author: 'a', created: '2025-01-01', updated: '2025-01-01' },
+    equipment: { manufacturer: 'm', series: 's', model: 'm' },
+    phases: [{ id: 'p1', title: 'P1', steps: [{ id: 's1', title: 'S1', instruction: 'do' }] }],
+  };
+}
+
+document.getElementById('run').addEventListener('click', async () => {
+  const tbody = document.querySelector('#results tbody');
+  tbody.innerHTML = '';
+  let passed = 0;
+  for (const [id, desc, fn] of tests) {
+    let result = false, error = '';
+    try { result = await fn(); } catch (e) { error = e.message; }
+    if (result) passed++;
+    tbody.insertAdjacentHTML('beforeend', `<tr><td>${id}</td><td>${desc}${error ? ' — ' + error : ''}</td><td class="${result ? 'pass' : 'fail'}">${result ? 'PASS' : 'FAIL'}</td></tr>`);
+  }
+  tbody.insertAdjacentHTML('beforeend', `<tr><td></td><td><b>Total</b></td><td><b>${passed} / ${tests.length}</b></td></tr>`);
+});
+</script>
+</main>
+</body>
+</html>

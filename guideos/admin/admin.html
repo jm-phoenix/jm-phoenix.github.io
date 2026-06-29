@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GuideOS — Administration Console</title>
+<link rel="stylesheet" href="/assets/css/base.css" />
+<link rel="stylesheet" href="./admin.css" />
+</head>
+<body>
+<header class="app-header">
+  <h1>GuideOS Administration Console</h1>
+  <div class="actions">
+    <button id="view-drafts">Drafts</button>
+    <button id="view-ai">AI Generator</button>
+    <button id="new-draft" class="primary">+ New Draft</button>
+    <button id="import-draft">Import JSON</button>
+    <input type="file" id="import-file" accept="application/json" class="hidden" />
+  </div>
+</header>
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <h2>Drafts</h2>
+    <ul class="draft-list" id="draft-list"></ul>
+  </aside>
+  <main class="admin-main" id="editor"></main>
+</div>
+<script type="module" src="./admin.js"></script>
+</body>
+</html>

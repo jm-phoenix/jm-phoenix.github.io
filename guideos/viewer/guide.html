@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GuideOS — Guide Viewer</title>
+<link rel="stylesheet" href="/assets/css/base.css" />
+<link rel="stylesheet" href="./guide.css" />
+</head>
+<body>
+<header class="app-header">
+  <div style="display:flex;align-items:center;gap:12px">
+    <button id="toggle-sidebar" aria-label="Menu">☰</button>
+    <h1 id="guide-title">Loading…</h1>
+  </div>
+  <div class="actions">
+    <select id="units-pref" aria-label="Units">
+      <option value="auto">Auto</option>
+      <option value="metric">Metric</option>
+      <option value="imperial">Imperial</option>
+    </select>
+    <button id="toggle-theme" aria-label="Toggle theme">🌓</button>
+  </div>
+</header>
+<div id="error-banner" class="error hidden" role="alert"></div>
+<div class="viewer-layout">
+  <aside class="sidebar" id="sidebar" aria-label="Guide navigation">
+    <h2>Phases</h2>
+    <div class="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
+    <p class="muted" id="progress-label">0% complete</p>
+    <nav id="toc"></nav>
+  </aside>
+  <main class="viewer-main" id="step-view" aria-live="polite"></main>
+</div>
+<script type="module" src="./guide.js"></script>
+</body>
+</html>

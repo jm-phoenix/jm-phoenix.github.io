@@ -1,0 +1,74 @@
+.viewer-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: calc(100vh - 53px);
+}
+.sidebar {
+  border-right: 1px solid var(--color-border);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  overflow-y: auto;
+}
+.sidebar h2 { font-size: 14px; text-transform: uppercase; color: var(--color-muted); letter-spacing: .05em; margin: 0 0 var(--space-3); }
+.sidebar ul { list-style: none; padding: 0; margin: 0; }
+.sidebar .phase-title { font-weight: 600; margin-top: var(--space-3); }
+.sidebar .step-link {
+  display: block;
+  padding: var(--space-1) var(--space-2);
+  color: var(--color-fg);
+  text-decoration: none;
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+.sidebar .step-link:hover { background: var(--color-border); }
+.sidebar .step-link.active { background: var(--color-primary); color: #fff; }
+.sidebar .step-link.completed::before { content: "✓ "; color: var(--color-success); }
+
+.viewer-main { padding: var(--space-5) var(--space-6); max-width: 880px; }
+.viewer-main h2 { margin-top: 0; }
+.viewer-main h3 { margin-top: var(--space-5); }
+
+.progress-bar {
+  height: 8px;
+  background: var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: var(--space-3) 0 var(--space-5);
+}
+.progress-bar > div { height: 100%; background: var(--color-primary); transition: width .2s; }
+
+.instruction { font-size: 17px; line-height: 1.7; }
+.step-section { margin-top: var(--space-4); }
+.step-section h4 { margin: 0 0 var(--space-2); font-size: 13px; text-transform: uppercase; color: var(--color-muted); letter-spacing: .05em; }
+.entity-list { list-style: disc; padding-left: 20px; }
+
+.code-block {
+  position: relative;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  margin: var(--space-3) 0;
+  overflow-x: auto;
+}
+.code-block pre { margin: 0; }
+.code-block .copy {
+  position: absolute; top: 6px; right: 6px;
+  font-size: 12px; padding: 2px 8px;
+}
+
+.step-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.notes textarea { min-height: 100px; }
+
+@media (max-width: 800px) {
+  .viewer-layout { grid-template-columns: 1fr; }
+  .sidebar { position: fixed; top: 53px; left: 0; right: 0; bottom: 0; transform: translateX(-100%); transition: transform .2s; z-index: 10; }
+  .sidebar.open { transform: translateX(0); }
+}

@@ -1,0 +1,17 @@
+{
+  "guideSpecLibraryVersion": "1.0",
+  "guides": [
+    {
+      "id": "8F35A198",
+      "title": "Replace Diaphragm on Sample Pump",
+      "manufacturer": "ACME",
+      "series": "SP-900",
+      "model": "SP-928",
+      "category": "Maintenance",
+      "difficulty": "Intermediate",
+      "estimatedMinutes": 45,
+      "version": "1.0.0",
+      "path": "8F/8F35A198.json"
+    }
+  ]
+}
