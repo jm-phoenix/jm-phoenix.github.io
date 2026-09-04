@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Slug Launcher</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root {
+    --bg-light: #f2f2f7;
+    --bg-dark: #000000;
+    --card-light: #ffffff;
+    --card-dark: #1c1c1e;
+    --text-light: #1c1c1e;
+    --text-dark: #f2f2f7;
+    --accent: #007aff;
+    --accent-dark: #0a84ff;
+}
+
+body.theme-light { background: var(--bg-light); color: var(--text-light); }
+body.theme-dark  { background: var(--bg-dark);  color: var(--text-dark); }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+    margin: 0;
+    padding: 0;
+    transition: background .2s ease, color .2s ease;
+}
+
+/* ---------- HEADER (fijo) ---------- */
+#header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-light);
+    transition: box-shadow .2s ease;
+}
+body.theme-dark #header { background: var(--bg-dark); }
+body.modeActive #header { box-shadow: 0 2px 10px rgba(0,122,255,0.35); }
+#header h1 { margin:0; font-size:19px; font-weight:700; display:flex; align-items:center; gap:8px; }
+.titleIcon { width:22px; height:22px; flex-shrink:0; }
+#burgerBtn {
+    border:none; background:transparent; color:inherit; font-size:22px; cursor:pointer;
+    width:36px; height:36px; border-radius:10px; transition:background .15s ease;
+}
+#burgerBtn:hover { background: rgba(127,127,127,0.15); }
+
+/* ---------- FOOTER (fijo) ---------- */
+#footer {
+    position: fixed;
+    left:0; right:0; bottom:0;
+    z-index: 1000;
+    padding: 10px 12px;
+    text-align:center;
+    font-size:12px;
+    opacity:0.75;
+    background: var(--bg-light);
+}
+body.theme-dark #footer { background: var(--bg-dark); }
+
+/* ---------- MAIN CONTENT ---------- */
+#main {
+    padding: 78px 20px 64px;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+/* ---------- BORDE ROJO: configuración no salvada ---------- */
+#unsavedIndicator {
+    position: fixed; inset: 0; z-index: 1500;
+    border: 4px solid #ff3b30;
+    box-sizing: border-box;
+    pointer-events: none;
+    display: none;
+}
+body.unsavedBorder #unsavedIndicator { display: block; }
+
+/* ---------- FOOTER: estado salvado ---------- */
+#footerSaved { font-weight:600; }
+body.unsavedBorder #footerSaved { color:#ff3b30; opacity:1; }
+
+/* ---------- ESTADO VACÍO: ayuda inicial ---------- */
+#emptyStateHelp {
+    display: none;
+    position: relative;
+    max-width: 420px;
+    margin: 30px auto 24px;
+    padding: 22px 22px 20px;
+    border-radius: 22px;
+    background: var(--card-light);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    text-align: center;
+    animation: popIn .3s ease;
+}
+body.theme-dark #emptyStateHelp { background: var(--card-dark); box-shadow:0 6px 18px rgba(0,0,0,0.6); }
+#emptyStateHelp.visible { display: block; }
+#emptyStateHelp h2 { margin: 0 0 10px; font-size: 18px; }
+#emptyStateHelp p { margin: 0; font-size: 14px; line-height: 1.5; opacity: 0.85; }
+#emptyAddAppSlot { margin-top:16px; display:flex; justify-content:center; }
+#emptyAddAppSlot .appIcon { width:150px; max-width:72%; }
+
+/* Hint secundario: cómo cambiar de idioma, en los 11 idiomas a la vez */
+#emptyLangHint {
+    margin: 14px 0 0;
+    padding-top: 12px;
+    border-top: 1px solid rgba(127,127,127,0.25);
+    font-size: 11.5px;
+    line-height: 1.7;
+    opacity: 0.65;
+}
+
+/* Flecha fija apuntando siempre al botón hamburguesa (☰) */
+.emptyHelpArrowSvg {
+    position: fixed;
+    top: 4px;
+    right: 4px;
+    width: 130px;
+    height: 130px;
+    color: var(--accent);
+    pointer-events: none;
+    z-index: 1002;
+}
+body.theme-dark .emptyHelpArrowSvg { color: var(--accent-dark); }
+
+/* ---------- GRID PRINCIPAL (cuadrado 1:1) ---------- */
+#launcherGrid, .folderGrid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(4, 1fr);
+}
+#launcherGrid { max-width: 1100px; margin: 0 auto; }
+@media (min-width: 1024px) { #launcherGrid { grid-template-columns: repeat(8, 1fr); } }
+@media (min-width: 700px) and (max-width: 1023px) { #launcherGrid { grid-template-columns: repeat(5, 1fr); } }
+@media (max-width: 699px)  { #launcherGrid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 420px)  { #launcherGrid { grid-template-columns: repeat(3, 1fr); } }
+
+/* El grid del folder siempre tiene al menos 1 columna menos que el launcher principal
+   en el mismo breakpoint (así nunca se ve más "apretado" que el launcher). */
+.folderGrid { grid-template-columns: repeat(3, 1fr); }
+@media (min-width:1024px){ .folderGrid{grid-template-columns:repeat(7,1fr);} }
+@media (min-width: 700px) and (max-width: 1023px) { .folderGrid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width:699px){ .folderGrid{grid-template-columns:repeat(3,1fr);} }
+@media (max-width:420px){ .folderGrid{grid-template-columns:repeat(2,1fr);} }
+
+/* ---------- ICONOS (celda cuadrada) ---------- */
+.appIcon {
+    aspect-ratio: 1 / 1;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:10%; box-sizing:border-box;
+    border-radius:20%; background:var(--card-light);
+    box-shadow:0 6px 18px rgba(0,0,0,0.08);
+    transition:transform .15s ease, box-shadow .15s ease, background .2s ease, outline .1s ease;
+    cursor:pointer; position:relative;
+    touch-action: manipulation;
+    -webkit-user-select:none; user-select:none;
+    min-width: 0; min-height: 0; overflow: hidden;
+}
+body.theme-dark .appIcon { background:var(--card-dark); box-shadow:0 6px 18px rgba(0,0,0,0.6); }
+.appIcon img, .appIcon .folderSvgIcon { width:54%; height:54%; aspect-ratio:1/1; object-fit:contain; margin-bottom:8%; border-radius:22%; }
+.appIcon img { pointer-events:none; -webkit-user-drag:none; user-drag:none; }
+.appIcon:hover { transform:scale(1.05); box-shadow:0 10px 24px rgba(0,0,0,0.12); }
+body.theme-dark .appIcon:hover { box-shadow:0 10px 24px rgba(0,0,0,0.8); }
+.appIcon span {
+    font-size:clamp(10px,2.6vw,14px); font-weight:500; color:var(--text-light);
+    max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+body.theme-dark .appIcon span { color:var(--text-dark); }
+
+/* Badge: cantidad de shortcuts dentro de un folder (50% más grande, azul del folder) */
+.appIcon .folderBadge {
+    position:absolute; top:4px; right:4px;
+    min-width:30px; height:30px; padding:0 6px;
+    border-radius:999px;
+    background:#4A90E2; color:#fff;
+    font-size:14px; font-weight:700; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    box-sizing:border-box;
+    box-shadow:0 1px 4px rgba(0,0,0,0.4);
+    z-index:2;
+    pointer-events:none;
+    white-space:nowrap; max-width:none;
+}
+body.theme-dark .appIcon .folderBadge { box-shadow:0 1px 4px rgba(0,0,0,0.8); border:1px solid rgba(255,255,255,0.15); }
+
+/* Modo Editar: indicador visual de que el icono es editable */
+.editModeItem { outline:2px dashed rgba(0,122,255,0.55); outline-offset:3px; }
+
+/* Modo Mover: animación wiggle */
+@keyframes wiggle {
+    0%,100% { transform:rotate(-2deg); }
+    50%     { transform:rotate(2deg); }
+}
+.wiggleMode .appIcon:not(.dragActive) { animation:wiggle .26s infinite ease-in-out; }
+.appIcon.dragActive { animation:none !important; box-shadow:0 14px 30px rgba(0,0,0,0.35); opacity:0.92; z-index:500; }
+.appIcon.dropTargetHighlight { outline:3px solid var(--accent); outline-offset:3px; background:rgba(0,122,255,0.12); }
+.addAppTile {
+    border:2px dashed rgba(0,122,255,0.45);
+    background:transparent;
+    box-shadow:none;
+}
+.addAppTile:hover { transform:scale(1.03); }
+.addAppTile .addAppPlus {
+    width:54%; height:54%; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    border:2px solid currentColor; font-size:clamp(28px,6vw,44px);
+    font-weight:300; line-height:1; color:var(--accent);
+    margin-bottom:8%;
+}
+.addAppTile span { color:var(--accent); }
+.folderModal.dropToDesktop .folderContent {
+    outline:3px dashed var(--accent);
+    outline-offset:6px;
+}
+
+/* ---------- FOLDER MODAL (zoom transition) ---------- */
+.folderModal {
+    position:fixed; inset:0; z-index:999;
+    display:flex; justify-content:center; align-items:center;
+    background:rgba(0,0,0,0);
+    backdrop-filter:blur(0px);
+    -webkit-backdrop-filter:blur(0px);
+    transition: background .25s ease, backdrop-filter .25s ease;
+    padding:20px; box-sizing:border-box;
+}
+.folderModal.open {
+    background:rgba(0,0,0,0.35);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+}
+.folderContent {
+    background:var(--card-light); padding:20px; border-radius:28px;
+    width:90%; max-width:600px; max-height:80vh; overflow:auto;
+    transform:scale(.82); opacity:0;
+    transition: transform .25s ease, opacity .25s ease;
+}
+.folderModal.open .folderContent { transform:scale(1); opacity:1; }
+body.theme-dark .folderContent { background:var(--card-dark); }
+
+/* ---------- MODALS GENERALES ---------- */
+#addModal, #folderModalAdd, #editAppModal, #editFolderModal, #sidePanelOverlay {
+    display:none; position:fixed; inset:0; z-index:1001;
+}
+#sidePanelOverlay {
+    background:rgba(0,0,0,0.35); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+}
+#sidePanel {
+    position:fixed; top:0; right:0; width:270px; height:100%;
+    background:var(--card-light); box-shadow:-4px 0 12px rgba(0,0,0,0.2);
+    padding:16px; box-sizing:border-box;
+    overflow-y:auto; overscroll-behavior:contain;
+    animation:slideIn .25s ease;
+}
+body.theme-dark #sidePanel { background:var(--card-dark); }
+
+@keyframes popIn  { from{transform:scale(.85);} to{transform:scale(1);} }
+@keyframes slideIn{ from{transform:translateX(100%);} to{transform:translateX(0);} }
+
+.modalBox {
+    background:var(--card-light); padding:20px; border-radius:22px;
+    width:90%; max-width:350px; margin:auto; margin-top:60px; animation:popIn .25s ease;
+    max-height:80vh; overflow:auto;
+}
+body.theme-dark .modalBox { background:var(--card-dark); }
+.modalBox input, .modalBox textarea {
+    width:100%; padding:10px; margin-bottom:12px; border-radius:12px;
+    border:1px solid #ccc; box-sizing:border-box;
+}
+.modalBox button {
+    width:100%; padding:10px; border:none; border-radius:14px;
+    background:var(--accent); color:white; font-size:15px; cursor:pointer; margin-bottom:8px;
+}
+.modalBox button:hover { background:var(--accent-dark); }
+.modalBox .fieldLabel { font-size:13px; font-weight:600; margin-bottom:6px; opacity:0.75; }
+#iconPreview, #editIconPreview { width:64px; height:64px; border-radius:14px; display:none; margin-bottom:10px; }
+
+.appSelectItem { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+
+/* ---------- ICON OPTIONS (deteccion automatica) ---------- */
+.iconOptionsRow { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+.iconOption {
+    width:44px; height:44px; border-radius:12px; object-fit:contain;
+    background:#eee; padding:4px; box-sizing:border-box; cursor:pointer;
+    border:2px solid transparent; transition:border .15s ease, transform .15s ease;
+}
+.iconOption:hover { transform:scale(1.08); }
+.iconOption.selectedIcon { border-color:var(--accent); }
+
+/* ---------- SIDE PANEL MENU ---------- */
+.sideMenuLink {
+    display:block; margin-bottom:10px; color:var(--accent); text-decoration:none; cursor:pointer;
+}
+body.theme-dark .sideMenuLink { color:var(--accent-dark); }
+.sideMenuSectionTitle { font-size:13px; font-weight:700; margin-top:14px; margin-bottom:6px; opacity:0.6; text-transform:uppercase; letter-spacing:.04em; }
+</style>
+</head>
+<body>
+
+<!-- HEADER (fixed) -->
+<div id="header">
+    <h1 id="titleLabel"><svg class="titleIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 263.935 263.935" aria-hidden="true"><path fill="#4A90E2" d="m188.835,93.248c-6.319-10.976-13.982-18.705-18.862-22.973l17.009-40.097c7.051-0.929 12.529-7.305 12.529-15.022-2.84217e-14-8.357-6.415-15.156-14.301-15.156-7.888,0-14.305,6.799-14.305,15.155 0,3.18 0.934,6.13 2.52,8.57l-16.621,39.184-35.194-14.011c-1.115-7.186-7.002-12.691-14.095-12.691-7.888,0-14.305,6.798-14.305,15.153 0,8.355 6.417,15.152 14.305,15.152 3.448,0 6.615-1.3 9.088-3.462l36.296,14.449c-1.008,10.456-3.716,33.415-9.006,46.189-12.34,29.792-29.63,42.078-44.886,52.918-12.398,8.811-24.109,17.132-30.532,32.639-11.676,28.183 3.698,48.68 12.504,53.703 1.148,0.655 2.431,0.985 3.716,0.985 1.093,0 2.187-0.238 3.202-0.718 2.212-1.044 3.776-3.102 4.189-5.513 0.136-0.79 0.257-1.617 0.383-2.479 0.689-4.737 1.402-9.635 6.399-15.682 3.186-3.854 11.276-6.456 20.646-9.469 21.782-7.005 54.699-17.59 72.607-60.826 13.996-33.786 5.939-59.976-3.286-75.998zm-10.571,70.26c-15.252,36.821-41.917,45.396-63.342,52.286-11.61,3.734-21.637,6.958-27.616,14.194-2.808,3.398-4.75,6.664-6.123,9.708-2.275-5.955-3.152-14.324 1.149-24.71 4.771-11.52 13.859-17.977 25.364-26.152 16.067-11.417 36.063-25.627 50.054-59.405 4.72-11.395 7.541-28.744 9.069-41.188 2.947,3.324 6.143,7.499 9.017,12.491 10.972,19.057 11.788,40.177 2.428,62.776z"/></svg><span id="titleLabelText">Launcher</span></h1>
+    <button id="burgerBtn" type="button">&#9776;</button>
+</div>
+
+<!-- BORDE ROJO: configuración no salvada -->
+<div id="unsavedIndicator"></div>
+
+<!-- MAIN CONTENT -->
+<div id="main">
+    <div id="emptyStateHelp">
+        <svg class="emptyHelpArrowSvg" width="130" height="130" viewBox="0 0 130 130" fill="none" aria-hidden="true">
+            <path d="M14 128 C 6 74, 24 34, 78 30" stroke="currentColor" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <polygon points="96,26 62,14 74,42" fill="currentColor"/>
+        </svg>
+        <h2 id="emptyHelpTitle"></h2>
+        <p id="emptyHelpBody"></p>
+        <div id="emptyLangHint"></div>
+        <div id="emptyAddAppSlot"></div>
+    </div>
+    <div id="launcherGrid"></div>
+</div>
+
+<!-- FOOTER (fixed) -->
+<div id="footer"><span id="footerMade"></span><span id="footerSaved"></span></div>
+
+<!-- SIDE PANEL -->
+<div id="sidePanelOverlay" onclick="closeSidePanel(event)">
+    <div id="sidePanel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span id="menuTitleLabel" style="font-weight:700;">Menú</span>
+            <button style="border:none;background:transparent;font-size:18px;cursor:pointer;color:inherit;" onclick="closeSidePanel()">&#10005;</button>
+        </div>
+
+        <div class="sideMenuSectionTitle" id="actionsSectionLabel">Acciones</div>
+        <a class="sideMenuLink" id="editIconsLink" onclick="enterEditMode()">Editar iconos</a>
+        <a class="sideMenuLink" id="moveIconsLink" onclick="enterMoveMode()">Mover iconos</a>
+        <a class="sideMenuLink" id="saveLauncherLink" onclick="saveSlugLauncher()">Salvar tu SlugLauncher</a>
+
+        <div class="sideMenuSectionTitle" id="addSectionLabel">Añadir</div>
+        <a class="sideMenuLink" id="addAppLink" onclick="openAddModal()">Añadir App</a>
+        <a class="sideMenuLink" id="addFolderLink" onclick="openFolderAddModal()">Añadir Folder</a>
+
+        <div class="sideMenuSectionTitle" id="configSectionLabel">Configuración</div>
+        <a class="sideMenuLink" id="exportLink" onclick="exportConfig()">Exportar URL</a>
+        <a class="sideMenuLink" id="importLink" onclick="importConfig()">Importar URL</a>
+
+        <div class="sideMenuSectionTitle" id="themeLabel">Tema</div>
+        <a class="sideMenuLink" id="themeDarkLink" onclick="setTheme(0)">Obscuro (0)</a>
+        <a class="sideMenuLink" id="themeLightLink" onclick="setTheme(1)">Claro (1)</a>
+        <a class="sideMenuLink" id="themeSystemLink" onclick="setTheme(2)">Sistema (2)</a>
+
+        <div class="sideMenuSectionTitle" id="langLabel">Idioma</div>
+        <select id="langSelect" onchange="setLanguage(this.value)" style="width:100%;padding:8px;border-radius:10px;border:1px solid #ccc;"></select>
+    </div>
+</div>
+
+<!-- MODAL ADD APP -->
+<div id="addModal">
+    <div class="modalBox">
+        <h3 id="addAppTitle" style="margin-top:0;">Añadir App</h3>
+        <input id="appURL" placeholder="URL">
+        <input id="appName" placeholder="Nombre">
+        <div class="fieldLabel" id="iconOptionsLabel">Icono</div>
+        <div id="appIconOptions" class="iconOptionsRow"></div>
+        <input id="appIcon" placeholder="Icono URL (opcional)">
+        <img id="iconPreview">
+        <button onclick="saveApp()" id="saveAppBtn">Guardar</button>
+        <button style="background:#aaa;" onclick="closeAddModal()" id="cancelAppBtn">Cancelar</button>
+    </div>
+</div>
+
+<!-- MODAL ADD FOLDER -->
+<div id="folderModalAdd">
+    <div class="modalBox">
+        <h3 id="addFolderTitle" style="margin-top:0;">Crear Folder</h3>
+        <input id="folderName" placeholder="Nombre del folder">
+        <div id="folderAppList" style="max-height:200px;overflow:auto;margin-bottom:12px;"></div>
+        <button onclick="saveFolder()" id="saveFolderBtn">Crear Folder</button>
+        <button style="background:#aaa;" onclick="closeFolderAddModal()" id="cancelFolderBtn">Cancelar</button>
+    </div>
+</div>
+
+<!-- MODAL EDIT APP -->
+<div id="editAppModal">
+    <div class="modalBox">
+        <h3 id="editAppTitle" style="margin-top:0;">Editar App</h3>
+        <input id="editAppURL" placeholder="URL">
+        <input id="editAppName" placeholder="Nombre">
+        <input id="editAppIcon" placeholder="Icono URL">
+        <img id="editIconPreview">
+        <button onclick="saveEditedApp()" id="saveEditAppBtn">Guardar cambios</button>
+        <button style="background:#aaa;" onclick="closeEditAppModal()" id="cancelEditAppBtn">Cancelar</button>
+        <button style="background:#ff3b30;" onclick="deleteApp()" id="deleteAppBtn">Eliminar App</button>
+    </div>
+</div>
+
+<!-- MODAL EDIT FOLDER -->
+<div id="editFolderModal">
+    <div class="modalBox">
+        <h3 id="editFolderTitle" style="margin-top:0;">Editar Folder</h3>
+        <input id="editFolderName" placeholder="Nombre del folder">
+        <div id="editFolderAppList" style="max-height:200px;overflow:auto;margin-bottom:12px;"></div>
+        <button onclick="saveEditedFolder()" id="saveEditFolderBtn">Guardar cambios</button>
+        <button style="background:#aaa;" onclick="closeEditFolderModal()" id="cancelEditFolderBtn">Cancelar</button>
+        <button style="background:#ff3b30;" onclick="deleteFolder()" id="deleteFolderBtn">Eliminar Folder</button>
+    </div>
+</div>
+
+<script>
+/* =========================================================
+   ESTADO GLOBAL
+   ========================================================= */
+let appsState = [];                 // estado persistido, se reconstruye desde el hash en modo normal
+let workingState = null;            // copia temporal usada durante Editar / Mover
+let currentMode = "normal";         // "normal" | "edit" | "move"
+let globalTheme = 1;                // 0 = dark, 1 = light, 2 = system
+let globalLang = "es";
+let globalSaved = 0;                // 0 = no salvado, 1 = salvado (via Exportar / Salvar SlugLauncher)
+
+let editingPath = null;             // {array, index} de la app en edición
+let editingFolderPath = null;       // {array, index} del folder en edición
+
+let inactivityTimer = null;
+let timerSuspended = false;
+const MODE_TIMEOUT_MS = 10000;
+
+/* =========================================================
+   DICCIONARIO i18n
+   ========================================================= */
+const i18n = {
+    en: {
+        title:"Slug Launcher", menu:"Menu", exitMode:"Exit mode",
+        actionsSection:"Actions", editIcons:"Edit icons", moveIcons:"Move icons", saveLauncher:"Save your SlugLauncher",
+        addSection:"Add", configSection:"Config",
+        addApp:"Add App", addFolder:"Add Folder",
+        exportUrl:"Export URL", importUrl:"Import URL",
+        theme:"Theme", lang:"Language",
+        themeDark:"Dark (0)", themeLight:"Light (1)", themeSystem:"System (2)",
+        addAppTitle:"Add App", saveApp:"Save", cancel:"Cancel",
+        addFolderTitle:"Create Folder", saveFolder:"Create Folder",
+        editAppTitle:"Edit App", saveEditApp:"Save changes", deleteApp:"Delete App",
+        editFolderTitle:"Edit Folder", saveEditFolder:"Save changes", deleteFolder:"Delete Folder",
+        footer:"Made with love by Inriris",
+        savedYes:"Saved", savedNo:"Not saved",
+        emptyTitle:"Welcome to your SlugLauncher!",
+        emptyBody:"Slug Launcher is an app launcher that stores your whole setup right in the URL \u2014 no accounts, no servers. Tap the \u2630 menu to choose your language and theme, then add your first icon to get started. To change the language, go to the menu.",
+        placeholderName:"Name", placeholderURL:"URL", placeholderIcon:"Icon URL (optional)",
+        iconOptionsLabel:"Icon",
+        invalidData:"Invalid data", invalidDomain:"Invalid domain", invalidName:"Invalid name",
+        selectApps:"Select apps", urlCopied:"URL copied to clipboard", invalidImportUrl:"Invalid URL",
+        saveDesktopInstructions:"A shortcut file was downloaded. Move it to your Desktop to use it.",
+        saveMobileInstructionsIOS:"Tap the Share icon and choose \"Add to Home Screen\".",
+        saveMobileInstructionsAndroid:"Open the browser menu and choose \"Add to Home screen\".",
+        saveError:"Could not create the shortcut on this device."
+    },
+    es: {
+        title:"Slug Launcher", menu:"Menú", exitMode:"Salir del modo",
+        actionsSection:"Acciones", editIcons:"Editar iconos", moveIcons:"Mover iconos", saveLauncher:"Salvar tu SlugLauncher",
+        addSection:"Añadir", configSection:"Configuración",
+        addApp:"Añadir App", addFolder:"Añadir Folder",
+        exportUrl:"Exportar URL", importUrl:"Importar URL",
+        theme:"Tema", lang:"Idioma",
+        themeDark:"Obscuro (0)", themeLight:"Claro (1)", themeSystem:"Sistema (2)",
+        addAppTitle:"Añadir App", saveApp:"Guardar", cancel:"Cancelar",
+        addFolderTitle:"Crear Folder", saveFolder:"Crear Folder",
+        editAppTitle:"Editar App", saveEditApp:"Guardar cambios", deleteApp:"Eliminar App",
+        editFolderTitle:"Editar Folder", saveEditFolder:"Guardar cambios", deleteFolder:"Eliminar Folder",
+        footer:"Hecho con amor por Inriris",
+        savedYes:"Guardado", savedNo:"No guardado",
+        emptyTitle:"\u00a1Bienvenido a tu SlugLauncher!",
+        emptyBody:"Slug Launcher es un lanzador de apps que guarda toda tu configuraci\u00f3n en la URL, sin cuentas ni servidores. Toca el men\u00fa \u2630 para elegir tu idioma y tema, y luego a\u00f1ade tu primer icono para empezar. Para cambiar el idioma ve al men\u00fa.",
+        placeholderName:"Nombre", placeholderURL:"URL", placeholderIcon:"Icono URL (opcional)",
+        iconOptionsLabel:"Icono",
+        invalidData:"Datos inválidos", invalidDomain:"Dominio no válido", invalidName:"Nombre inválido",
+        selectApps:"Selecciona apps", urlCopied:"URL copiado al portapapeles", invalidImportUrl:"URL inválido",
+        saveDesktopInstructions:"Se descargó un archivo de acceso directo. Muévelo a tu Escritorio para usarlo.",
+        saveMobileInstructionsIOS:"Toca el ícono de Compartir y elige \"Añadir a pantalla de inicio\".",
+        saveMobileInstructionsAndroid:"Abre el menú del navegador y elige \"Añadir a pantalla de inicio\".",
+        saveError:"No se pudo crear el acceso directo en este dispositivo."
+    },
+    fr: {
+        title:"Slug Launcher", menu:"Menu", exitMode:"Quitter le mode",
+        actionsSection:"Actions", editIcons:"Modifier icônes", moveIcons:"Déplacer icônes", saveLauncher:"Enregistrer votre SlugLauncher",
+        addSection:"Ajouter", configSection:"Configuration",
+        addApp:"Ajouter App", addFolder:"Ajouter Dossier",
+        exportUrl:"Exporter URL", importUrl:"Importer URL",
+        theme:"Thème", lang:"Langue",
+        themeDark:"Sombre (0)", themeLight:"Clair (1)", themeSystem:"Système (2)",
+        addAppTitle:"Ajouter App", saveApp:"Enregistrer", cancel:"Annuler",
+        addFolderTitle:"Créer Dossier", saveFolder:"Créer Dossier",
+        editAppTitle:"Modifier App", saveEditApp:"Enregistrer les modifications", deleteApp:"Supprimer App",
+        editFolderTitle:"Modifier Dossier", saveEditFolder:"Enregistrer les modifications", deleteFolder:"Supprimer Dossier",
+        footer:"Fait avec amour par Inriris",
+        savedYes:"Enregistr\u00e9", savedNo:"Non enregistr\u00e9",
+        emptyTitle:"Bienvenue sur votre SlugLauncher !",
+        emptyBody:"Slug Launcher est un lanceur d'applications qui enregistre toute votre configuration directement dans l'URL, sans compte ni serveur. Touchez le menu \u2630 pour choisir votre langue et votre th\u00e8me, puis ajoutez votre premi\u00e8re ic\u00f4ne pour commencer. Pour changer de langue, allez dans le menu.",
+        placeholderName:"Nom", placeholderURL:"URL", placeholderIcon:"URL de l'icône (optionnel)",
+        iconOptionsLabel:"Icône",
+        invalidData:"Données invalides", invalidDomain:"Domaine invalide", invalidName:"Nom invalide",
+        selectApps:"Sélectionnez des apps", urlCopied:"URL copiée dans le presse-papiers", invalidImportUrl:"URL invalide",
+        saveDesktopInstructions:"Un fichier de raccourci a été téléchargé. Déplacez-le sur votre Bureau pour l'utiliser.",
+        saveMobileInstructionsIOS:"Appuyez sur Partager puis \"Sur l'écran d'accueil\".",
+        saveMobileInstructionsAndroid:"Ouvrez le menu du navigateur et choisissez \"Ajouter à l'écran d'accueil\".",
+        saveError:"Impossible de créer le raccourci sur cet appareil."
+    },
+    de: {
+        title:"Slug Launcher", menu:"Menü", exitMode:"Modus verlassen",
+        actionsSection:"Aktionen", editIcons:"Symbole bearbeiten", moveIcons:"Symbole verschieben", saveLauncher:"SlugLauncher speichern",
+        addSection:"Hinzufügen", configSection:"Konfiguration",
+        addApp:"App hinzufügen", addFolder:"Ordner hinzufügen",
+        exportUrl:"URL exportieren", importUrl:"URL importieren",
+        theme:"Theme", lang:"Sprache",
+        themeDark:"Dunkel (0)", themeLight:"Hell (1)", themeSystem:"System (2)",
+        addAppTitle:"App hinzufügen", saveApp:"Speichern", cancel:"Abbrechen",
+        addFolderTitle:"Ordner erstellen", saveFolder:"Ordner erstellen",
+        editAppTitle:"App bearbeiten", saveEditApp:"Änderungen speichern", deleteApp:"App löschen",
+        editFolderTitle:"Ordner bearbeiten", saveEditFolder:"Änderungen speichern", deleteFolder:"Ordner löschen",
+        footer:"Mit Liebe gemacht von Inriris",
+        savedYes:"Gespeichert", savedNo:"Nicht gespeichert",
+        emptyTitle:"Willkommen bei deinem SlugLauncher!",
+        emptyBody:"Slug Launcher ist ein App-Launcher, der deine gesamte Einrichtung direkt in der URL speichert \u2013 ohne Konten, ohne Server. Tippe auf das Men\u00fc \u2630, um Sprache und Design zu w\u00e4hlen, und f\u00fcge dann dein erstes Symbol hinzu, um loszulegen. Um die Sprache zu \u00e4ndern, gehe zum Men\u00fc.",
+        placeholderName:"Name", placeholderURL:"URL", placeholderIcon:"Symbol-URL (optional)",
+        iconOptionsLabel:"Symbol",
+        invalidData:"Ungültige Daten", invalidDomain:"Ungültige Domain", invalidName:"Ungültiger Name",
+        selectApps:"Apps auswählen", urlCopied:"URL in die Zwischenablage kopiert", invalidImportUrl:"Ungültige URL",
+        saveDesktopInstructions:"Eine Verknüpfungsdatei wurde heruntergeladen. Verschiebe sie auf deinen Desktop.",
+        saveMobileInstructionsIOS:"Tippe auf Teilen und wähle \"Zum Home-Bildschirm\".",
+        saveMobileInstructionsAndroid:"Öffne das Browsermenü und wähle \"Zum Startbildschirm hinzufügen\".",
+        saveError:"Verknüpfung konnte auf diesem Gerät nicht erstellt werden."
+    },
+    pt: {
+        title:"Slug Launcher", menu:"Menu", exitMode:"Sair do modo",
+        actionsSection:"Ações", editIcons:"Editar ícones", moveIcons:"Mover ícones", saveLauncher:"Salvar seu SlugLauncher",
+        addSection:"Adicionar", configSection:"Configuração",
+        addApp:"Adicionar App", addFolder:"Adicionar Pasta",
+        exportUrl:"Exportar URL", importUrl:"Importar URL",
+        theme:"Tema", lang:"Idioma",
+        themeDark:"Escuro (0)", themeLight:"Claro (1)", themeSystem:"Sistema (2)",
+        addAppTitle:"Adicionar App", saveApp:"Salvar", cancel:"Cancelar",
+        addFolderTitle:"Criar Pasta", saveFolder:"Criar Pasta",
+        editAppTitle:"Editar App", saveEditApp:"Salvar alterações", deleteApp:"Excluir App",
+        editFolderTitle:"Editar Pasta", saveEditFolder:"Salvar alterações", deleteFolder:"Excluir Pasta",
+        footer:"Feito com amor por Inriris",
+        savedYes:"Salvo", savedNo:"N\u00e3o salvo",
+        emptyTitle:"Bem-vindo ao seu SlugLauncher!",
+        emptyBody:"O Slug Launcher \u00e9 um launcher de apps que guarda toda a sua configura\u00e7\u00e3o diretamente na URL, sem contas nem servidores. Toque no menu \u2630 para escolher seu idioma e tema, depois adicione seu primeiro \u00edcone para come\u00e7ar. Para mudar o idioma, v\u00e1 ao menu.",
+        placeholderName:"Nome", placeholderURL:"URL", placeholderIcon:"URL do ícone (opcional)",
+        iconOptionsLabel:"Ícone",
+        invalidData:"Dados inválidos", invalidDomain:"Domínio inválido", invalidName:"Nome inválido",
+        selectApps:"Selecione apps", urlCopied:"URL copiada para a área de transferência", invalidImportUrl:"URL inválida",
+        saveDesktopInstructions:"Um arquivo de atalho foi baixado. Mova-o para a sua Área de Trabalho.",
+        saveMobileInstructionsIOS:"Toque em Compartilhar e escolha \"Adicionar à Tela de Início\".",
+        saveMobileInstructionsAndroid:"Abra o menu do navegador e escolha \"Adicionar à tela inicial\".",
+        saveError:"Não foi possível criar o atalho neste dispositivo."
+    },
+    it: {
+        title:"Slug Launcher", menu:"Menu", exitMode:"Esci dalla modalità",
+        actionsSection:"Azioni", editIcons:"Modifica icone", moveIcons:"Sposta icone", saveLauncher:"Salva il tuo SlugLauncher",
+        addSection:"Aggiungi", configSection:"Configurazione",
+        addApp:"Aggiungi App", addFolder:"Aggiungi Cartella",
+        exportUrl:"Esporta URL", importUrl:"Importa URL",
+        theme:"Tema", lang:"Lingua",
+        themeDark:"Scuro (0)", themeLight:"Chiaro (1)", themeSystem:"Sistema (2)",
+        addAppTitle:"Aggiungi App", saveApp:"Salva", cancel:"Annulla",
+        addFolderTitle:"Crea Cartella", saveFolder:"Crea Cartella",
+        editAppTitle:"Modifica App", saveEditApp:"Salva modifiche", deleteApp:"Elimina App",
+        editFolderTitle:"Modifica Cartella", saveEditFolder:"Salva modifiche", deleteFolder:"Elimina Cartella",
+        footer:"Fatto con amore da Inriris",
+        savedYes:"Salvato", savedNo:"Non salvato",
+        emptyTitle:"Benvenuto nel tuo SlugLauncher!",
+        emptyBody:"Slug Launcher \u00e8 un launcher di app che salva tutta la tua configurazione direttamente nell'URL, senza account n\u00e9 server. Tocca il menu \u2630 per scegliere lingua e tema, poi aggiungi la tua prima icona per iniziare. Per cambiare lingua, vai al menu.",
+        placeholderName:"Nome", placeholderURL:"URL", placeholderIcon:"URL icona (opzionale)",
+        iconOptionsLabel:"Icona",
+        invalidData:"Dati non validi", invalidDomain:"Dominio non valido", invalidName:"Nome non valido",
+        selectApps:"Seleziona app", urlCopied:"URL copiato negli appunti", invalidImportUrl:"URL non valido",
+        saveDesktopInstructions:"È stato scaricato un file di collegamento. Spostalo sul Desktop per usarlo.",
+        saveMobileInstructionsIOS:"Tocca Condividi e scegli \"Aggiungi a Home\".",
+        saveMobileInstructionsAndroid:"Apri il menu del browser e scegli \"Aggiungi a schermata Home\".",
+        saveError:"Impossibile creare il collegamento su questo dispositivo."
+    },
+    ru: {
+        title:"Slug Launcher", menu:"Меню", exitMode:"Выйти из режима",
+        actionsSection:"Действия", editIcons:"Редактировать значки", moveIcons:"Переместить значки", saveLauncher:"Сохранить SlugLauncher",
+        addSection:"Добавить", configSection:"Настройки",
+        addApp:"Добавить приложение", addFolder:"Добавить папку",
+        exportUrl:"Экспорт URL", importUrl:"Импорт URL",
+        theme:"Тема", lang:"Язык",
+        themeDark:"Тёмная (0)", themeLight:"Светлая (1)", themeSystem:"Системная (2)",
+        addAppTitle:"Добавить приложение", saveApp:"Сохранить", cancel:"Отмена",
+        addFolderTitle:"Создать папку", saveFolder:"Создать папку",
+        editAppTitle:"Редактировать приложение", saveEditApp:"Сохранить изменения", deleteApp:"Удалить приложение",
+        editFolderTitle:"Редактировать папку", saveEditFolder:"Сохранить изменения", deleteFolder:"Удалить папку",
+        footer:"Сделано с любовью от Inriris",
+        savedYes:"Сохранено", savedNo:"Не сохранено",
+        emptyTitle:"Добро пожаловать в ваш SlugLauncher!",
+        emptyBody:"Slug Launcher — это лаунчер приложений, который хранит все настройки прямо в URL, без аккаунтов и серверов. Нажмите на меню ☰, чтобы выбрать язык и тему, а затем добавьте первую иконку, чтобы начать. Чтобы изменить язык, откройте меню.",
+        placeholderName:"Имя", placeholderURL:"URL", placeholderIcon:"URL значка (необязательно)",
+        iconOptionsLabel:"Значок",
+        invalidData:"Неверные данные", invalidDomain:"Неверный домен", invalidName:"Неверное имя",
+        selectApps:"Выберите приложения", urlCopied:"URL скопирован в буфер обмена", invalidImportUrl:"Неверный URL",
+        saveDesktopInstructions:"Файл ярлыка загружен. Переместите его на Рабочий стол.",
+        saveMobileInstructionsIOS:"Нажмите \"Поделиться\" и выберите \"На экран Домой\".",
+        saveMobileInstructionsAndroid:"Откройте меню браузера и выберите \"Добавить на главный экран\".",
+        saveError:"Не удалось создать ярлык на этом устройстве."
+    },
+    zh: {
+        title:"Slug Launcher", menu:"菜单", exitMode:"退出模式",
+        actionsSection:"操作", editIcons:"编辑图标", moveIcons:"移动图标", saveLauncher:"保存你的 SlugLauncher",
+        addSection:"添加", configSection:"设置",
+        addApp:"添加应用", addFolder:"添加文件夹",
+        exportUrl:"导出URL", importUrl:"导入URL",
+        theme:"主题", lang:"语言",
+        themeDark:"深色 (0)", themeLight:"浅色 (1)", themeSystem:"系统 (2)",
+        addAppTitle:"添加应用", saveApp:"保存", cancel:"取消",
+        addFolderTitle:"创建文件夹", saveFolder:"创建文件夹",
+        editAppTitle:"编辑应用", saveEditApp:"保存更改", deleteApp:"删除应用",
+        editFolderTitle:"编辑文件夹", saveEditFolder:"保存更改", deleteFolder:"删除文件夹",
+        footer:"由 Inriris 用心制作",
+        savedYes:"已保存", savedNo:"未保存",
+        emptyTitle:"欢迎使用你的 SlugLauncher！",
+        emptyBody:"Slug Launcher 是一款应用启动器，它把所有设置直接保存在网址（URL）中，无需账号也无需服务器。点击 ☰ 菜单选择语言和主题，然后添加你的第一个图标即可开始使用。要更改语言，请前往菜单。",
+        placeholderName:"名称", placeholderURL:"URL", placeholderIcon:"图标 URL（可选）",
+        iconOptionsLabel:"图标",
+        invalidData:"数据无效", invalidDomain:"域名无效", invalidName:"名称无效",
+        selectApps:"请选择应用", urlCopied:"URL 已复制到剪贴板", invalidImportUrl:"URL 无效",
+        saveDesktopInstructions:"已下载快捷方式文件。请将其移动到桌面以使用。",
+        saveMobileInstructionsIOS:"点击“分享”，然后选择“添加到主屏幕”。",
+        saveMobileInstructionsAndroid:"打开浏览器菜单并选择“添加到主屏幕”。",
+        saveError:"无法在此设备上创建快捷方式。"
+    },
+    ja: {
+        title:"Slug Launcher", menu:"メニュー", exitMode:"モードを終了",
+        actionsSection:"操作", editIcons:"アイコンを編集", moveIcons:"アイコンを移動", saveLauncher:"SlugLauncherを保存",
+        addSection:"追加", configSection:"設定",
+        addApp:"アプリ追加", addFolder:"フォルダ追加",
+        exportUrl:"URLエクスポート", importUrl:"URLインポート",
+        theme:"テーマ", lang:"言語",
+        themeDark:"ダーク (0)", themeLight:"ライト (1)", themeSystem:"システム (2)",
+        addAppTitle:"アプリ追加", saveApp:"保存", cancel:"キャンセル",
+        addFolderTitle:"フォルダ作成", saveFolder:"フォルダ作成",
+        editAppTitle:"アプリ編集", saveEditApp:"変更を保存", deleteApp:"アプリ削除",
+        editFolderTitle:"フォルダ編集", saveEditFolder:"変更を保存", deleteFolder:"フォルダ削除",
+        footer:"Inririsが愛を込めて作りました",
+        savedYes:"保存済み", savedNo:"未保存",
+        emptyTitle:"SlugLauncherへようこそ！",
+        emptyBody:"Slug Launcherは、設定をすべてURLに直接保存するアプリランチャーです。アカウントもサーバーも不要です。☰メニューをタップして言語とテーマを選び、最初のアイコンを追加して始めましょう。言語を変更するには、メニューへ移動してください。",
+        placeholderName:"名前", placeholderURL:"URL", placeholderIcon:"アイコンURL（任意）",
+        iconOptionsLabel:"アイコン",
+        invalidData:"データが無効です", invalidDomain:"ドメインが無効です", invalidName:"名前が無効です",
+        selectApps:"アプリを選択してください", urlCopied:"URLをクリップボードにコピーしました", invalidImportUrl:"URLが無効です",
+        saveDesktopInstructions:"ショートカットファイルをダウンロードしました。デスクトップに移動して使用してください。",
+        saveMobileInstructionsIOS:"共有アイコンをタップし「ホーム画面に追加」を選択してください。",
+        saveMobileInstructionsAndroid:"ブラウザメニューから「ホーム画面に追加」を選択してください。",
+        saveError:"このデバイスではショートカットを作成できませんでした。"
+    },
+    hi: {
+        title:"Slug Launcher", menu:"मेनू", exitMode:"मोड से बाहर निकलें",
+        actionsSection:"कार्य", editIcons:"आइकन संपादित करें", moveIcons:"आइकन ले जाएं", saveLauncher:"अपना SlugLauncher सहेजें",
+        addSection:"जोड़ें", configSection:"सेटिंग्स",
+        addApp:"ऐप जोड़ें", addFolder:"फ़ोल्डर जोड़ें",
+        exportUrl:"URL निर्यात करें", importUrl:"URL आयात करें",
+        theme:"थीम", lang:"भाषा",
+        themeDark:"डार्क (0)", themeLight:"लाइट (1)", themeSystem:"सिस्टम (2)",
+        addAppTitle:"ऐप जोड़ें", saveApp:"सहेजें", cancel:"रद्द करें",
+        addFolderTitle:"फ़ोल्डर बनाएं", saveFolder:"फ़ोल्डर बनाएं",
+        editAppTitle:"ऐप संपादित करें", saveEditApp:"परिवर्तन सहेजें", deleteApp:"ऐप हटाएं",
+        editFolderTitle:"फ़ोल्डर संपादित करें", saveEditFolder:"परिवर्तन सहेजें", deleteFolder:"फ़ोल्डर हटाएं",
+        footer:"Inriris द्वारा प्यार से बनाया गया",
+        savedYes:"सहेजा गया", savedNo:"सहेजा नहीं गया",
+        emptyTitle:"आपके SlugLauncher में आपका स्वागत है!",
+        emptyBody:"Slug Launcher एक ऐप लॉन्चर है जो आपकी पूरी सेटिंग सीधे URL में सहेजता है — किसी खाते या सर्वर की ज़रूरत नहीं। भाषा और थीम चुनने के लिए ऊपर ☰ मेनू पर टैप करें, फिर शुरू करने के लिए अपना पहला आइकन जोड़ें। भाषा बदलने के लिए मेनू में जाएं।",
+        placeholderName:"नाम", placeholderURL:"URL", placeholderIcon:"आइकन URL (वैकल्पिक)",
+        iconOptionsLabel:"आइकन",
+        invalidData:"अमान्य डेटा", invalidDomain:"अमान्य डोमेन", invalidName:"अमान्य नाम",
+        selectApps:"ऐप्स चुनें", urlCopied:"URL क्लिपबोर्ड पर कॉपी किया गया", invalidImportUrl:"अमान्य URL",
+        saveDesktopInstructions:"एक शॉर्टकट फ़ाइल डाउनलोड हुई है। इसे उपयोग के लिए डेस्कटॉप पर ले जाएं।",
+        saveMobileInstructionsIOS:"शेयर आइकन टैप करें और \"होम स्क्रीन पर जोड़ें\" चुनें।",
+        saveMobileInstructionsAndroid:"ब्राउज़र मेनू खोलें और \"होम स्क्रीन पर जोड़ें\" चुनें।",
+        saveError:"इस डिवाइस पर शॉर्टकट नहीं बनाया जा सका।"
+    },
+    ar: {
+        title:"Slug Launcher", menu:"القائمة", exitMode:"الخروج من الوضع",
+        actionsSection:"إجراءات", editIcons:"تعديل الأيقونات", moveIcons:"نقل الأيقونات", saveLauncher:"حفظ SlugLauncher الخاص بك",
+        addSection:"إضافة", configSection:"الإعدادات",
+        addApp:"إضافة تطبيق", addFolder:"إضافة مجلد",
+        exportUrl:"تصدير URL", importUrl:"استيراد URL",
+        theme:"السمة", lang:"اللغة",
+        themeDark:"داكن (0)", themeLight:"فاتح (1)", themeSystem:"النظام (2)",
+        addAppTitle:"إضافة تطبيق", saveApp:"حفظ", cancel:"إلغاء",
+        addFolderTitle:"إنشاء مجلد", saveFolder:"إنشاء مجلد",
+        editAppTitle:"تعديل تطبيق", saveEditApp:"حفظ التغييرات", deleteApp:"حذف تطبيق",
+        editFolderTitle:"تعديل مجلد", saveEditFolder:"حفظ التغييرات", deleteFolder:"حذف مجلد",
+        footer:"صُنع بحب بواسطة Inriris",
+        savedYes:"محفوظ", savedNo:"غير محفوظ",
+        emptyTitle:"مرحبًا بك في SlugLauncher الخاص بك!",
+        emptyBody:"‏Slug Launcher هو مشغّل تطبيقات يحفظ كل إعداداتك مباشرة في الرابط (URL)، بدون حسابات أو خوادم. اضغط على قائمة ☰ لاختيار اللغة والسمة، ثم أضف أول أيقونة لك للبدء. لتغيير اللغة، اذهب إلى القائمة.",
+        placeholderName:"الاسم", placeholderURL:"URL", placeholderIcon:"رابط الأيقونة (اختياري)",
+        iconOptionsLabel:"الأيقونة",
+        invalidData:"بيانات غير صالحة", invalidDomain:"نطاق غير صالح", invalidName:"اسم غير صالح",
+        selectApps:"اختر التطبيقات", urlCopied:"تم نسخ الرابط", invalidImportUrl:"رابط غير صالح",
+        saveDesktopInstructions:"تم تنزيل ملف اختصار. انقله إلى سطح المكتب لاستخدامه.",
+        saveMobileInstructionsIOS:"اضغط على مشاركة ثم اختر \"إضافة إلى الشاشة الرئيسية\".",
+        saveMobileInstructionsAndroid:"افتح قائمة المتصفح واختر \"إضافة إلى الشاشة الرئيسية\".",
+        saveError:"تعذر إنشاء الاختصار على هذا الجهاز."
+    }
+};
+
+function t(key){
+    const dict = i18n[globalLang] || i18n.en;
+    return dict[key] !== undefined ? dict[key] : (i18n.en[key] || key);
+}
+
+/* Lista fija (no depende del idioma activo): permite reconocer el propio
+   idioma y saber que el cambio está en el menú, sin poder leer el idioma actual. */
+const LANGUAGE_SWITCH_HINTS = [
+    "Change to English",
+    "Cambia a espa\u00f1ol",
+    "Passer en fran\u00e7ais",
+    "Auf Deutsch wechseln",
+    "Mudar para portugu\u00eas",
+    "Passa all'italiano",
+    "\u041f\u0435\u0440\u0435\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u043d\u0430 \u0440\u0443\u0441\u0441\u043a\u0438\u0439",
+    "\u5207\u6362\u5230\u4e2d\u6587",
+    "\u65e5\u672c\u8a9e\u306b\u5207\u308a\u66ff\u3048\u308b",
+    "\u0939\u093f\u0928\u094d\u0926\u0940 \u092e\u0947\u0902 \u092c\u0926\u0932\u0947\u0902",
+    "\u0627\u0644\u062a\u063a\u064a\u064a\u0631 \u0625\u0644\u0649 \u0627\u0644\u0639\u0631\u0628\u064a\u0629"
+];
+function renderLangHint(){
+    const el = document.getElementById("emptyLangHint");
+    if (el) el.textContent = "\u2630 " + LANGUAGE_SWITCH_HINTS.join("  \u00b7  ");
+}
+
+/* =========================================================
+   SVG INTERNO DE FOLDER (sin dependencias externas)
+   ========================================================= */
+const FOLDER_SVG = '<svg class="folderSvgIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#4A90E2"><path d="M10 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V8C22 6.9 21.1 6 20 6H12L10 4Z"/></svg>';
+
+/* Icono de respaldo (data URI interno, sin red) */
+const FALLBACK_ICON = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#9aa0a6"><rect x="3" y="3" width="18" height="18" rx="5"/></svg>'
+);
+
+/* =========================================================
+   HELPERS GENERALES
+   ========================================================= */
+function normalize(str) {
+    if (!str) return "";
+    str = str.trim();
+    return /^https?:\/\//i.test(str) ? str : "https://" + str;
+}
+function stripProtocol(str){ return (str||"").replace(/^https?:\/\//i,''); }
+function isValidDomain(domain){ return /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(domain); }
+function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+/* =========================================================
+   APLICAR I18N
+   ========================================================= */
+function applyI18n() {
+    document.title = t("title");
+    document.getElementById("menuTitleLabel").textContent = t("menu");
+
+    document.getElementById("actionsSectionLabel").textContent = t("actionsSection");
+    document.getElementById("editIconsLink").textContent = t("editIcons");
+    document.getElementById("moveIconsLink").textContent = t("moveIcons");
+    document.getElementById("saveLauncherLink").textContent = t("saveLauncher");
+
+    document.getElementById("addSectionLabel").textContent = t("addSection");
+    document.getElementById("addAppLink").textContent = t("addApp");
+    document.getElementById("addFolderLink").textContent = t("addFolder");
+
+    document.getElementById("configSectionLabel").textContent = t("configSection");
+    document.getElementById("exportLink").textContent = t("exportUrl");
+    document.getElementById("importLink").textContent = t("importUrl");
+
+    document.getElementById("themeLabel").textContent = t("theme");
+    document.getElementById("themeDarkLink").textContent = t("themeDark");
+    document.getElementById("themeLightLink").textContent = t("themeLight");
+    document.getElementById("themeSystemLink").textContent = t("themeSystem");
+    document.getElementById("langLabel").textContent = t("lang");
+
+    document.getElementById("addAppTitle").textContent = t("addAppTitle");
+    document.getElementById("saveAppBtn").textContent = t("saveApp");
+    document.getElementById("cancelAppBtn").textContent = t("cancel");
+    document.getElementById("iconOptionsLabel").textContent = t("iconOptionsLabel");
+    document.getElementById("appURL").placeholder = t("placeholderURL");
+    document.getElementById("appName").placeholder = t("placeholderName");
+    document.getElementById("appIcon").placeholder = t("placeholderIcon");
+
+    document.getElementById("addFolderTitle").textContent = t("addFolderTitle");
+    document.getElementById("saveFolderBtn").textContent = t("saveFolder");
+    document.getElementById("cancelFolderBtn").textContent = t("cancel");
+
+    document.getElementById("editAppTitle").textContent = t("editAppTitle");
+    document.getElementById("saveEditAppBtn").textContent = t("saveEditApp");
+    document.getElementById("cancelEditAppBtn").textContent = t("cancel");
+    document.getElementById("deleteAppBtn").textContent = t("deleteApp");
+    document.getElementById("editAppURL").placeholder = t("placeholderURL");
+    document.getElementById("editAppName").placeholder = t("placeholderName");
+    document.getElementById("editAppIcon").placeholder = t("placeholderIcon");
+
+    document.getElementById("editFolderTitle").textContent = t("editFolderTitle");
+    document.getElementById("saveEditFolderBtn").textContent = t("saveEditFolder");
+    document.getElementById("cancelEditFolderBtn").textContent = t("cancel");
+    document.getElementById("deleteFolderBtn").textContent = t("deleteFolder");
+    document.getElementById("editFolderName").placeholder = t("placeholderName");
+
+    document.getElementById("footerMade").textContent = t("footer");
+    document.getElementById("emptyHelpTitle").textContent = t("emptyTitle");
+    document.getElementById("emptyHelpBody").textContent = t("emptyBody");
+
+    const langSelect = document.getElementById("langSelect");
+    langSelect.innerHTML = "";
+    Object.keys(i18n).forEach(code => {
+        const opt = document.createElement("option");
+        opt.value = code;
+        opt.textContent = code.toUpperCase();
+        if (code === globalLang) opt.selected = true;
+        langSelect.appendChild(opt);
+    });
+
+    updateHamburgerModeUI();
+    updateSavedIndicator();
+}
+
+/* =========================================================
+   INDICADOR DE GUARDADO (footer + borde rojo)
+   ========================================================= */
+function updateSavedIndicator(){
+    const savedSpan = document.getElementById("footerSaved");
+    if (savedSpan){
+        const symbol = globalSaved === 1 ? "\u2713" : "\u26a0";
+        const label = globalSaved === 1 ? t("savedYes") : t("savedNo");
+        savedSpan.textContent = ` \u00b7 ${symbol} ${label}`;
+    }
+    const isEmpty = getActiveState().length === 0;
+    document.body.classList.toggle("unsavedBorder", globalSaved === 0 && !isEmpty);
+}
+
+/* =========================================================
+   ESTADO VACÍO: ayuda inicial
+   ========================================================= */
+function updateEmptyState(){
+    const isEmpty = getActiveState().length === 0;
+    document.getElementById("emptyStateHelp").classList.toggle("visible", isEmpty);
+    renderLangHint();
+}
+
+/* =========================================================
+   TEMA
+   ========================================================= */
+function applyTheme() {
+    document.body.classList.remove("theme-light","theme-dark");
+    if (globalTheme === 2) {
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        document.body.classList.add(prefersDark ? "theme-dark" : "theme-light");
+    } else if (globalTheme === 0) {
+        document.body.classList.add("theme-dark");
+    } else {
+        document.body.classList.add("theme-light");
+    }
+}
+
+/* =========================================================
+   HASH: GLOBAL (tema/idioma) + ITEMS
+   ========================================================= */
+function globalPartString(){ return `GLOBAL:${globalTheme},${globalLang},${globalSaved}`; }
+
+function parseGlobal() {
+    const hash = getDecodedHashString().substring(1);
+    if (!hash) return;
+    const parts = hash.split("#").filter(Boolean);
+    if (parts.length && parts[0].startsWith("GLOBAL:")) {
+        const gl = parts[0].replace("GLOBAL:","");
+        const [themeStr, langStr, savedStr] = gl.split(",");
+        const tnum = parseInt(themeStr,10);
+        if (!isNaN(tnum) && tnum>=0 && tnum<=2) globalTheme = tnum;
+        if (langStr && langStr.length===2 && i18n[langStr.toLowerCase()]) globalLang = langStr.toLowerCase();
+        globalSaved = (savedStr === "1") ? 1 : 0;
+    }
+}
+function getDecodedHashString(){
+    // Compartir URLs puede convertir los separadores del hash:
+    // %23 -> #, %7C -> |, etc. Decodificamos TODO el fragmento antes
+    // de separar carpetas y parámetros para mantener compatibilidad.
+    const hashOriginal = window.location.hash;
+    if (!hashOriginal) return "";
+    try {
+        return decodeURIComponent(hashOriginal);
+    } catch(e) {
+        return hashOriginal;
+    }
+}
+function updateGlobalInHash() {
+    const hash = getDecodedHashString().substring(1);
+    const parts = hash ? hash.split("#").filter(Boolean) : [];
+    const rest = parts.filter(p => !p.startsWith("GLOBAL:"));
+    location.hash = "#" + [globalPartString(), ...rest].join("#");
+}
+function safeDecode(str){
+    if (!str) return str;
+    try { return decodeURIComponent(str); } catch(e){ return str; }
+}
+function parseHash(){
+    const hash = getDecodedHashString().substring(1);
+    if (!hash) return [];
+    const items = hash.split("#").filter(Boolean).filter(p=>!p.startsWith("GLOBAL:"));
+    const result=[];
+    items.forEach(item=>{
+        if (item.startsWith("FOLDER:")){
+            const parts = item.split("|");
+            const folderName = safeDecode(parts[0].replace("FOLDER:",""));
+            const apps = parts.slice(1).filter(Boolean).map(slug=>{
+                const fields = slug.split(",");
+                const name = fields.shift() || "";
+                const url = fields.shift() || "";
+                const icon = fields.join(",");
+                return {type:"app", name:safeDecode(name), url:normalize(safeDecode(url)), icon:normalize(safeDecode(icon)) };
+            });
+            result.push({type:"folder", name:folderName, apps});
+        }else{
+            const fields = item.split(",");
+            const name = fields.shift() || "";
+            const url = fields.shift() || "";
+            const icon = fields.join(",");
+            result.push({type:"app", name:safeDecode(name), url:normalize(safeDecode(url)), icon:normalize(safeDecode(icon)) });
+        }
+    });
+    return result;
+}
+function serializeHash(state){
+    const parts=[];
+    parts.push(globalPartString());
+    state.forEach(item=>{
+        if (item.type==="folder"){
+            const appsSlugs = (item.apps || []).map(a=>{
+                const url = stripProtocol(a.url);
+                const icon = stripProtocol(a.icon);
+                return `${a.name},${url},${icon}`;
+            }).join("|");
+            parts.push(`FOLDER:${item.name}${appsSlugs ? "|" + appsSlugs : ""}`);
+        }else{
+            const url = stripProtocol(item.url);
+            const icon = stripProtocol(item.icon);
+            parts.push(`${item.name},${url},${icon}`);
+        }
+    });
+    location.hash = "#" + parts.join("#");
+}
+
+/* =========================================================
+   TEMPORIZADOR DE INACTIVIDAD (Editar / Mover)
+   ========================================================= */
+function resetInactivityTimer(){
+    if (currentMode === "normal" || timerSuspended) return;
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(()=>{ exitCurrentMode(); }, MODE_TIMEOUT_MS);
+}
+function suspendInactivityTimer(){ timerSuspended = true; clearTimeout(inactivityTimer); }
+function resumeInactivityTimer(){ timerSuspended = false; resetInactivityTimer(); }
+
+["click","touchstart","input"].forEach(evt=>{
+    document.addEventListener(evt, ()=>{ if(currentMode!=="normal") resetInactivityTimer(); }, {passive:true});
+});
+
+/* =========================================================
+   MODOS: EDITAR / MOVER (persistencia diferida)
+   ========================================================= */
+function getActiveState(){ return currentMode === "normal" ? appsState : workingState; }
+
+function commitMode(){
+    if (currentMode === "normal") return;
+    clearTimeout(inactivityTimer);
+    timerSuspended = false;
+    globalSaved = 0;
+    serializeHash(workingState);
+    currentMode = "normal";
+    workingState = null;
+}
+
+function exitCurrentMode(){
+    if (currentMode === "normal") return;
+    commitMode();
+    updateHamburgerModeUI();
+    renderLauncher();
+}
+
+function enterEditMode(){
+    if (currentMode === "move") commitMode();
+    appsState = parseHash();
+    workingState = deepClone(appsState);
+    currentMode = "edit";
+    closeSidePanel();
+    updateHamburgerModeUI();
+    renderLauncher();
+    resetInactivityTimer();
+}
+function enterMoveMode(){
+    if (currentMode === "edit") commitMode();
+    appsState = parseHash();
+    workingState = deepClone(appsState);
+    currentMode = "move";
+    closeSidePanel();
+    updateHamburgerModeUI();
+    renderLauncher();
+    resetInactivityTimer();
+}
+
+function updateHamburgerModeUI(){
+    const btn = document.getElementById("burgerBtn");
+    if (currentMode === "normal"){
+        btn.innerHTML = "&#9776;";
+        btn.setAttribute("aria-label", t("menu"));
+        document.body.classList.remove("modeActive");
+    } else {
+        btn.innerHTML = "&#10005;";
+        btn.setAttribute("aria-label", t("exitMode"));
+        document.body.classList.add("modeActive");
+    }
+}
+
+document.getElementById("burgerBtn").addEventListener("click", ()=>{
+    if (currentMode !== "normal") { exitCurrentMode(); }
+    else { openSidePanel(); }
+});
+
+/* =========================================================
+   SIDE PANEL
+   ========================================================= */
+function openSidePanel(){ document.getElementById("sidePanelOverlay").style.display="block"; }
+function closeSidePanel(e){
+    if (e && e.target && e.target.id!=="sidePanelOverlay"){
+        if (!e.target.closest || !e.target.closest("#sidePanel")) { /* click fuera: continuar */ }
+        else return;
+    }
+    document.getElementById("sidePanelOverlay").style.display="none";
+}
+
+/* =========================================================
+   RENDER: ITEMS DEL GRID
+   ========================================================= */
+function renderApp(app, parent, path){
+    const div=document.createElement("div");
+    div.className="appIcon";
+    div.dataset.itemType="app";
+    const iconSrc = app.icon || FALLBACK_ICON;
+    div.innerHTML = `<img draggable="false" src="${iconSrc}" onerror="this.onerror=null;this.src='${FALLBACK_ICON}'"><span>${escapeHtml(app.name)}</span>`;
+    const img = div.querySelector("img");
+    if (img) img.addEventListener("dragstart", e=>e.preventDefault());
+    attachItemInteraction(div, app, path, false);
+    parent.appendChild(div);
+}
+function renderFolderIcon(folder,parent,path){
+    const div=document.createElement("div");
+    div.className="appIcon folderIcon";
+    div.dataset.itemType="folder";
+    const count = folder.apps ? folder.apps.length : 0;
+    div.innerHTML = `${FOLDER_SVG}<span>${escapeHtml(folder.name)}</span><span class="folderBadge">${count}</span>`;
+    attachItemInteraction(div, folder, path, true);
+    parent.appendChild(div);
+}
+
+function attachItemInteraction(el, item, path, isFolder){
+    if (currentMode === "normal"){
+        el.addEventListener("click", ()=>{
+            if (isFolder) openFolder(item);
+            else window.open(item.url, "_blank");
+        });
+    } else if (currentMode === "edit"){
+        el.classList.add("editModeItem");
+        el.addEventListener("click", ()=>{
+            if (isFolder) openEditFolder(path);
+            else openEditApp(path);
+            resetInactivityTimer();
+        });
+    } else if (currentMode === "move"){
+        attachMoveHandlers(el, item, path, isFolder);
+    }
+}
+
+/* =========================================================
+   MODO MOVER: drag & drop unificado (mouse + touch)
+   ========================================================= */
+function attachMoveHandlers(el, item, path, isFolder){
+    let pointerId=null, startX=0, startY=0, dragging=false;
+
+    el.addEventListener("pointerdown",(e)=>{
+        if (currentMode!=="move") return;
+        e.preventDefault();
+        pointerId = e.pointerId; startX=e.clientX; startY=e.clientY; dragging=false;
+        try{ el.setPointerCapture(pointerId); }catch(err){}
+        resetInactivityTimer();
+    });
+
+    el.addEventListener("pointermove",(e)=>{
+        if (currentMode!=="move" || e.pointerId!==pointerId) return;
+        const dx=e.clientX-startX, dy=e.clientY-startY;
+        if (!dragging && Math.hypot(dx,dy) > 8){
+            dragging = true;
+            suspendInactivityTimer();
+            el.classList.add("dragActive");
+            el.style.touchAction = "none";
+        }
+        if (dragging){
+            e.preventDefault();
+            el.style.transform = `translate(${dx}px,${dy}px) scale(1.06)`;
+            updateDropHighlight(e.clientX, e.clientY, el);
+        }
+    });
+
+    const finish=(e)=>{
+        if (currentMode!=="move" || e.pointerId!==pointerId) return;
+        if (dragging){
+            const dropResult = performDrop(e.clientX, e.clientY, path, isFolder, el);
+            el.style.transform=""; el.classList.remove("dragActive"); el.style.touchAction="";
+            clearDropHighlights();
+            dragging=false;
+            resumeInactivityTimer();
+            const folderModalEl = el.closest(".folderModal");
+            if (folderModalEl) {
+                if (dropResult === "movedOut") renderLauncher();
+                refreshFolderModalGrid(folderModalEl, path.array);
+            } else {
+                renderLauncher();
+            }
+        } else {
+            if (isFolder) openFolder(item);
+            resetInactivityTimer();
+        }
+        pointerId=null;
+    };
+    el.addEventListener("pointerup", finish);
+    el.addEventListener("pointercancel",(e)=>{
+        if (dragging){
+            el.style.transform=""; el.classList.remove("dragActive"); el.style.touchAction="";
+            clearDropHighlights(); dragging=false; resumeInactivityTimer();
+        }
+        pointerId=null;
+    });
+}
+
+function elementUnderPointer(x,y,draggedEl){
+    draggedEl.style.pointerEvents="none";
+    const raw = document.elementFromPoint(x,y);
+    draggedEl.style.pointerEvents="";
+    return raw ? raw.closest(".appIcon") : null;
+}
+function updateDropHighlight(x,y,draggedEl){
+    clearDropHighlights();
+    const targetEl = elementUnderPointer(x,y,draggedEl);
+    if (targetEl && targetEl!==draggedEl && targetEl.dataset.itemType==="folder"){
+        targetEl.classList.add("dropTargetHighlight");
+    }
+}
+function clearDropHighlights(){
+    document.querySelectorAll(".dropTargetHighlight").forEach(el=>el.classList.remove("dropTargetHighlight"));
+}
+
+function performDrop(x,y,path,isFolder,draggedEl){
+    const targetEl = elementUnderPointer(x,y,draggedEl);
+    clearDropHighlights();
+
+    const folderModal = draggedEl.closest(".folderModal");
+    if (folderModal && !isFolder){
+        const content = folderModal.querySelector(".folderContent");
+        const rect = content ? content.getBoundingClientRect() : null;
+        const outsideFolderContent = !rect ||
+            x < rect.left || x > rect.right || y < rect.top || y > rect.bottom;
+
+        if (outsideFolderContent){
+            const folderApps = path.array;
+            const root = getActiveState();
+            const sourceIndex = path.index;
+            if (folderApps && root && root !== folderApps && sourceIndex >= 0 && sourceIndex < folderApps.length){
+                const [movedApp] = folderApps.splice(sourceIndex,1);
+                root.push(movedApp);
+                globalSaved = 0;
+                if (currentMode === "normal") serializeHash(root);
+                return "movedOut";
+            }
+        }
+    }
+
+    if (!targetEl || targetEl===draggedEl) return;
+    if (targetEl.dataset.itemType === "add-app") return;
+
+    const container = draggedEl.parentElement;
+    if (!container || !container.contains(targetEl)) return;
+
+    const siblings = [...container.children];
+    const targetIndex = siblings.indexOf(targetEl);
+    if (targetIndex === -1) return;
+
+    const arr = path.array;
+    const sourceIndex = path.index;
+    const targetIsFolder = targetEl.dataset.itemType === "folder";
+
+    if (!isFolder && targetIsFolder && targetIndex !== sourceIndex){
+        const [movedApp] = arr.splice(sourceIndex,1);
+        const folderRealIndex = targetIndex > sourceIndex ? targetIndex-1 : targetIndex;
+        const folderObj = arr[folderRealIndex];
+        if (folderObj && folderObj.type==="folder"){
+            folderObj.apps = folderObj.apps || [];
+            folderObj.apps.push(movedApp);
+        } else {
+            arr.splice(sourceIndex,0,movedApp);
+        }
+        return;
+    }
+
+    if (targetIndex === sourceIndex) return;
+    const [moved] = arr.splice(sourceIndex,1);
+    const insertAt = sourceIndex < targetIndex ? targetIndex-1 : targetIndex;
+    arr.splice(insertAt,0,moved);
+}
+
+function renderDesktopAddAppTile(parent){
+    const div = document.createElement("div");
+    div.className = "appIcon addAppTile";
+    div.dataset.itemType = "add-app";
+    div.setAttribute("role","button");
+    div.setAttribute("tabindex","0");
+    div.innerHTML = `<div class="addAppPlus">+</div><span>${escapeHtml(t("addApp"))}</span>`;
+    const open = (e)=>{
+        e.preventDefault();
+        openAddModal();
+        resetInactivityTimer();
+    };
+    div.addEventListener("click", open);
+    div.addEventListener("keydown", e=>{
+        if (e.key==="Enter" || e.key===" ") open(e);
+    });
+    parent.appendChild(div);
+}
+
+function renderFolderAddAppTile(folder, parent){
+    const div = document.createElement("div");
+    div.className = "appIcon addAppTile";
+    div.dataset.itemType = "add-app";
+    div.setAttribute("role","button");
+    div.setAttribute("tabindex","0");
+    div.innerHTML = `<div class="addAppPlus">+</div><span>${escapeHtml(t("addApp"))}</span>`;
+    const open = (e)=>{
+        e.preventDefault();
+        openAddModal(folder);
+        resetInactivityTimer();
+    };
+    div.addEventListener("click", open);
+    div.addEventListener("keydown", e=>{
+        if (e.key==="Enter" || e.key===" ") open(e);
+    });
+    parent.appendChild(div);
+}
+
+function refreshFolderModalGrid(modalEl, appsArray){
+    const grid = modalEl.querySelector(".folderGrid");
+    if (!grid) return;
+    grid.innerHTML="";
+    grid.classList.toggle("wiggleMode", currentMode==="move");
+    appsArray.slice(0,35).forEach((app,idx)=>{
+        renderApp(app, grid, {array:appsArray, index:idx});
+    });
+    const folder = getActiveState().find(item=>item.type==="folder" && item.apps===appsArray);
+    if (folder && currentMode === "edit") renderFolderAddAppTile(folder, grid);
+}
+
+/* =========================================================
+   FOLDER: abrir / cerrar (animación zoom)
+   ========================================================= */
+function openFolder(folder){
+    const maxIcons=35;
+    const modal=document.createElement("div");
+    modal.className="folderModal";
+    const content=document.createElement("div");
+    content.className="folderContent";
+    const title=document.createElement("h2");
+    title.textContent=folder.name;
+    title.style.textAlign="center";
+    title.style.marginTop="0";
+    const grid=document.createElement("div");
+    grid.className="folderGrid";
+    grid.classList.toggle("wiggleMode", currentMode==="move");
+    (folder.apps || []).slice(0,maxIcons).forEach((app,idx)=>{
+        renderApp(app, grid, {array:folder.apps, index:idx});
+    });
+    if (currentMode === "edit") renderFolderAddAppTile(folder, grid);
+    content.appendChild(title);
+    content.appendChild(grid);
+    modal.appendChild(content);
+
+    modal.addEventListener("click",(e)=>{
+        if (e.target===modal) closeFolderModalEl(modal);
+    });
+    modal.addEventListener("pointermove",(e)=>{
+        if (currentMode!=="move") return;
+        const contentRect = content.getBoundingClientRect();
+        const inside = e.clientX >= contentRect.left && e.clientX <= contentRect.right &&
+                       e.clientY >= contentRect.top && e.clientY <= contentRect.bottom;
+        modal.classList.toggle("dropToDesktop", !inside);
+    });
+    modal.addEventListener("pointerup",()=>modal.classList.remove("dropToDesktop"));
+
+    document.body.appendChild(modal);
+    requestAnimationFrame(()=>{ modal.classList.add("open"); });
+}
+function closeFolderModalEl(modal){
+    modal.classList.remove("open");
+    const cleanup = ()=>{ if (modal.parentNode) modal.remove(); };
+    let done=false;
+    const onEnd = ()=>{ if(done) return; done=true; cleanup(); };
+    modal.addEventListener("transitionend", onEnd, {once:true});
+    setTimeout(onEnd, 320);
+}
+
+/* =========================================================
+   RENDER: LAUNCHER PRINCIPAL
+   ========================================================= */
+function renderLauncher(){
+    if (currentMode === "normal") { appsState = parseHash(); }
+    const state = getActiveState();
+    const maxIcons = 64;
+    const limited = state.slice(0,maxIcons);
+    const grid=document.getElementById("launcherGrid");
+    grid.innerHTML="";
+    grid.classList.toggle("wiggleMode", currentMode==="move");
+    limited.forEach((item,idx)=>{
+        const path = {array: state, index: idx};
+        if (item.type==="folder") renderFolderIcon(item,grid,path);
+        else renderApp(item,grid,path);
+    });
+
+    const emptyAddSlot = document.getElementById("emptyAddAppSlot");
+    if (emptyAddSlot) emptyAddSlot.innerHTML="";
+
+    // Desktop vacío: + Add App queda junto a las instrucciones existentes.
+    if (state.length === 0) {
+        if (emptyAddSlot) renderDesktopAddAppTile(emptyAddSlot);
+    // Desktop con contenido: + Add App solo existe en Editar iconos.
+    } else if (currentMode === "edit") {
+        renderDesktopAddAppTile(grid);
+    }
+
+    updateEmptyState();
+    updateSavedIndicator();
+}
+
+/* =========================================================
+   MODAL: AÑADIR APP  (con detección automática de iconos)
+   ========================================================= */
+let addAppTargetFolder = null;
+let addAppTargetFolderIndex = -1;
+
+function openAddModal(targetFolder = null){
+    addAppTargetFolder = targetFolder;
+    addAppTargetFolderIndex = -1;
+    if (targetFolder){
+        const active = getActiveState();
+        addAppTargetFolderIndex = active.indexOf(targetFolder);
+    }
+    document.getElementById("appURL").value="";
+    document.getElementById("appName").value="";
+    document.getElementById("appIcon").value="";
+    document.getElementById("appIconOptions").innerHTML="";
+    document.getElementById("iconPreview").style.display="none";
+    closeSidePanel();
+    document.getElementById("addModal").style.display="block";
+}
+function closeAddModal(){
+    document.getElementById("addModal").style.display="none";
+    addAppTargetFolder = null;
+    addAppTargetFolderIndex = -1;
+}
+
+let _iconCandidates = [];
+
+document.getElementById("appURL").addEventListener("input", () => {
+    const url = document.getElementById("appURL").value.trim();
+    const domain = stripProtocol(url).split("/")[0];
+    if (isValidDomain(domain)){
+        const nameField = document.getElementById("appName");
+        if (!nameField.value.trim()){
+            const base = domain.split(".")[0];
+            nameField.value = base.charAt(0).toUpperCase() + base.slice(1);
+        }
+        detectIcons(domain);
+    } else {
+        _iconCandidates = [];
+        document.getElementById("appIconOptions").innerHTML="";
+    }
+});
+
+document.getElementById("appIcon").addEventListener("input", () => {
+    const icon = document.getElementById("appIcon").value.trim();
+    const preview = document.getElementById("iconPreview");
+    if (!icon){ preview.style.display="none"; return; }
+    preview.src = normalize(icon);
+    preview.style.display = "block";
+});
+
+function detectIcons(domain){
+    _iconCandidates = [];
+    const s2 = `https://www.google.com/s2/favicons?sz=128&domain=${encodeURIComponent(domain)}`;
+    _iconCandidates.push({url:s2, label:"S2"});
+    selectIconOption(s2);
+    renderIconOptions();
+
+    const guesses = [ `https://${domain}/favicon.ico`, `https://${domain}/apple-touch-icon.png` ];
+    guesses.forEach(u=>{
+        const img = new Image();
+        img.onload = () => {
+            if (img.naturalWidth > 0 && !_iconCandidates.find(c=>c.url===u)){
+                _iconCandidates.push({url:u, label:"favicon"});
+                renderIconOptions();
+            }
+        };
+        img.onerror = () => {};
+        img.src = u;
+    });
+
+    // Mejor esfuerzo: og:image (puede fallar por CORS, se ignora silenciosamente)
+    fetch(`https://${domain}`, {mode:"cors"}).then(r=>r.text()).then(html=>{
+        let m = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+             || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+        if (m && m[1]){
+            let og = m[1];
+            if (og.startsWith("//")) og = "https:"+og;
+            else if (og.startsWith("/")) og = `https://${domain}${og}`;
+            if (!_iconCandidates.find(c=>c.url===og)){
+                _iconCandidates.push({url:og, label:"OG"});
+                renderIconOptions();
+            }
+        }
+    }).catch(()=>{});
+}
+
+function renderIconOptions(){
+    const row = document.getElementById("appIconOptions");
+    row.innerHTML="";
+    const current = stripProtocol(document.getElementById("appIcon").value.trim());
+    _iconCandidates.forEach(c=>{
+        const img=document.createElement("img");
+        img.src=c.url;
+        img.title=c.label;
+        img.className="iconOption" + (stripProtocol(c.url)===current ? " selectedIcon":"");
+        img.onclick=()=>selectIconOption(c.url);
+        row.appendChild(img);
+    });
+}
+function selectIconOption(url){
+    document.getElementById("appIcon").value = stripProtocol(url);
+    const preview = document.getElementById("iconPreview");
+    preview.src = normalize(url);
+    preview.style.display="block";
+    document.querySelectorAll("#appIconOptions .iconOption").forEach(el=>{
+        el.classList.toggle("selectedIcon", stripProtocol(el.src)===stripProtocol(url));
+    });
+}
+
+function persistActiveState(state){
+    globalSaved = 0;
+    if (currentMode === "normal"){
+        serializeHash(state);
+        appsState = parseHash();
+    }
+}
+
+function refreshOpenFolderForIndex(folderIndex){
+    if (folderIndex < 0) return;
+    const state = getActiveState();
+    const folder = state[folderIndex];
+    if (!folder || folder.type !== "folder") return;
+    const modal = document.querySelector(".folderModal");
+    if (modal) refreshFolderModalGrid(modal, folder.apps || []);
+}
+
+function saveApp(){
+    const name = document.getElementById("appName").value.trim();
+    const urlRaw = document.getElementById("appURL").value.trim();
+    let iconRaw = document.getElementById("appIcon").value.trim();
+
+    if (!name || !urlRaw) { alert(t("invalidData")); return; }
+    const domain = stripProtocol(urlRaw);
+    if (!isValidDomain(domain)) { alert(t("invalidDomain")); return; }
+    if (!iconRaw){ iconRaw = stripProtocol(`https://www.google.com/s2/favicons?sz=128&domain=${domain}`); }
+
+    const newApp = {
+        type:"app",
+        name,
+        url:normalize(domain),
+        icon:normalize(iconRaw)
+    };
+
+    const state = getActiveState();
+
+    if (addAppTargetFolder){
+        const folderIndex = addAppTargetFolderIndex;
+        const currentFolder = state[folderIndex];
+        if (!currentFolder || currentFolder.type !== "folder"){
+            alert(t("invalidData"));
+            closeAddModal();
+            return;
+        }
+        currentFolder.apps = currentFolder.apps || [];
+        currentFolder.apps.push(newApp);
+        persistActiveState(state);
+        closeAddModal();
+        renderLauncher();
+        refreshOpenFolderForIndex(folderIndex);
+        return;
+    }
+
+    state.push(newApp);
+    persistActiveState(state);
+    closeAddModal();
+    renderLauncher();
+}
+
+/* =========================================================
+   MODAL: AÑADIR FOLDER
+   ========================================================= */
+function openFolderAddModal(){
+    closeSidePanel();
+    document.getElementById("folderName").value="";
+    document.getElementById("folderModalAdd").style.display="block";
+
+    const state = getActiveState();
+    const list = document.getElementById("folderAppList");
+    list.innerHTML="";
+    state.forEach((item,index)=>{
+        if (item.type !== "app") return;
+        const div=document.createElement("div");
+        div.className="appSelectItem";
+        div.innerHTML = `<input type="checkbox" data-root-index="${index}"><span>${escapeHtml(item.name)}</span>`;
+        list.appendChild(div);
+    });
+}
+function closeFolderAddModal(){ document.getElementById("folderModalAdd").style.display="none"; }
+
+function saveFolder(){
+    const name = document.getElementById("folderName").value.trim();
+    if (!name){ alert(t("invalidName")); return; }
+
+    const state = getActiveState();
+    const checks = [...document.querySelectorAll("#folderAppList input:checked")];
+    const selectedIndexes = checks
+        .map(c=>parseInt(c.dataset.rootIndex,10))
+        .filter(i=>Number.isInteger(i) && i>=0 && i<state.length)
+        .sort((a,b)=>a-b);
+
+    const selectedSet = new Set(selectedIndexes);
+    const selectedApps = [];
+    const remaining = [];
+
+    state.forEach((item,index)=>{
+        if (selectedSet.has(index)) selectedApps.push(item);
+        else remaining.push(item);
+    });
+
+    remaining.push({type:"folder", name, apps:selectedApps});
+
+    if (currentMode === "normal"){
+        serializeHash(remaining);
+        appsState = parseHash();
+    } else {
+        workingState = remaining;
+        globalSaved = 0;
+    }
+
+    closeFolderAddModal();
+    renderLauncher();
+}
+
+/* =========================================================
+   MODAL: EDITAR APP (dentro de modo Editar)
+   ========================================================= */
+function openEditApp(path){
+    editingPath = path;
+    const app = path.array[path.index];
+    document.getElementById("editAppURL").value = stripProtocol(app.url);
+    document.getElementById("editAppName").value = app.name;
+    document.getElementById("editAppIcon").value = stripProtocol(app.icon);
+    const preview = document.getElementById("editIconPreview");
+    preview.src = app.icon;
+    preview.style.display = "block";
+    document.getElementById("editAppModal").style.display="block";
+    resetInactivityTimer();
+}
+function closeEditAppModal(){
+    document.getElementById("editAppModal").style.display="none";
+    editingPath=null;
+    resetInactivityTimer();
+}
+
+document.getElementById("editAppIcon").addEventListener("input", () => {
+    const icon = document.getElementById("editAppIcon").value.trim();
+    const preview = document.getElementById("editIconPreview");
+    if (!icon){ preview.style.display="none"; return; }
+    preview.src = normalize(icon);
+    preview.style.display = "block";
+});
+
+function saveEditedApp(){
+    if (!editingPath) return;
+    const app = editingPath.array[editingPath.index];
+    const name = document.getElementById("editAppName").value.trim();
+    const urlRaw = document.getElementById("editAppURL").value.trim();
+    let iconRaw = document.getElementById("editAppIcon").value.trim();
+
+    if (!name || !urlRaw) { alert(t("invalidData")); return; }
+    const domain = stripProtocol(urlRaw);
+    if (!isValidDomain(domain)) { alert(t("invalidDomain")); return; }
+    if (!iconRaw){ iconRaw = stripProtocol(`https://www.google.com/s2/favicons?sz=128&domain=${domain}`); }
+
+    app.name = name;
+    app.url = normalize(domain);
+    app.icon = normalize(iconRaw);
+
+    closeEditAppModal();
+    renderLauncher();
+}
+function deleteApp(){
+    if (!editingPath) return;
+    editingPath.array.splice(editingPath.index,1);
+    closeEditAppModal();
+    renderLauncher();
+}
+
+/* =========================================================
+   MODAL: EDITAR FOLDER (dentro de modo Editar)
+   ========================================================= */
+function openEditFolder(path){
+    editingFolderPath = path;
+    const folder = path.array[path.index];
+    document.getElementById("editFolderName").value = folder.name;
+
+    const list = document.getElementById("editFolderAppList");
+    list.innerHTML="";
+    folder.apps.forEach(app=>{
+        const url = stripProtocol(app.url);
+        const icon = stripProtocol(app.icon);
+        const div=document.createElement("div");
+        div.className="appSelectItem";
+        div.innerHTML = `<input type="checkbox" value="${escapeHtml(app.name)},${escapeHtml(url)},${escapeHtml(icon)}" checked><span>${escapeHtml(app.name)}</span>`;
+        list.appendChild(div);
+    });
+    document.getElementById("editFolderModal").style.display="block";
+    resetInactivityTimer();
+}
+function closeEditFolderModal(){
+    document.getElementById("editFolderModal").style.display="none";
+    editingFolderPath=null;
+    resetInactivityTimer();
+}
+function saveEditedFolder(){
+    if (!editingFolderPath) return;
+    const folder = editingFolderPath.array[editingFolderPath.index];
+    const name = document.getElementById("editFolderName").value.trim();
+    if (!name){ alert(t("invalidName")); return; }
+
+    const checks = [...document.querySelectorAll("#editFolderAppList input:checked")];
+
+    folder.name = name;
+    folder.apps = checks.map(c=>{
+        const [n,u,i] = c.value.split(",");
+        return { type:"app", name:n, url:normalize(u), icon:normalize(i) };
+    });
+
+    closeEditFolderModal();
+    renderLauncher();
+}
+function deleteFolder(){
+    if (!editingFolderPath) return;
+    editingFolderPath.array.splice(editingFolderPath.index,1);
+    closeEditFolderModal();
+    renderLauncher();
+}
+
+/* =========================================================
+   EXPORT / IMPORT
+   ========================================================= */
+function markSavedAndRewriteHash(){
+    globalSaved = 1;
+    const hash = getDecodedHashString().substring(1);
+    const parts = hash ? hash.split("#").filter(Boolean) : [];
+    const rest = parts.filter(p=>!p.startsWith("GLOBAL:"));
+    location.hash = "#" + [globalPartString(), ...rest].join("#");
+    updateSavedIndicator();
+}
+function exportConfig(){
+    markSavedAndRewriteHash();
+    navigator.clipboard.writeText(location.href).then(()=>alert(t("urlCopied")));
+    closeSidePanel();
+}
+function importConfig(){
+    const input = prompt("URL:");
+    if (!input) return;
+    try{
+        const url = new URL(input);
+        location.hash = url.hash;
+        parseGlobal();   // respeta tema/idioma/guardado tal cual vienen en la URL importada
+        applyTheme();
+        applyI18n();
+        renderLauncher();
+    }catch(e){ alert(t("invalidImportUrl")); }
+    closeSidePanel();
+}
+
+/* =========================================================
+   THEME / LANGUAGE SETTERS
+   ========================================================= */
+function setTheme(tval){ globalTheme = tval; globalSaved = 0; updateGlobalInHash(); applyTheme(); updateSavedIndicator(); }
+function setLanguage(lang){
+    globalLang = lang.toLowerCase();
+    globalSaved = 0;
+    updateGlobalInHash();
+    location.reload();
+}
+
+/* =========================================================
+   SALVAR TU SLUGLAUNCHER (acceso directo)
+   ========================================================= */
+function detectPlatform(){
+    const ua = navigator.userAgent || navigator.vendor || "";
+    if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return "ios";
+    if (/android/i.test(ua)) return "android";
+    if (/Win/i.test(navigator.platform || ua)) return "windows";
+    if (/Mac/i.test(navigator.platform || ua) && !/iPad|iPhone/.test(ua)) return "mac";
+    if (/Linux/i.test(navigator.platform || ua)) return "linux";
+    return "unknown";
+}
+function downloadTextFile(filename, content, mime){
+    const blob = new Blob([content], {type: mime || "text/plain"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+}
+function weblocXML(url){
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0"><dict><key>URL</key><string>${url}</string></dict></plist>`;
+}
+function saveSlugLauncher(){
+    closeSidePanel();
+    markSavedAndRewriteHash();
+    const platform = detectPlatform();
+    const url = window.location.href;
+    const name = (t("title") || "SlugLauncher").trim();
+
+    try{
+        if (platform === "windows"){
+            downloadTextFile(`${name}.url`, `[InternetShortcut]\r\nURL=${url}\r\n`);
+            alert(t("saveDesktopInstructions"));
+        } else if (platform === "mac"){
+            downloadTextFile(`${name}.webloc`, weblocXML(url), "application/xml");
+            alert(t("saveDesktopInstructions"));
+        } else if (platform === "linux"){
+            downloadTextFile(`${name}.desktop`, `[Desktop Entry]\nType=Link\nName=${name}\nURL=${url}\nIcon=text-html\n`);
+            alert(t("saveDesktopInstructions"));
+        } else if (platform === "ios"){
+            alert(t("saveMobileInstructionsIOS"));
+        } else if (platform === "android"){
+            alert(t("saveMobileInstructionsAndroid"));
+        } else {
+            downloadTextFile(`${name}.url`, `[InternetShortcut]\r\nURL=${url}\r\n`);
+            alert(t("saveDesktopInstructions"));
+        }
+    }catch(err){
+        alert(t("saveError"));
+    }
+}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+parseGlobal();
+applyTheme();
+applyI18n();
+renderLauncher();
+
+window.addEventListener("hashchange", ()=>{
+    if (currentMode !== "normal"){ currentMode="normal"; workingState=null; clearTimeout(inactivityTimer); }
+    parseGlobal();
+    applyTheme();
+    applyI18n();
+    renderLauncher();
+});
+</script>
+</body>
+</html>
