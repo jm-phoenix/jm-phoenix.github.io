@@ -2488,6 +2488,24 @@ document.addEventListener("keydown", e=>{
 /* =========================================================
    INIT
    ========================================================= */
+if (!location.hash || location.hash === "#") {
+    const browserLang = (navigator.language || "en").toLowerCase().split("-")[0];
+
+    const supportedLanguages = [
+        "en", "es", "fr", "de", "pt",
+        "it", "ru", "zh", "ja", "hi", "ar"
+    ];
+
+    const lang = supportedLanguages.includes(browserLang)
+        ? browserLang
+        : "en";
+
+    history.replaceState(
+        null,
+        "",
+        location.pathname + "#GLOBAL:2," + lang + ",0"
+    );
+}
 parseGlobal();
 applyTheme();
 applyI18n();
