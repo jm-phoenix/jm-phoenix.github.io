@@ -8,9 +8,9 @@
 <style>
 :root {
     --bg-light: #fffEf7;
-    --bg-dark: #0C0C0C;
+    --bg-dark: #0F0F0F;
     --card-light: #ffffff;
-    --card-dark: #1e1e20;
+    --card-dark: #2f2f31;
     --text-light: #1c1c1e;
     --text-dark: #f2f2f7;
     --accent: #007aff;
@@ -162,11 +162,24 @@ body.theme-dark #emptyStateHelp { background: var(--card-dark); box-shadow:0 6px
     -webkit-user-select:none; user-select:none;
     min-width: 0; min-height: 0; overflow: hidden;
 }
-body.theme-dark .appIcon { background:var(--card-dark); box-shadow:0 1px 2px rgba(0,0,0,0.5), 0 10px 26px rgba(0,0,0,0.75); }
+body.theme-dark .appIcon {
+    background: var(--card-dark);
+    box-shadow:
+        0 1px 2px rgba(0,0,0,0.75),
+        0 5px 12px rgba(0,0,0,0.55),
+        0 12px 24px rgba(0,0,0,0.35),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+}
 .appIcon img, .appIcon .folderSvgIcon { width:54%; height:54%; aspect-ratio:1/1; object-fit:contain; margin-bottom:8%; border-radius:24%; }
 .appIcon img { pointer-events:none; -webkit-user-drag:none; user-drag:none; }
 .appIcon:hover { transform:scale(1.06); box-shadow:0 2px 4px rgba(0,0,0,0.06), 0 14px 28px rgba(0,0,0,0.14); }
-body.theme-dark .appIcon:hover { box-shadow:0 2px 4px rgba(0,0,0,0.6), 0 14px 30px rgba(0,0,0,0.85); }
+body.theme-dark .appIcon:hover {
+    box-shadow:
+        0 2px 4px rgba(0,0,0,0.8),
+        0 8px 16px rgba(0,0,0,0.6),
+        0 16px 32px rgba(0,0,0,0.45),
+        inset 0 1px 0 rgba(255,255,255,0.10);
+}
 
 /* Folder con icono negro superpuesto (opcional, vía svgapi.com u otra URL) */
 .folderIconWrap { position:relative; width:54%; height:54%; margin-bottom:8%; }
@@ -208,6 +221,12 @@ body.theme-dark .appIcon .folderBadge { box-shadow:0 1px 4px rgba(0,0,0,0.8); bo
 }
 .wiggleMode .appIcon:not(.dragActive) { animation:wiggle .26s infinite ease-in-out; }
 .appIcon.dragActive { animation:none !important; box-shadow:0 14px 30px rgba(0,0,0,0.35); opacity:0.92; z-index:500; }
+body.theme-dark .appIcon.dragActive {
+    box-shadow:
+        0 14px 30px rgba(0,0,0,0.65),
+        0 20px 40px rgba(0,0,0,0.35),
+        inset 0 1px 0 rgba(255,255,255,0.10);
+}
 .appIcon.dropTargetHighlight { outline:3px solid var(--accent); outline-offset:3px; background:rgba(0,122,255,0.12); }
 .addAppTile {
     border:2px dashed rgba(0,122,255,0.45);
@@ -1957,7 +1976,7 @@ function saveApp(){
     const newApp = {
         type:"app",
         name,
-        url:normalize(domain),
+        url:normalize(stripProtocol(fullURL)),
         icon:normalize(iconRaw)
     };
 
@@ -2512,11 +2531,11 @@ applyI18n();
 renderLauncher();
 
 window.addEventListener("hashchange", ()=>{
-    if (currentMode !== "normal"){ currentMode="normal"; workingState=null; clearTimeout(inactivityTimer); }
+    const wasEditing = currentMode !== "normal";
     parseGlobal();
     applyTheme();
     applyI18n();
-    renderLauncher();
+    if (!wasEditing) renderLauncher();
 });
 </script>
 </body>
