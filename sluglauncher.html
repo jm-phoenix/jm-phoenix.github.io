@@ -4,29 +4,48 @@
 <meta charset="UTF-8">
 <title>Slug Launcher</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+ 
+<!-- Animotion: librería de 745+ animaciones CSS3 (https://github.com/animotion-mcp/animotion-mcp.github.io) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/animotion-mcp/animotion-mcp.github.io@main/css/keyframes.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/animotion-mcp/animotion-mcp.github.io@main/css/keyframes-part2.css">
+ 
 <style>
 :root {
     --bg-light: #fffEf7;
-    --bg-dark: #0F0F0F;
+    --bg-dark: #0C0C0C;
     --card-light: #ffffff;
-    --card-dark: #2f2f31;
+    --card-dark: #1e1e20;
     --text-light: #1c1c1e;
     --text-dark: #f2f2f7;
     --accent: #007aff;
     --accent-dark: #0a84ff;
 }
-
-body.theme-light { background: var(--bg-light); color: var(--text-light); }
-body.theme-dark  { background: var(--bg-dark);  color: var(--text-dark); }
-
+ 
+body.theme-light {
+    background-color: var(--bg-light);
+    background-image:
+        radial-gradient(circle at 15% -10%, rgba(0,122,255,0.07), transparent 45%),
+        radial-gradient(circle at 100% 0%, rgba(74,144,226,0.06), transparent 40%);
+    background-attachment: fixed;
+    color: var(--text-light);
+}
+body.theme-dark {
+    background-color: var(--bg-dark);
+    background-image:
+        radial-gradient(circle at 12% -10%, rgba(10,132,255,0.10), transparent 42%),
+        radial-gradient(circle at 100% 0%, rgba(74,50,180,0.08), transparent 45%),
+        radial-gradient(circle at 50% 110%, rgba(10,132,255,0.05), transparent 50%);
+    background-attachment: fixed;
+    color: var(--text-dark);
+}
+ 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
     margin: 0;
     padding: 0;
     transition: background .2s ease, color .2s ease;
 }
-
+ 
 /* ---------- HEADER (fijo, glassmorphism) ---------- */
 #header {
     position: fixed;
@@ -40,24 +59,39 @@ body {
     backdrop-filter: blur(22px) saturate(180%);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
     border-bottom: 1px solid rgba(127,127,127,0.14);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
     transition: box-shadow .2s ease, background .2s ease;
 }
 body.theme-dark #header {
     background: rgba(0,0,0,0.55);
     border-bottom: 1px solid rgba(255,255,255,0.08);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.07);
 }
-body.modeActive #header { box-shadow: 0 2px 10px rgba(0,122,255,0.35); }
+body.modeActive #header { box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 2px 10px rgba(0,122,255,0.35); }
+body.theme-dark.modeActive #header { box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 2px 14px rgba(10,132,255,0.4); }
 #header h1 { margin:0; font-size:19px; font-weight:700; display:flex; align-items:center; gap:8px; }
+#titleLabel { cursor:pointer; transition:opacity .15s ease, transform .15s ease; border-radius:10px; }
+#titleLabel:hover { opacity:0.75; }
+#titleLabel:active { transform:scale(.97); }
 .titleIcon { width:22px; height:22px; flex-shrink:0; transform:scale(1.5); transform-origin:center center; }
 #headerActions { display:flex; align-items:center; gap:4px; }
 #searchBtn, #editBtn, #burgerBtn {
     border:none; background:transparent; color:inherit; font-size:22px; cursor:pointer;
-    width:36px; height:36px; border-radius:10px; transition:background .15s ease;
+    width:36px; height:36px; border-radius:10px;
+    transition:background .15s ease, transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease;
     display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 0 0 rgba(74,144,226,0);
 }
 #searchBtn svg, #editBtn svg { width:19px; height:19px; }
-#searchBtn:hover, #editBtn:hover, #burgerBtn:hover { background: rgba(127,127,127,0.15); }
-
+#searchBtn:hover, #editBtn:hover, #burgerBtn:hover {
+    background: rgba(127,127,127,0.15); transform:scale(1.1);
+    box-shadow:0 0 14px 2px rgba(74,144,226,0.35);
+}
+body.theme-dark #searchBtn:hover, body.theme-dark #editBtn:hover, body.theme-dark #burgerBtn:hover {
+    box-shadow:0 0 16px 3px rgba(10,132,255,0.45);
+}
+#searchBtn:active, #editBtn:active, #burgerBtn:active { transform:scale(.9); }
+ 
 /* ---------- FOOTER (fijo, glassmorphism) ---------- */
 #footer {
     position: fixed;
@@ -71,19 +105,21 @@ body.modeActive #header { box-shadow: 0 2px 10px rgba(0,122,255,0.35); }
     backdrop-filter: blur(22px) saturate(180%);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
     border-top: 1px solid rgba(127,127,127,0.14);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
 }
 body.theme-dark #footer {
     background: rgba(0,0,0,0.55);
     border-top: 1px solid rgba(255,255,255,0.08);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
 }
-
+ 
 /* ---------- MAIN CONTENT ---------- */
 #main {
     padding: 78px 20px 64px;
     min-height: 100vh;
     box-sizing: border-box;
 }
-
+ 
 /* ---------- BORDE ROJO: configuración no salvada ---------- */
 #unsavedIndicator {
     position: fixed; inset: 0; z-index: 1500;
@@ -93,11 +129,11 @@ body.theme-dark #footer {
     display: none;
 }
 body.unsavedBorder #unsavedIndicator { display: block; }
-
+ 
 /* ---------- FOOTER: estado salvado ---------- */
 #footerSaved { font-weight:600; }
 body.unsavedBorder #footerSaved { color:#ff3b30; opacity:1; }
-
+ 
 /* ---------- ESTADO VACÍO: ayuda inicial ---------- */
 #emptyStateHelp {
     display: none;
@@ -109,7 +145,7 @@ body.unsavedBorder #footerSaved { color:#ff3b30; opacity:1; }
     background: var(--card-light);
     box-shadow: 0 6px 18px rgba(0,0,0,0.08);
     text-align: center;
-    animation: popIn .3s ease;
+    animation: animotion-bounce-in .55s both;
 }
 body.theme-dark #emptyStateHelp { background: var(--card-dark); box-shadow:0 6px 18px rgba(0,0,0,0.6); }
 #emptyStateHelp.visible { display: block; }
@@ -117,7 +153,7 @@ body.theme-dark #emptyStateHelp { background: var(--card-dark); box-shadow:0 6px
 #emptyStateHelp p { margin: 0; font-size: 14px; line-height: 1.5; opacity: 0.85; }
 #emptyAddAppSlot { margin-top:16px; display:flex; justify-content:center; }
 #emptyAddAppSlot .appIcon { width:150px; max-width:72%; }
-
+ 
 /* Hint secundario: cómo cambiar de idioma, en los 11 idiomas a la vez */
 #emptyLangHint {
     margin: 14px 0 0;
@@ -127,12 +163,12 @@ body.theme-dark #emptyStateHelp { background: var(--card-dark); box-shadow:0 6px
     line-height: 1.7;
     opacity: 0.65;
 }
-
-
+ 
+ 
 /* ---------- GRID PRINCIPAL (cuadrado 1:1) ---------- */
 #launcherGrid, .folderGrid {
     display: grid;
-    gap: 16px;
+    gap: 24px;
     grid-template-columns: repeat(4, 1fr);
 }
 #launcherGrid { max-width: 1100px; margin: 0 auto; }
@@ -140,7 +176,7 @@ body.theme-dark #emptyStateHelp { background: var(--card-dark); box-shadow:0 6px
 @media (min-width: 700px) and (max-width: 1023px) { #launcherGrid { grid-template-columns: repeat(5, 1fr); } }
 @media (max-width: 699px)  { #launcherGrid { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 420px)  { #launcherGrid { grid-template-columns: repeat(3, 1fr); } }
-
+ 
 /* El grid del folder siempre tiene al menos 1 columna menos que el launcher principal
    en el mismo breakpoint (así nunca se ve más "apretado" que el launcher). */
 .folderGrid { grid-template-columns: repeat(3, 1fr); }
@@ -148,39 +184,37 @@ body.theme-dark #emptyStateHelp { background: var(--card-dark); box-shadow:0 6px
 @media (min-width: 700px) and (max-width: 1023px) { .folderGrid { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width:699px){ .folderGrid{grid-template-columns:repeat(3,1fr);} }
 @media (max-width:420px){ .folderGrid{grid-template-columns:repeat(2,1fr);} }
-
+ 
 /* ---------- ICONOS (celda cuadrada) ---------- */
 .appIcon {
     aspect-ratio: 1 / 1;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     padding:10%; box-sizing:border-box;
     border-radius:24%; background:var(--card-light);
-    box-shadow:0 1px 2px rgba(0,0,0,0.05), 0 10px 22px rgba(0,0,0,0.10);
-    transition:transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s cubic-bezier(.2,.8,.2,1), background .2s ease, outline .1s ease;
+    box-shadow:0 1px 2px rgba(0,0,0,0.05), 0 10px 22px rgba(0,0,0,0.10), 0 0 0 0 rgba(74,144,226,0);
+    transition:transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .35s ease, background .2s ease, outline .1s ease;
     cursor:pointer; position:relative;
     touch-action: manipulation;
     -webkit-user-select:none; user-select:none;
     min-width: 0; min-height: 0; overflow: hidden;
 }
-body.theme-dark .appIcon {
-    background: var(--card-dark);
-    box-shadow:
-        0 1px 2px rgba(0,0,0,0.75),
-        0 5px 12px rgba(0,0,0,0.55),
-        0 12px 24px rgba(0,0,0,0.35),
-        inset 0 1px 0 rgba(255,255,255,0.08);
-}
+body.theme-dark .appIcon { background:var(--card-dark); box-shadow:0 1px 2px rgba(0,0,0,0.5), 0 10px 26px rgba(0,0,0,0.75), 0 0 0 0 rgba(10,132,255,0); }
 .appIcon img, .appIcon .folderSvgIcon { width:54%; height:54%; aspect-ratio:1/1; object-fit:contain; margin-bottom:8%; border-radius:24%; }
 .appIcon img { pointer-events:none; -webkit-user-drag:none; user-drag:none; }
-.appIcon:hover { transform:scale(1.06); box-shadow:0 2px 4px rgba(0,0,0,0.06), 0 14px 28px rgba(0,0,0,0.14); }
-body.theme-dark .appIcon:hover {
-    box-shadow:
-        0 2px 4px rgba(0,0,0,0.8),
-        0 8px 16px rgba(0,0,0,0.6),
-        0 16px 32px rgba(0,0,0,0.45),
-        inset 0 1px 0 rgba(255,255,255,0.10);
+/* Hover: elevación + halo de luz detrás del icono (en oscuro el halo reemplaza a la sombra, que ahí casi no se ve) */
+.appIcon:hover {
+    transform:translate3d(0,-5px,0) scale(1.06);
+    box-shadow:0 2px 4px rgba(0,0,0,0.06), 0 18px 32px rgba(0,0,0,0.16), 0 0 13px 3px rgba(74,144,226,0.4);
 }
-
+body.theme-dark .appIcon:hover {
+    box-shadow:0 2px 4px rgba(0,0,0,0.3), 0 10px 22px rgba(0,0,0,0.5), 0 0 17px 4px rgba(10,132,255,0.55);
+}
+@media (prefers-reduced-motion: reduce) { .appIcon { transition:background .2s ease; } .appIcon:hover { transform:none; } }
+ 
+/* Entrada del grid: fade-in-up escalonado (Animotion) */
+.appIconEnter { animation: animotion-fade-in-up .5s cubic-bezier(.16,1,.3,1) both; }
+@media (prefers-reduced-motion: reduce) { .appIconEnter { animation: none; } }
+ 
 /* Folder con icono negro superpuesto (opcional, vía svgapi.com u otra URL) */
 .folderIconWrap { position:relative; width:54%; height:54%; margin-bottom:8%; }
 .folderIconWrap .folderSvgIcon { width:100%; height:100%; margin-bottom:0; }
@@ -194,7 +228,7 @@ body.theme-dark .appIcon:hover {
     max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 body.theme-dark .appIcon span { color:var(--text-dark); }
-
+ 
 /* Badge: cantidad de shortcuts dentro de un folder (50% más grande, azul del folder) */
 .appIcon .folderBadge {
     position:absolute; top:4px; right:4px;
@@ -210,23 +244,24 @@ body.theme-dark .appIcon span { color:var(--text-dark); }
     white-space:nowrap; max-width:none;
 }
 body.theme-dark .appIcon .folderBadge { box-shadow:0 1px 4px rgba(0,0,0,0.8); border:1px solid rgba(255,255,255,0.15); }
-
+ 
 /* Modo Editar: indicador visual de que el icono es editable */
 .editModeItem { outline:2px dashed rgba(0,122,255,0.55); outline-offset:3px; }
-
+ 
 /* Modo Mover: animación wiggle */
 @keyframes wiggle {
     0%,100% { transform:rotate(-2deg); }
     50%     { transform:rotate(2deg); }
 }
 .wiggleMode .appIcon:not(.dragActive) { animation:wiggle .26s infinite ease-in-out; }
-.appIcon.dragActive { animation:none !important; box-shadow:0 14px 30px rgba(0,0,0,0.35); opacity:0.92; z-index:500; }
-body.theme-dark .appIcon.dragActive {
-    box-shadow:
-        0 14px 30px rgba(0,0,0,0.65),
-        0 20px 40px rgba(0,0,0,0.35),
-        inset 0 1px 0 rgba(255,255,255,0.10);
+/* Evita que el navegador se quede con el gesto (pull-to-refresh en iOS, swipe atrás/adelante
+   en ChromeOS táctil, menú contextual por long-press) desde el primer toque en modo mover,
+   en vez de esperar a que el JS detecte que empezó un arrastre. */
+.wiggleMode .appIcon, .wiggleMode .addAppTile {
+    touch-action: none;
+    -webkit-touch-callout: none;
 }
+.appIcon.dragActive { animation:none !important; box-shadow:0 14px 30px rgba(0,0,0,0.35); opacity:0.92; z-index:500; }
 .appIcon.dropTargetHighlight { outline:3px solid var(--accent); outline-offset:3px; background:rgba(0,122,255,0.12); }
 .addAppTile {
     border:2px dashed rgba(0,122,255,0.45);
@@ -246,7 +281,7 @@ body.theme-dark .appIcon.dragActive {
     outline:3px dashed var(--accent);
     outline-offset:6px;
 }
-
+ 
 /* ---------- FOLDER MODAL (zoom transition) ---------- */
 .folderModal {
     position:fixed; inset:0; z-index:999;
@@ -266,11 +301,11 @@ body.theme-dark .appIcon.dragActive {
     background:var(--card-light); padding:20px; border-radius:28px;
     width:90%; max-width:600px; max-height:80vh; overflow:auto;
     transform:scale(.82); opacity:0;
-    transition: transform .25s ease, opacity .25s ease;
+    transition: transform .38s cubic-bezier(.34,1.56,.64,1), opacity .25s ease;
 }
 .folderModal.open .folderContent { transform:scale(1); opacity:1; }
 body.theme-dark .folderContent { background:var(--card-dark); }
-
+ 
 .folderModalHeader {
     position:relative;
     display:flex;
@@ -301,16 +336,35 @@ body.theme-dark .folderContent { background:var(--card-dark); }
 }
 .folderModalClose:hover { background:rgba(127,127,127,.22); }
 .folderModalClose:active { transform:scale(.94); }
-
+.folderModalEditBtn {
+    position:absolute;
+    top:0;
+    left:0;
+    width:36px;
+    height:36px;
+    border:0;
+    border-radius:50%;
+    background:rgba(127,127,127,.12);
+    color:inherit;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:3;
+    transition:background .15s ease, transform .1s ease;
+}
+.folderModalEditBtn svg { width:17px; height:17px; }
+.folderModalEditBtn:hover { background:rgba(127,127,127,.22); }
+.folderModalEditBtn:active { transform:scale(.94); }
+ 
 /* ---------- MODALS GENERALES (fondo oscurecido + desenfoque profundo) ---------- */
-#addModal, #folderModalAdd, #editAppModal, #editFolderModal, #sidePanelOverlay {
+#addModal, #folderModalAdd, #editAppModal, #editFolderModal, #sidePanelOverlay, #slugInfoModal, #urlIOModal {
     display:none; position:fixed; inset:0; z-index:1001;
     background:rgba(0,0,0,0.38);
     backdrop-filter:blur(22px) saturate(160%);
     -webkit-backdrop-filter:blur(22px) saturate(160%);
-    animation: fadeInOverlay .2s ease;
+    animation: animotion-fade-in .22s ease both;
 }
-@keyframes fadeInOverlay { from{opacity:0;} to{opacity:1;} }
 #sidePanelOverlay {
     background:rgba(0,0,0,0.35); backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px);
 }
@@ -319,30 +373,56 @@ body.theme-dark .folderContent { background:var(--card-dark); }
     background:var(--card-light); box-shadow:-4px 0 20px rgba(0,0,0,0.18);
     padding:20px 18px; box-sizing:border-box;
     overflow-y:auto; overscroll-behavior:contain;
-    animation:slideIn .28s cubic-bezier(.2,.8,.2,1);
+    animation: animotion-slide-in-right .34s cubic-bezier(.16,1,.3,1) both;
     font-family:inherit;
 }
 body.theme-dark #sidePanel { background:var(--card-dark); }
-
-@keyframes popIn  { from{transform:scale(.85); opacity:0;} to{transform:scale(1); opacity:1;} }
-@keyframes slideIn{ from{transform:translateX(100%);} to{transform:translateX(0);} }
-
+@media (prefers-reduced-motion: reduce) {
+    #sidePanel { animation:none !important; }
+}
+/* Cierre animado del panel + overlay */
+@keyframes sidePanelSlideOut { from { transform:translateX(0); } to { transform:translateX(100%); } }
+@keyframes overlayFadeOut { from { opacity:1; } to { opacity:0; } }
+#sidePanelOverlay.closing { animation: overlayFadeOut .26s ease both; }
+#sidePanelOverlay.closing #sidePanel { animation: sidePanelSlideOut .26s cubic-bezier(.4,0,.68,.06) both; }
+ 
 .modalBox {
     background:var(--card-light); padding:24px; border-radius:30px;
-    width:90%; max-width:350px; margin:auto; margin-top:60px; animation:popIn .28s cubic-bezier(.2,.8,.2,1);
+    width:90%; max-width:350px; margin:auto; margin-top:60px;
+    animation: animotion-bounce-in .5s both;
     max-height:80vh; overflow:auto;
-    box-shadow:0 20px 60px rgba(0,0,0,0.25);
+    box-shadow:0 20px 60px rgba(0,0,0,0.25), 0 0 30px 4px rgba(74,144,226,0.22);
 }
-body.theme-dark .modalBox { background:var(--card-dark); box-shadow:0 20px 60px rgba(0,0,0,0.7); }
-.modalBox input, .modalBox textarea {
+body.theme-dark .modalBox {
+    background:var(--card-dark);
+    box-shadow:0 20px 60px rgba(0,0,0,0.7), 0 0 40px 6px rgba(10,132,255,0.3);
+}
+.modalBox input:not([type="checkbox"]):not([type="radio"]), .modalBox textarea, .modalBox select {
     width:100%; padding:11px 12px; margin-bottom:12px; border-radius:14px;
-    border:1px solid #ccc; box-sizing:border-box;
+    border:1px solid rgba(127,127,127,0.35); box-sizing:border-box;
     font-size:16px; /* Evita el zoom automático de iOS al enfocar campos */
+    background:var(--card-light); color:var(--text-light);
+    transition:background .2s ease, color .2s ease, border-color .15s ease, box-shadow .15s ease;
 }
-
+.modalBox input::placeholder, .modalBox textarea::placeholder { color:inherit; opacity:0.45; }
+.modalBox input:not([type="checkbox"]):not([type="radio"]):focus, .modalBox textarea:focus, .modalBox select:focus {
+    outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,122,255,0.18);
+}
+body.theme-dark .modalBox input:not([type="checkbox"]):not([type="radio"]), body.theme-dark .modalBox textarea, body.theme-dark .modalBox select {
+    background:rgba(255,255,255,0.06); color:var(--text-dark); border-color:rgba(255,255,255,0.14);
+    color-scheme:dark; /* corrige flechas/checkbox nativos de <select> en oscuro */
+}
+body.theme-dark .modalBox input:not([type="checkbox"]):not([type="radio"]):focus, body.theme-dark .modalBox textarea:focus, body.theme-dark .modalBox select:focus {
+    border-color:var(--accent-dark); box-shadow:0 0 0 3px rgba(10,132,255,0.22);
+}
+/* Checkboxes (p.ej. la lista de apps dentro de un folder): mantienen su tamaño nativo,
+   solo se les da el color de acento para que combinen con el resto de la UI. */
+.modalBox input[type="checkbox"] { width:auto; margin:0; accent-color:var(--accent); flex-shrink:0; }
+body.theme-dark .modalBox input[type="checkbox"] { accent-color:var(--accent-dark); }
+ 
 /* En iPhone/iPad Safari, los campos con menos de 16px provocan zoom al recibir foco. */
 @media (max-width: 600px) {
-    .modalBox input, .modalBox textarea, .modalBox select {
+    .modalBox input:not([type="checkbox"]):not([type="radio"]), .modalBox textarea, .modalBox select {
         font-size:16px !important;
     }
 }
@@ -360,7 +440,7 @@ body.theme-dark .modalBox { background:var(--card-dark); box-shadow:0 20px 60px 
 }
 body.theme-dark .modalBox .helperLink { color:var(--accent-dark); }
 #iconPreview, #editIconPreview, #folderIconPreview, #editFolderIconPreview { width:64px; height:64px; border-radius:16px; display:none; margin-bottom:10px; }
-
+ 
 /* ---------- TOGGLE App / Folder (modal Añadir) ---------- */
 .segmentedControl {
     display:flex; background:rgba(127,127,127,0.15); border-radius:13px;
@@ -378,16 +458,16 @@ body.theme-dark .modalBox .helperLink { color:var(--accent-dark); }
 body.theme-dark .modalBox .segmentedControl button.segmentBtn.active {
     background:var(--card-dark); box-shadow:0 1px 5px rgba(0,0,0,0.55);
 }
-
+ 
 /* ---------- Resalte: item listo para mover (tras usar el botón "Mover") ---------- */
 @keyframes pendingMovePulse {
     0%,100% { box-shadow:0 0 0 0 rgba(0,122,255,0.55); }
     50%     { box-shadow:0 0 0 12px rgba(0,122,255,0); }
 }
 .pendingMoveHighlight { animation:pendingMovePulse .55s ease 3; }
-
+ 
 .appSelectItem { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
-
+ 
 /* ---------- ICON OPTIONS (deteccion automatica) ---------- */
 .iconOptionsRow { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
 .iconOption {
@@ -397,7 +477,9 @@ body.theme-dark .modalBox .segmentedControl button.segmentBtn.active {
 }
 .iconOption:hover { transform:scale(1.08); }
 .iconOption.selectedIcon { border-color:var(--accent); }
-
+body.theme-dark .iconOption { background:rgba(255,255,255,0.08); }
+body.theme-dark .iconOption.selectedIcon { border-color:var(--accent-dark); }
+ 
 /* ---------- SIDE PANEL MENU (estilo panel nativo) ---------- */
 .sideMenuLink {
     display:block; margin-bottom:4px; padding:9px 10px; border-radius:12px;
@@ -410,12 +492,24 @@ body.theme-dark .sideMenuLink { color:var(--text-dark); }
 body.theme-dark .sideMenuLink:hover { background:rgba(10,132,255,0.18); color:var(--accent-dark); }
 .sideMenuSectionTitle {
     font-size:11.5px; font-weight:700; margin-top:20px; margin-bottom:8px;
-    opacity:0.55; text-transform:uppercase; letter-spacing:.08em;
-    padding:0 10px;
+    opacity:0.85; text-transform:uppercase; letter-spacing:.08em;
+    padding:0 10px; color:var(--accent);
 }
-#langSelect { font-weight:500; }
-
-
+body.theme-dark .sideMenuSectionTitle { color:var(--accent-dark); }
+#langSelect {
+    font-weight:500; width:100%; padding:8px 10px; border-radius:10px;
+    border:1px solid rgba(127,127,127,0.35); box-sizing:border-box;
+    background:var(--card-light); color:var(--text-light);
+    transition:background .2s ease, color .2s ease, border-color .15s ease;
+}
+#langSelect:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,122,255,0.18); }
+body.theme-dark #langSelect {
+    background:rgba(255,255,255,0.06); color:var(--text-dark); border-color:rgba(255,255,255,0.14);
+    color-scheme:dark;
+}
+body.theme-dark #langSelect:focus { border-color:var(--accent-dark); box-shadow:0 0 0 3px rgba(10,132,255,0.22); }
+ 
+ 
 /* ---------- MODAL: SALVAR / INSTALAR SLUGLAUNCHER ---------- */
 #saveLauncherModal {
     display:none; position:fixed; inset:0; z-index:1700;
@@ -425,13 +519,13 @@ body.theme-dark .sideMenuLink:hover { background:rgba(10,132,255,0.18); color:va
     -webkit-backdrop-filter:blur(24px) saturate(160%);
     padding:20px; box-sizing:border-box;
 }
-#saveLauncherModal.open { display:flex; animation:fadeInOverlay .2s ease; }
+#saveLauncherModal.open { display:flex; animation: animotion-fade-in .22s ease both; }
 #saveLauncherBox {
     width:100%; max-width:430px; max-height:82vh; overflow:auto;
     background:var(--card-light); color:var(--text-light);
     border-radius:28px; padding:24px; box-sizing:border-box;
     box-shadow:0 24px 70px rgba(0,0,0,.3);
-    animation:popIn .28s cubic-bezier(.2,.8,.2,1);
+    animation: animotion-bounce-in .5s both;
 }
 body.theme-dark #saveLauncherBox { background:var(--card-dark); color:var(--text-dark); }
 #saveLauncherBox h2 { margin:0 34px 8px 0; font-size:20px; }
@@ -453,7 +547,7 @@ body.theme-dark #saveLauncherBox { background:var(--card-dark); color:var(--text
 #saveLauncherActions { display:flex; gap:8px; margin-top:16px; }
 #saveLauncherActions button { flex:1; margin-bottom:0; }
 #saveLauncherCopyBtn { background:rgba(127,127,127,.18) !important; color:inherit !important; }
-
+ 
 /* ---------- BUSCADOR RÁPIDO ---------- */
 #searchModalOverlay {
     display:none; position:fixed; inset:0; z-index:1600;
@@ -472,11 +566,11 @@ body.theme-dark #saveLauncherBox { background:var(--card-dark); color:var(--text
     padding:14px; box-sizing:border-box;
     max-height:74vh; display:flex; flex-direction:column;
     transform:scale(.92) translateY(-8px); opacity:0;
-    transition:transform .22s cubic-bezier(.2,.8,.2,1), opacity .22s ease;
+    transition:transform .35s cubic-bezier(.34,1.56,.64,1), opacity .22s ease;
 }
 #searchModalOverlay.open #searchModalBox { transform:scale(1) translateY(0); opacity:1; }
 body.theme-dark #searchModalBox { background:var(--card-dark); }
-
+ 
 .searchInputRow {
     display:flex; align-items:center; gap:10px;
     padding:10px 14px; border-radius:16px;
@@ -490,7 +584,7 @@ body.theme-dark #searchModalBox { background:var(--card-dark); }
     color:inherit; min-width:0;
 }
 #searchInput::placeholder { color:inherit; opacity:0.5; }
-
+ 
 .searchResultsList { overflow-y:auto; overscroll-behavior:contain; }
 .searchResultItem {
     display:flex; align-items:center; gap:12px;
@@ -506,7 +600,7 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 .searchNoResults { padding:24px 10px; text-align:center; font-size:14px; opacity:0.6; }
-
+ 
 /* iOS/Safari: prevent automatic page zoom when focusing form controls */
 @media (max-width: 768px){
     input, textarea, select, button { font-size: 16px !important; }
@@ -514,10 +608,10 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
 </style>
 </head>
 <body>
-
+ 
 <!-- HEADER (fixed) -->
 <div id="header">
-    <h1 id="titleLabel"><svg class="titleIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 263.935 263.935" aria-hidden="true"><path fill="#4A90E2" d="m188.835,93.248c-6.319-10.976-13.982-18.705-18.862-22.973l17.009-40.097c7.051-0.929 12.529-7.305 12.529-15.022-2.84217e-14-8.357-6.415-15.156-14.301-15.156-7.888,0-14.305,6.799-14.305,15.155 0,3.18 0.934,6.13 2.52,8.57l-16.621,39.184-35.194-14.011c-1.115-7.186-7.002-12.691-14.095-12.691-7.888,0-14.305,6.798-14.305,15.153 0,8.355 6.417,15.152 14.305,15.152 3.448,0 6.615-1.3 9.088-3.462l36.296,14.449c-1.008,10.456-3.716,33.415-9.006,46.189-12.34,29.792-29.63,42.078-44.886,52.918-12.398,8.811-24.109,17.132-30.532,32.639-11.676,28.183 3.698,48.68 12.504,53.703 1.148,0.655 2.431,0.985 3.716,0.985 1.093,0 2.187-0.238 3.202-0.718 2.212-1.044 3.776-3.102 4.189-5.513 0.136-0.79 0.257-1.617 0.383-2.479 0.689-4.737 1.402-9.635 6.399-15.682 3.186-3.854 11.276-6.456 20.646-9.469 21.782-7.005 54.699-17.59 72.607-60.826 13.996-33.786 5.939-59.976-3.286-75.998zm-10.571,70.26c-15.252,36.821-41.917,45.396-63.342,52.286-11.61,3.734-21.637,6.958-27.616,14.194-2.808,3.398-4.75,6.664-6.123,9.708-2.275-5.955-3.152-14.324 1.149-24.71 4.771-11.52 13.859-17.977 25.364-26.152 16.067-11.417 36.063-25.627 50.054-59.405 4.72-11.395 7.541-28.744 9.069-41.188 2.947,3.324 6.143,7.499 9.017,12.491 10.972,19.057 11.788,40.177 2.428,62.776z"/></svg><span id="titleLabelText">Launcher</span></h1>
+    <h1 id="titleLabel" onclick="openSlugModal()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSlugModal();}"><svg class="titleIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 263.935 263.935" aria-hidden="true"><path fill="#4A90E2" d="m188.835,93.248c-6.319-10.976-13.982-18.705-18.862-22.973l17.009-40.097c7.051-0.929 12.529-7.305 12.529-15.022-2.84217e-14-8.357-6.415-15.156-14.301-15.156-7.888,0-14.305,6.799-14.305,15.155 0,3.18 0.934,6.13 2.52,8.57l-16.621,39.184-35.194-14.011c-1.115-7.186-7.002-12.691-14.095-12.691-7.888,0-14.305,6.798-14.305,15.153 0,8.355 6.417,15.152 14.305,15.152 3.448,0 6.615-1.3 9.088-3.462l36.296,14.449c-1.008,10.456-3.716,33.415-9.006,46.189-12.34,29.792-29.63,42.078-44.886,52.918-12.398,8.811-24.109,17.132-30.532,32.639-11.676,28.183 3.698,48.68 12.504,53.703 1.148,0.655 2.431,0.985 3.716,0.985 1.093,0 2.187-0.238 3.202-0.718 2.212-1.044 3.776-3.102 4.189-5.513 0.136-0.79 0.257-1.617 0.383-2.479 0.689-4.737 1.402-9.635 6.399-15.682 3.186-3.854 11.276-6.456 20.646-9.469 21.782-7.005 54.699-17.59 72.607-60.826 13.996-33.786 5.939-59.976-3.286-75.998zm-10.571,70.26c-15.252,36.821-41.917,45.396-63.342,52.286-11.61,3.734-21.637,6.958-27.616,14.194-2.808,3.398-4.75,6.664-6.123,9.708-2.275-5.955-3.152-14.324 1.149-24.71 4.771-11.52 13.859-17.977 25.364-26.152 16.067-11.417 36.063-25.627 50.054-59.405 4.72-11.395 7.541-28.744 9.069-41.188 2.947,3.324 6.143,7.499 9.017,12.491 10.972,19.057 11.788,40.177 2.428,62.776z"/></svg><span id="titleLabelText">Launcher</span></h1>
     <div id="headerActions">
         <button id="searchBtn" type="button" aria-label="Buscar">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -528,9 +622,9 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
         <button id="burgerBtn" type="button">&#9776;</button>
     </div>
 </div>
-
+ 
 <!-- MODAL BUSCADOR RÁPIDO -->
-
+ 
 <div id="saveLauncherModal" aria-hidden="true">
     <div id="saveLauncherBox" class="modalBox" role="dialog" aria-modal="true" aria-labelledby="saveLauncherTitle" style="position:relative;margin:0;">
         <button id="saveLauncherClose" type="button" aria-label="Cerrar" title="Cerrar">×</button>
@@ -543,7 +637,7 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
         </div>
     </div>
 </div>
-
+ 
 <div id="searchModalOverlay">
     <div id="searchModalBox">
         <div class="searchInputRow">
@@ -554,14 +648,14 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
         <div id="searchNoResults" class="searchNoResults"></div>
     </div>
 </div>
-
+ 
 <!-- BORDE ROJO: configuración no salvada -->
 <div id="unsavedIndicator"></div>
-
+ 
 <!-- MAIN CONTENT -->
 <div id="main">
     <div id="emptyStateHelp">
-
+ 
         <h2 id="emptyHelpTitle"></h2>
         <p id="emptyHelpBody"></p>
         <div id="emptyLangHint"></div>
@@ -569,10 +663,10 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
     </div>
     <div id="launcherGrid"></div>
 </div>
-
+ 
 <!-- FOOTER (fixed) -->
 <div id="footer"><span id="footerMade"></span><span id="footerSaved"></span></div>
-
+ 
 <!-- SIDE PANEL -->
 <div id="sidePanelOverlay" onclick="closeSidePanel(event)">
     <div id="sidePanel">
@@ -580,40 +674,40 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
             <span id="menuTitleLabel" style="font-weight:700;">Menú</span>
             <button style="border:none;background:transparent;font-size:18px;cursor:pointer;color:inherit;" onclick="closeSidePanel()">&#10005;</button>
         </div>
-
+ 
         <div class="sideMenuSectionTitle" id="actionsSectionLabel">Acciones</div>
         <a class="sideMenuLink" id="editIconsLink" onclick="enterEditMode()">Editar iconos</a>
         <a class="sideMenuLink" id="moveIconsLink" onclick="enterMoveMode()">Mover iconos</a>
         <a class="sideMenuLink" id="saveLauncherLink" onclick="saveSlugLauncher()">Salvar tu SlugLauncher</a>
-
+ 
         <div class="sideMenuSectionTitle" id="addSectionLabel">Añadir</div>
         <a class="sideMenuLink" id="addAppLink" onclick="openAddModal(null,'app')">Añadir App</a>
         <a class="sideMenuLink" id="addFolderLink" onclick="openAddModal(null,'folder')">Añadir Folder</a>
-
+ 
         <div class="sideMenuSectionTitle" id="configSectionLabel">Configuración</div>
         <a class="sideMenuLink" id="exportLink" onclick="exportConfig()">Exportar URL</a>
         <a class="sideMenuLink" id="importLink" onclick="importConfig()">Importar URL</a>
-
+ 
         <div class="sideMenuSectionTitle" id="themeLabel">Tema</div>
         <a class="sideMenuLink" id="themeDarkLink" onclick="setTheme(0)">Obscuro</a>
         <a class="sideMenuLink" id="themeLightLink" onclick="setTheme(1)">Claro</a>
         <a class="sideMenuLink" id="themeSystemLink" onclick="setTheme(2)">Sistema</a>
-
+ 
         <div class="sideMenuSectionTitle" id="langLabel">Idioma</div>
-        <select id="langSelect" onchange="setLanguage(this.value)" style="width:100%;padding:8px;border-radius:10px;border:1px solid #ccc;"></select>
+        <select id="langSelect" onchange="setLanguage(this.value)"></select>
     </div>
 </div>
-
+ 
 <!-- MODAL AÑADIR (APP / FOLDER, con toggle) -->
 <div id="addModal">
     <div class="modalBox">
         <h3 id="addModalTitle" style="margin-top:0;">Añadir App</h3>
-
+ 
         <div id="addTypeToggle" class="segmentedControl">
             <button type="button" class="segmentBtn" id="addTypeAppBtn" onclick="setAddType('app')">App</button>
             <button type="button" class="segmentBtn" id="addTypeFolderBtn" onclick="setAddType('folder')">Folder</button>
         </div>
-
+ 
         <div id="addAppSection">
             <input id="appURL" placeholder="URL">
             <input id="appName" placeholder="Nombre">
@@ -623,7 +717,7 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
             <img id="iconPreview">
             <a class="helperLink" id="appSvgApiLink" onclick="openSvgApiSearch('appName')">🔍 Buscar icono SVG en svgapi.com</a>
         </div>
-
+ 
         <div id="addFolderSection" style="display:none;">
             <input id="folderName" placeholder="Nombre del folder">
             <div class="fieldLabel" id="folderIconLabel">Icono del folder (opcional, se mostrará en negro)</div>
@@ -632,18 +726,20 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
             <a class="helperLink" id="folderSvgApiLink" onclick="openSvgApiSearch('folderName')">🔍 Buscar icono SVG en svgapi.com</a>
             <div id="folderAppList" style="max-height:200px;overflow:auto;margin-bottom:12px;"></div>
         </div>
-
+ 
         <button onclick="handleAddSave()" id="saveAddBtn">Guardar</button>
         <button style="background:#aaa;" onclick="closeAddModal()" id="cancelAddBtn">Cancelar</button>
     </div>
 </div>
-
+ 
 <!-- MODAL EDIT APP -->
 <div id="editAppModal">
     <div class="modalBox">
         <h3 id="editAppTitle" style="margin-top:0;">Editar App</h3>
         <input id="editAppURL" placeholder="URL">
         <input id="editAppName" placeholder="Nombre">
+        <div class="fieldLabel" id="editIconOptionsLabel">Icono</div>
+        <div id="editAppIconOptions" class="iconOptionsRow"></div>
         <input id="editAppIcon" placeholder="Icono URL">
         <img id="editIconPreview">
         <a class="helperLink" id="editAppSvgApiLink" onclick="openSvgApiSearch('editAppName')">🔍 Buscar icono SVG en svgapi.com</a>
@@ -653,7 +749,7 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
         <button style="background:#ff3b30;" onclick="deleteApp()" id="deleteAppBtn">Eliminar App</button>
     </div>
 </div>
-
+ 
 <!-- MODAL EDIT FOLDER -->
 <div id="editFolderModal">
     <div class="modalBox">
@@ -670,7 +766,31 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
         <button style="background:#ff3b30;" onclick="deleteFolder()" id="deleteFolderBtn">Eliminar Folder</button>
     </div>
 </div>
-
+ 
+<!-- MODAL SLUG: se abre al tocar el título del header -->
+<div id="slugInfoModal">
+    <div class="modalBox" role="dialog" aria-modal="true" aria-labelledby="slugInfoTitle">
+        <h3 id="slugInfoTitle" style="margin-top:0;">SlugLauncher</h3>
+        <p id="slugInfoText" style="margin-top:0;opacity:0.75;font-size:14px;line-height:1.5;">¿Qué te gustaría hacer?</p>
+        <a href="https://git.inriris.com/sluglauncher.html" target="_blank" rel="noopener" style="text-decoration:none;">
+            <button id="slugCreateBtn" type="button">Crear tu propio SlugLauncher</button>
+        </a>
+        <button id="slugShareBtn" type="button" onclick="shareLauncher()">Compartir tu launcher</button>
+        <button id="slugCancelBtn" type="button" style="background:#aaa;" onclick="closeSlugModal()">Cancelar</button>
+    </div>
+</div>
+ 
+<!-- MODAL EXPORTAR / IMPORTAR URL -->
+<div id="urlIOModal">
+    <div class="modalBox" role="dialog" aria-modal="true" aria-labelledby="urlIOTitle">
+        <h3 id="urlIOTitle" style="margin-top:0;">Exportar URL</h3>
+        <textarea id="urlIOField" rows="3" style="resize:vertical;width:100%;box-sizing:border-box;"></textarea>
+        <button id="urlIOPasteBtn" type="button" onclick="pasteUrlIOField()" style="background:#8e8e93;display:none;">Pegar</button>
+        <button id="urlIOPrimaryBtn" type="button" onclick="confirmUrlIOModal()">Copiar</button>
+        <button id="urlIOCancelBtn" type="button" style="background:#aaa;" onclick="closeUrlIOModal()">Cancelar</button>
+    </div>
+</div>
+ 
 <script>
 /* =========================================================
    ESTADO GLOBAL
@@ -681,14 +801,14 @@ let currentMode = "normal";         // "normal" | "edit" | "move"
 let globalTheme = 1;                // 0 = dark, 1 = light, 2 = system
 let globalLang = "es";
 let globalSaved = 0;                // 0 = no salvado, 1 = salvado (via Exportar / Salvar SlugLauncher)
-
+ 
 let editingPath = null;             // {array, index} de la app en edición
 let editingFolderPath = null;       // {array, index} del folder en edición
-
+ 
 let inactivityTimer = null;
 let timerSuspended = false;
 const MODE_TIMEOUT_MS = 10000;
-
+ 
 /* =========================================================
    DICCIONARIO i18n
    ========================================================= */
@@ -702,6 +822,7 @@ const i18n = {
         theme:"Theme", lang:"Language",
         themeDark:"Dark", themeLight:"Light", themeSystem:"System",
         addAppTitle:"Add App", saveApp:"Save", cancel:"Cancel",
+        editFolder:"Edit folder",
         addFolderTitle:"Create Folder", saveFolder:"Create Folder",
         editAppTitle:"Edit App", saveEditApp:"Save changes", deleteApp:"Delete App",
         editFolderTitle:"Edit Folder", saveEditFolder:"Save changes", deleteFolder:"Delete Folder",
@@ -719,7 +840,8 @@ const i18n = {
         saveDesktopInstructions:"A shortcut file was downloaded. Move it to your Desktop to use it.",
         saveMobileInstructionsIOS:"Tap the Share icon and choose \"Add to Home Screen\".",
         saveMobileInstructionsAndroid:"Open the browser menu and choose \"Add to Home screen\".",
-        saveError:"Could not create the shortcut on this device."
+        saveError:"Could not create the shortcut on this device.",
+        slugQuestion:"What would you like to do?", slugCreate:"Create your own SlugLauncher", slugShare:"Share your launcher", shareText:"Check out my SlugLauncher", copyUrl:"Copy", importAction:"Import", pasteAction:"Paste"
     },
     es: {
         title:"Slug Launcher", menu:"Menú", exitMode:"Salir del modo",
@@ -730,6 +852,7 @@ const i18n = {
         theme:"Tema", lang:"Idioma",
         themeDark:"Obscuro", themeLight:"Claro", themeSystem:"Sistema",
         addAppTitle:"Añadir App", saveApp:"Guardar", cancel:"Cancelar",
+        editFolder:"Editar folder",
         addFolderTitle:"Crear Folder", saveFolder:"Crear Folder",
         editAppTitle:"Editar App", saveEditApp:"Guardar cambios", deleteApp:"Eliminar App",
         editFolderTitle:"Editar Folder", saveEditFolder:"Guardar cambios", deleteFolder:"Eliminar Folder",
@@ -747,7 +870,8 @@ const i18n = {
         saveDesktopInstructions:"Se descargó un archivo de acceso directo. Muévelo a tu Escritorio para usarlo.",
         saveMobileInstructionsIOS:"Toca el ícono de Compartir y elige \"Añadir a pantalla de inicio\".",
         saveMobileInstructionsAndroid:"Abre el menú del navegador y elige \"Añadir a pantalla de inicio\".",
-        saveError:"No se pudo crear el acceso directo en este dispositivo."
+        saveError:"No se pudo crear el acceso directo en este dispositivo.",
+        slugQuestion:"¿Qué te gustaría hacer?", slugCreate:"Crear tu propio SlugLauncher", slugShare:"Compartir tu launcher", shareText:"Mira mi SlugLauncher", copyUrl:"Copiar", importAction:"Importar", pasteAction:"Pegar"
     },
     fr: {
         title:"Slug Launcher", menu:"Menu", exitMode:"Quitter le mode",
@@ -758,6 +882,7 @@ const i18n = {
         theme:"Thème", lang:"Langue",
         themeDark:"Sombre", themeLight:"Clair", themeSystem:"Système",
         addAppTitle:"Ajouter App", saveApp:"Enregistrer", cancel:"Annuler",
+        editFolder:"Modifier le dossier",
         addFolderTitle:"Créer Dossier", saveFolder:"Créer Dossier",
         editAppTitle:"Modifier App", saveEditApp:"Enregistrer les modifications", deleteApp:"Supprimer App",
         editFolderTitle:"Modifier Dossier", saveEditFolder:"Enregistrer les modifications", deleteFolder:"Supprimer Dossier",
@@ -775,7 +900,8 @@ const i18n = {
         saveDesktopInstructions:"Un fichier de raccourci a été téléchargé. Déplacez-le sur votre Bureau pour l'utiliser.",
         saveMobileInstructionsIOS:"Appuyez sur Partager puis \"Sur l'écran d'accueil\".",
         saveMobileInstructionsAndroid:"Ouvrez le menu du navigateur et choisissez \"Ajouter à l'écran d'accueil\".",
-        saveError:"Impossible de créer le raccourci sur cet appareil."
+        saveError:"Impossible de créer le raccourci sur cet appareil.",
+        slugQuestion:"Que souhaitez-vous faire ?", slugCreate:"Créer votre propre SlugLauncher", slugShare:"Partager votre launcher", shareText:"Découvre mon SlugLauncher", copyUrl:"Copier", importAction:"Importer", pasteAction:"Coller"
     },
     de: {
         title:"Slug Launcher", menu:"Menü", exitMode:"Modus verlassen",
@@ -786,6 +912,7 @@ const i18n = {
         theme:"Theme", lang:"Sprache",
         themeDark:"Dunkel", themeLight:"Hell", themeSystem:"System",
         addAppTitle:"App hinzufügen", saveApp:"Speichern", cancel:"Abbrechen",
+        editFolder:"Ordner bearbeiten",
         addFolderTitle:"Ordner erstellen", saveFolder:"Ordner erstellen",
         editAppTitle:"App bearbeiten", saveEditApp:"Änderungen speichern", deleteApp:"App löschen",
         editFolderTitle:"Ordner bearbeiten", saveEditFolder:"Änderungen speichern", deleteFolder:"Ordner löschen",
@@ -803,7 +930,8 @@ const i18n = {
         saveDesktopInstructions:"Eine Verknüpfungsdatei wurde heruntergeladen. Verschiebe sie auf deinen Desktop.",
         saveMobileInstructionsIOS:"Tippe auf Teilen und wähle \"Zum Home-Bildschirm\".",
         saveMobileInstructionsAndroid:"Öffne das Browsermenü und wähle \"Zum Startbildschirm hinzufügen\".",
-        saveError:"Verknüpfung konnte auf diesem Gerät nicht erstellt werden."
+        saveError:"Verknüpfung konnte auf diesem Gerät nicht erstellt werden.",
+        slugQuestion:"Was möchtest du tun?", slugCreate:"Erstelle deinen eigenen SlugLauncher", slugShare:"Deinen Launcher teilen", shareText:"Schau dir meinen SlugLauncher an", copyUrl:"Kopieren", importAction:"Importieren", pasteAction:"Einfügen"
     },
     pt: {
         title:"Slug Launcher", menu:"Menu", exitMode:"Sair do modo",
@@ -814,6 +942,7 @@ const i18n = {
         theme:"Tema", lang:"Idioma",
         themeDark:"Escuro", themeLight:"Claro", themeSystem:"Sistema",
         addAppTitle:"Adicionar App", saveApp:"Salvar", cancel:"Cancelar",
+        editFolder:"Editar pasta",
         addFolderTitle:"Criar Pasta", saveFolder:"Criar Pasta",
         editAppTitle:"Editar App", saveEditApp:"Salvar alterações", deleteApp:"Excluir App",
         editFolderTitle:"Editar Pasta", saveEditFolder:"Salvar alterações", deleteFolder:"Excluir Pasta",
@@ -831,7 +960,8 @@ const i18n = {
         saveDesktopInstructions:"Um arquivo de atalho foi baixado. Mova-o para a sua Área de Trabalho.",
         saveMobileInstructionsIOS:"Toque em Compartilhar e escolha \"Adicionar à Tela de Início\".",
         saveMobileInstructionsAndroid:"Abra o menu do navegador e escolha \"Adicionar à tela inicial\".",
-        saveError:"Não foi possível criar o atalho neste dispositivo."
+        saveError:"Não foi possível criar o atalho neste dispositivo.",
+        slugQuestion:"O que você gostaria de fazer?", slugCreate:"Criar seu próprio SlugLauncher", slugShare:"Compartilhar seu launcher", shareText:"Veja meu SlugLauncher", copyUrl:"Copiar", importAction:"Importar", pasteAction:"Colar"
     },
     it: {
         title:"Slug Launcher", menu:"Menu", exitMode:"Esci dalla modalità",
@@ -842,6 +972,7 @@ const i18n = {
         theme:"Tema", lang:"Lingua",
         themeDark:"Scuro", themeLight:"Chiaro", themeSystem:"Sistema",
         addAppTitle:"Aggiungi App", saveApp:"Salva", cancel:"Annulla",
+        editFolder:"Modifica cartella",
         addFolderTitle:"Crea Cartella", saveFolder:"Crea Cartella",
         editAppTitle:"Modifica App", saveEditApp:"Salva modifiche", deleteApp:"Elimina App",
         editFolderTitle:"Modifica Cartella", saveEditFolder:"Salva modifiche", deleteFolder:"Elimina Cartella",
@@ -859,7 +990,8 @@ const i18n = {
         saveDesktopInstructions:"È stato scaricato un file di collegamento. Spostalo sul Desktop per usarlo.",
         saveMobileInstructionsIOS:"Tocca Condividi e scegli \"Aggiungi a Home\".",
         saveMobileInstructionsAndroid:"Apri il menu del browser e scegli \"Aggiungi a schermata Home\".",
-        saveError:"Impossibile creare il collegamento su questo dispositivo."
+        saveError:"Impossibile creare il collegamento su questo dispositivo.",
+        slugQuestion:"Cosa vorresti fare?", slugCreate:"Crea il tuo SlugLauncher", slugShare:"Condividi il tuo launcher", shareText:"Guarda il mio SlugLauncher", copyUrl:"Copia", importAction:"Importa", pasteAction:"Incolla"
     },
     ru: {
         title:"Slug Launcher", menu:"Меню", exitMode:"Выйти из режима",
@@ -870,6 +1002,7 @@ const i18n = {
         theme:"Тема", lang:"Язык",
         themeDark:"Тёмная", themeLight:"Светлая", themeSystem:"Системная",
         addAppTitle:"Добавить приложение", saveApp:"Сохранить", cancel:"Отмена",
+        editFolder:"Изменить папку",
         addFolderTitle:"Создать папку", saveFolder:"Создать папку",
         editAppTitle:"Редактировать приложение", saveEditApp:"Сохранить изменения", deleteApp:"Удалить приложение",
         editFolderTitle:"Редактировать папку", saveEditFolder:"Сохранить изменения", deleteFolder:"Удалить папку",
@@ -887,7 +1020,8 @@ const i18n = {
         saveDesktopInstructions:"Файл ярлыка загружен. Переместите его на Рабочий стол.",
         saveMobileInstructionsIOS:"Нажмите \"Поделиться\" и выберите \"На экран Домой\".",
         saveMobileInstructionsAndroid:"Откройте меню браузера и выберите \"Добавить на главный экран\".",
-        saveError:"Не удалось создать ярлык на этом устройстве."
+        saveError:"Не удалось создать ярлык на этом устройстве.",
+        slugQuestion:"Что вы хотите сделать?", slugCreate:"Создать свой SlugLauncher", slugShare:"Поделиться своим лаунчером", shareText:"Посмотри мой SlugLauncher", copyUrl:"Копировать", importAction:"Импортировать", pasteAction:"Вставить"
     },
     zh: {
         title:"Slug Launcher", menu:"菜单", exitMode:"退出模式",
@@ -898,6 +1032,7 @@ const i18n = {
         theme:"主题", lang:"语言",
         themeDark:"深色", themeLight:"浅色", themeSystem:"系统",
         addAppTitle:"添加应用", saveApp:"保存", cancel:"取消",
+        editFolder:"编辑文件夹",
         addFolderTitle:"创建文件夹", saveFolder:"创建文件夹",
         editAppTitle:"编辑应用", saveEditApp:"保存更改", deleteApp:"删除应用",
         editFolderTitle:"编辑文件夹", saveEditFolder:"保存更改", deleteFolder:"删除文件夹",
@@ -915,7 +1050,8 @@ const i18n = {
         saveDesktopInstructions:"已下载快捷方式文件。请将其移动到桌面以使用。",
         saveMobileInstructionsIOS:"点击“分享”，然后选择“添加到主屏幕”。",
         saveMobileInstructionsAndroid:"打开浏览器菜单并选择“添加到主屏幕”。",
-        saveError:"无法在此设备上创建快捷方式。"
+        saveError:"无法在此设备上创建快捷方式。",
+        slugQuestion:"你想做什么？", slugCreate:"创建你自己的 SlugLauncher", slugShare:"分享你的启动器", shareText:"看看我的 SlugLauncher", copyUrl:"复制", importAction:"导入", pasteAction:"粘贴"
     },
     ja: {
         title:"Slug Launcher", menu:"メニュー", exitMode:"モードを終了",
@@ -926,6 +1062,7 @@ const i18n = {
         theme:"テーマ", lang:"言語",
         themeDark:"ダーク", themeLight:"ライト", themeSystem:"システム",
         addAppTitle:"アプリ追加", saveApp:"保存", cancel:"キャンセル",
+        editFolder:"フォルダを編集",
         addFolderTitle:"フォルダ作成", saveFolder:"フォルダ作成",
         editAppTitle:"アプリ編集", saveEditApp:"変更を保存", deleteApp:"アプリ削除",
         editFolderTitle:"フォルダ編集", saveEditFolder:"変更を保存", deleteFolder:"フォルダ削除",
@@ -943,7 +1080,8 @@ const i18n = {
         saveDesktopInstructions:"ショートカットファイルをダウンロードしました。デスクトップに移動して使用してください。",
         saveMobileInstructionsIOS:"共有アイコンをタップし「ホーム画面に追加」を選択してください。",
         saveMobileInstructionsAndroid:"ブラウザメニューから「ホーム画面に追加」を選択してください。",
-        saveError:"このデバイスではショートカットを作成できませんでした。"
+        saveError:"このデバイスではショートカットを作成できませんでした。",
+        slugQuestion:"何をしますか？", slugCreate:"自分のSlugLauncherを作成", slugShare:"ランチャーを共有", shareText:"私のSlugLauncherを見てね", copyUrl:"コピー", importAction:"インポート", pasteAction:"貼り付け"
     },
     hi: {
         title:"Slug Launcher", menu:"मेनू", exitMode:"मोड से बाहर निकलें",
@@ -954,6 +1092,7 @@ const i18n = {
         theme:"थीम", lang:"भाषा",
         themeDark:"डार्क", themeLight:"लाइट", themeSystem:"सिस्टम",
         addAppTitle:"ऐप जोड़ें", saveApp:"सहेजें", cancel:"रद्द करें",
+        editFolder:"फ़ोल्डर संपादित करें",
         addFolderTitle:"फ़ोल्डर बनाएं", saveFolder:"फ़ोल्डर बनाएं",
         editAppTitle:"ऐप संपादित करें", saveEditApp:"परिवर्तन सहेजें", deleteApp:"ऐप हटाएं",
         editFolderTitle:"फ़ोल्डर संपादित करें", saveEditFolder:"परिवर्तन सहेजें", deleteFolder:"फ़ोल्डर हटाएं",
@@ -971,7 +1110,8 @@ const i18n = {
         saveDesktopInstructions:"एक शॉर्टकट फ़ाइल डाउनलोड हुई है। इसे उपयोग के लिए डेस्कटॉप पर ले जाएं।",
         saveMobileInstructionsIOS:"शेयर आइकन टैप करें और \"होम स्क्रीन पर जोड़ें\" चुनें।",
         saveMobileInstructionsAndroid:"ब्राउज़र मेनू खोलें और \"होम स्क्रीन पर जोड़ें\" चुनें।",
-        saveError:"इस डिवाइस पर शॉर्टकट नहीं बनाया जा सका।"
+        saveError:"इस डिवाइस पर शॉर्टकट नहीं बनाया जा सका।",
+        slugQuestion:"आप क्या करना चाहेंगे?", slugCreate:"अपना खुद का SlugLauncher बनाएं", slugShare:"अपना लॉन्चर शेयर करें", shareText:"मेरा SlugLauncher देखें", copyUrl:"कॉपी करें", importAction:"आयात करें", pasteAction:"पेस्ट करें"
     },
     ar: {
         title:"Slug Launcher", menu:"القائمة", exitMode:"الخروج من الوضع",
@@ -982,6 +1122,7 @@ const i18n = {
         theme:"السمة", lang:"اللغة",
         themeDark:"داكن", themeLight:"فاتح", themeSystem:"النظام",
         addAppTitle:"إضافة تطبيق", saveApp:"حفظ", cancel:"إلغاء",
+        editFolder:"تعديل المجلد",
         addFolderTitle:"إنشاء مجلد", saveFolder:"إنشاء مجلد",
         editAppTitle:"تعديل تطبيق", saveEditApp:"حفظ التغييرات", deleteApp:"حذف تطبيق",
         editFolderTitle:"تعديل مجلد", saveEditFolder:"حفظ التغييرات", deleteFolder:"حذف مجلد",
@@ -999,15 +1140,16 @@ const i18n = {
         saveDesktopInstructions:"تم تنزيل ملف اختصار. انقله إلى سطح المكتب لاستخدامه.",
         saveMobileInstructionsIOS:"اضغط على مشاركة ثم اختر \"إضافة إلى الشاشة الرئيسية\".",
         saveMobileInstructionsAndroid:"افتح قائمة المتصفح واختر \"إضافة إلى الشاشة الرئيسية\".",
-        saveError:"تعذر إنشاء الاختصار على هذا الجهاز."
+        saveError:"تعذر إنشاء الاختصار على هذا الجهاز.",
+        slugQuestion:"ماذا تريد أن تفعل؟", slugCreate:"أنشئ SlugLauncher الخاص بك", slugShare:"شارك اللانشر الخاص بك", shareText:"شاهد SlugLauncher الخاص بي", copyUrl:"نسخ", importAction:"استيراد", pasteAction:"لصق"
     }
 };
-
+ 
 function t(key){
     const dict = i18n[globalLang] || i18n.en;
     return dict[key] !== undefined ? dict[key] : (i18n.en[key] || key);
 }
-
+ 
 /* Lista fija (no depende del idioma activo): permite reconocer el propio
    idioma y saber que el cambio está en el menú, sin poder leer el idioma actual. */
 const LANGUAGE_SWITCH_HINTS = [
@@ -1027,17 +1169,17 @@ function renderLangHint(){
     const el = document.getElementById("emptyLangHint");
     if (el) el.textContent = "\u2630 " + LANGUAGE_SWITCH_HINTS.join("  \u00b7  ");
 }
-
+ 
 /* =========================================================
    SVG INTERNO DE FOLDER (sin dependencias externas)
    ========================================================= */
 const FOLDER_SVG = '<svg class="folderSvgIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#4A90E2"><path d="M10 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V8C22 6.9 21.1 6 20 6H12L10 4Z"/></svg>';
-
+ 
 /* Icono de respaldo (data URI interno, sin red) */
 const FALLBACK_ICON = 'data:image/svg+xml;utf8,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#9aa0a6"><rect x="3" y="3" width="18" height="18" rx="5"/></svg>'
 );
-
+ 
 /* =========================================================
    HELPERS GENERALES
    ========================================================= */
@@ -1052,33 +1194,33 @@ function escapeHtml(str){
     return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
-
+ 
 /* =========================================================
    APLICAR I18N
    ========================================================= */
 function applyI18n() {
     document.title = t("title");
     document.getElementById("menuTitleLabel").textContent = t("menu");
-
+ 
     document.getElementById("actionsSectionLabel").textContent = t("actionsSection");
     document.getElementById("editIconsLink").textContent = t("editIcons");
     document.getElementById("moveIconsLink").textContent = t("moveIcons");
     document.getElementById("saveLauncherLink").textContent = t("saveLauncher");
-
+ 
     document.getElementById("addSectionLabel").textContent = t("addSection");
     document.getElementById("addAppLink").textContent = t("addApp");
     document.getElementById("addFolderLink").textContent = t("addFolder");
-
+ 
     document.getElementById("configSectionLabel").textContent = t("configSection");
     document.getElementById("exportLink").textContent = t("exportUrl");
     document.getElementById("importLink").textContent = t("importUrl");
-
+ 
     document.getElementById("themeLabel").textContent = t("theme");
     document.getElementById("themeDarkLink").textContent = t("themeDark");
     document.getElementById("themeLightLink").textContent = t("themeLight");
     document.getElementById("themeSystemLink").textContent = t("themeSystem");
     document.getElementById("langLabel").textContent = t("lang");
-
+ 
     document.getElementById("addTypeAppBtn").textContent = t("addApp");
     document.getElementById("addTypeFolderBtn").textContent = t("addFolder");
     setAddType(addType); // refresca título/botón según el idioma sin perder la selección actual
@@ -1087,8 +1229,9 @@ function applyI18n() {
     document.getElementById("appURL").placeholder = t("placeholderURL");
     document.getElementById("appName").placeholder = t("placeholderName");
     document.getElementById("appIcon").placeholder = t("placeholderIcon");
-
+ 
     document.getElementById("editAppTitle").textContent = t("editAppTitle");
+    document.getElementById("editIconOptionsLabel").textContent = t("iconOptionsLabel");
     document.getElementById("saveEditAppBtn").textContent = t("saveEditApp");
     document.getElementById("moveAppBtn").textContent = t("moveItem");
     document.getElementById("cancelEditAppBtn").textContent = t("cancel");
@@ -1096,18 +1239,30 @@ function applyI18n() {
     document.getElementById("editAppURL").placeholder = t("placeholderURL");
     document.getElementById("editAppName").placeholder = t("placeholderName");
     document.getElementById("editAppIcon").placeholder = t("placeholderIcon");
-
+ 
     document.getElementById("editFolderTitle").textContent = t("editFolderTitle");
     document.getElementById("saveEditFolderBtn").textContent = t("saveEditFolder");
     document.getElementById("moveFolderBtn").textContent = t("moveItem");
     document.getElementById("cancelEditFolderBtn").textContent = t("cancel");
     document.getElementById("deleteFolderBtn").textContent = t("deleteFolder");
     document.getElementById("editFolderName").placeholder = t("placeholderName");
-
+ 
+    document.getElementById("slugInfoText").textContent = t("slugQuestion");
+    document.getElementById("slugCreateBtn").textContent = t("slugCreate");
+    document.getElementById("slugShareBtn").textContent = t("slugShare");
+    document.getElementById("slugCancelBtn").textContent = t("cancel");
+ 
+    document.getElementById("urlIOPasteBtn").textContent = t("pasteAction");
+    document.getElementById("urlIOCancelBtn").textContent = t("cancel");
+    if (document.getElementById("urlIOModal").style.display === "block"){
+        document.getElementById("urlIOTitle").textContent = urlIOMode==="export" ? t("exportUrl") : t("importUrl");
+        document.getElementById("urlIOPrimaryBtn").textContent = urlIOMode==="export" ? t("copyUrl") : t("importAction");
+    }
+ 
     document.getElementById("footerMade").textContent = t("footer");
     document.getElementById("emptyHelpTitle").textContent = t("emptyTitle");
     document.getElementById("emptyHelpBody").textContent = t("emptyBody");
-
+ 
     document.getElementById("searchBtn").setAttribute("aria-label", t("searchLabel"));
     document.getElementById("editBtn").setAttribute("aria-label", t("editIcons"));
     document.getElementById("searchInput").placeholder = t("searchPlaceholder");
@@ -1120,7 +1275,7 @@ function applyI18n() {
     document.getElementById("editFolderIconLabel").textContent = t("folderIconLabel");
     document.getElementById("folderIcon").placeholder = t("placeholderIcon");
     document.getElementById("editFolderIcon").placeholder = t("placeholderIcon");
-
+ 
     const langSelect = document.getElementById("langSelect");
     langSelect.innerHTML = "";
     Object.keys(i18n).forEach(code => {
@@ -1130,11 +1285,11 @@ function applyI18n() {
         if (code === globalLang) opt.selected = true;
         langSelect.appendChild(opt);
     });
-
+ 
     updateHamburgerModeUI();
     updateSavedIndicator();
 }
-
+ 
 /* =========================================================
    INDICADOR DE GUARDADO (footer + borde rojo)
    ========================================================= */
@@ -1148,7 +1303,7 @@ function updateSavedIndicator(){
     const isEmpty = getActiveState().length === 0;
     document.body.classList.toggle("unsavedBorder", globalSaved === 0 && !isEmpty);
 }
-
+ 
 /* =========================================================
    ESTADO VACÍO: ayuda inicial
    ========================================================= */
@@ -1157,7 +1312,7 @@ function updateEmptyState(){
     document.getElementById("emptyStateHelp").classList.toggle("visible", isEmpty);
     renderLangHint();
 }
-
+ 
 /* =========================================================
    TEMA
    ========================================================= */
@@ -1172,12 +1327,12 @@ function applyTheme() {
         document.body.classList.add("theme-light");
     }
 }
-
+ 
 /* =========================================================
    HASH: GLOBAL (tema/idioma) + ITEMS
    ========================================================= */
 function globalPartString(){ return `GLOBAL:${globalTheme},${globalLang},${globalSaved}`; }
-
+ 
 function parseGlobal() {
     const hash = getDecodedHashString().substring(1);
     if (!hash) return;
@@ -1267,7 +1422,7 @@ function serializeHash(state){
     });
     location.hash = "#" + parts.join("#");
 }
-
+ 
 /* =========================================================
    TEMPORIZADOR DE INACTIVIDAD (Editar / Mover)
    ========================================================= */
@@ -1278,16 +1433,16 @@ function resetInactivityTimer(){
 }
 function suspendInactivityTimer(){ timerSuspended = true; clearTimeout(inactivityTimer); }
 function resumeInactivityTimer(){ timerSuspended = false; resetInactivityTimer(); }
-
+ 
 ["click","touchstart","input"].forEach(evt=>{
     document.addEventListener(evt, ()=>{ if(currentMode!=="normal") resetInactivityTimer(); }, {passive:true});
 });
-
+ 
 /* =========================================================
    MODOS: EDITAR / MOVER (persistencia diferida)
    ========================================================= */
 function getActiveState(){ return currentMode === "normal" ? appsState : workingState; }
-
+ 
 function commitMode(){
     if (currentMode === "normal") return;
     clearTimeout(inactivityTimer);
@@ -1297,14 +1452,14 @@ function commitMode(){
     currentMode = "normal";
     workingState = null;
 }
-
+ 
 function exitCurrentMode(){
     if (currentMode === "normal") return;
     commitMode();
     updateHamburgerModeUI();
     renderLauncher();
 }
-
+ 
 function enterEditMode(){
     if (currentMode === "move") commitMode();
     appsState = parseHash();
@@ -1325,7 +1480,7 @@ function enterMoveMode(){
     renderLauncher();
     resetInactivityTimer();
 }
-
+ 
 function updateHamburgerModeUI(){
     const btn = document.getElementById("burgerBtn");
     const searchBtn = document.getElementById("searchBtn");
@@ -1344,7 +1499,7 @@ function updateHamburgerModeUI(){
         if (editBtn) editBtn.style.display = "none";
     }
 }
-
+ 
 document.getElementById("burgerBtn").addEventListener("click", ()=>{
     if (currentMode !== "normal") { exitCurrentMode(); }
     else { openSidePanel(); }
@@ -1352,19 +1507,60 @@ document.getElementById("burgerBtn").addEventListener("click", ()=>{
 document.getElementById("editBtn").addEventListener("click", ()=>{
     if (currentMode === "normal") enterEditMode();
 });
-
+ 
 /* =========================================================
    SIDE PANEL
    ========================================================= */
-function openSidePanel(){ document.getElementById("sidePanelOverlay").style.display="block"; }
+function openSidePanel(){
+    const overlay = document.getElementById("sidePanelOverlay");
+    overlay.classList.remove("closing");
+    overlay.style.display="block";
+    staggerSidePanelItems();
+}
+function staggerSidePanelItems(){
+    // Animación de entrada hecha en JS (no CSS @keyframes) a propósito: en iOS Safari,
+    // las animaciones CSS declaradas en hijos de un contenedor que pasa de display:none
+    // a block a veces nunca llegan a dispararse, dejando el contenido en opacity:0 para
+    // siempre (menú "en blanco"). Controlando opacity/transform desde JS evitamos eso,
+    // y el timeout de seguridad garantiza que el menú siempre termine visible.
+    const panel = document.getElementById("sidePanel");
+    if (!panel) return;
+    const items = Array.from(panel.children);
+    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    clearTimeout(panel._staggerSafety);
+    if (reduceMotion){
+        items.forEach(el=>{ el.style.transition=""; el.style.transitionDelay=""; el.style.opacity="1"; el.style.transform="none"; });
+        return;
+    }
+    items.forEach(el=>{
+        el.style.transition = "none";
+        el.style.opacity = "0";
+        el.style.transform = "translateY(10px)";
+    });
+    // Fuerza un reflow para que el navegador registre el estado inicial antes de animar
+    void panel.offsetHeight;
+    items.forEach((el,i)=>{
+        el.style.transition = "opacity .3s ease, transform .3s ease";
+        el.style.transitionDelay = (i*0.03)+"s";
+        el.style.opacity = "1";
+        el.style.transform = "translateY(0)";
+    });
+    // Red de seguridad: si por lo que sea la transición no corre, el menú igual queda visible
+    panel._staggerSafety = setTimeout(()=>{
+        items.forEach(el=>{ el.style.transition=""; el.style.transitionDelay=""; el.style.opacity="1"; el.style.transform="none"; });
+    }, 900);
+}
 function closeSidePanel(e){
     if (e && e.target && e.target.id!=="sidePanelOverlay"){
         if (!e.target.closest || !e.target.closest("#sidePanel")) { /* click fuera: continuar */ }
         else return;
     }
-    document.getElementById("sidePanelOverlay").style.display="none";
+    const overlay = document.getElementById("sidePanelOverlay");
+    if (overlay.style.display==="none" || overlay.classList.contains("closing")) return;
+    overlay.classList.add("closing");
+    setTimeout(()=>{ overlay.style.display="none"; overlay.classList.remove("closing"); }, 260);
 }
-
+ 
 /* =========================================================
    RENDER: ITEMS DEL GRID
    ========================================================= */
@@ -1389,17 +1585,17 @@ function renderFolderIcon(folder,parent,path){
     attachItemInteraction(div, folder, path, true);
     parent.appendChild(div);
 }
-
+ 
 function attachItemInteraction(el, item, path, isFolder){
     if (currentMode === "normal"){
         el.addEventListener("click", ()=>{
-            if (isFolder) openFolder(item);
+            if (isFolder) openFolder(item, path);
             else window.open(item.url, "_blank");
         });
     } else if (currentMode === "edit"){
         el.classList.add("editModeItem");
         el.addEventListener("click", ()=>{
-            if (isFolder) openEditFolder(path);
+            if (isFolder) openFolder(item, path);
             else openEditApp(path);
             resetInactivityTimer();
         });
@@ -1407,21 +1603,28 @@ function attachItemInteraction(el, item, path, isFolder){
         attachMoveHandlers(el, item, path, isFolder);
     }
 }
-
+ 
 /* =========================================================
    MODO MOVER: drag & drop unificado (mouse + touch)
    ========================================================= */
 function attachMoveHandlers(el, item, path, isFolder){
     let pointerId=null, startX=0, startY=0, dragging=false;
-
+ 
     el.addEventListener("pointerdown",(e)=>{
         if (currentMode!=="move") return;
         e.preventDefault();
         pointerId = e.pointerId; startX=e.clientX; startY=e.clientY; dragging=false;
+        el.style.touchAction = "none"; // ya lo cubre .wiggleMode por CSS, pero lo reforzamos aquí también
         try{ el.setPointerCapture(pointerId); }catch(err){}
         resetInactivityTimer();
     });
-
+ 
+    // En touchscreens (ChromeOS, tablets con mouse emulado) un long-press durante el
+    // arrastre puede disparar el menú contextual nativo; lo bloqueamos en modo mover.
+    el.addEventListener("contextmenu",(e)=>{
+        if (currentMode==="move") e.preventDefault();
+    });
+ 
     el.addEventListener("pointermove",(e)=>{
         if (currentMode!=="move" || e.pointerId!==pointerId) return;
         const dx=e.clientX-startX, dy=e.clientY-startY;
@@ -1437,7 +1640,7 @@ function attachMoveHandlers(el, item, path, isFolder){
             updateDropHighlight(e.clientX, e.clientY, el);
         }
     });
-
+ 
     const finish=(e)=>{
         if (currentMode!=="move" || e.pointerId!==pointerId) return;
         if (dragging){
@@ -1454,7 +1657,7 @@ function attachMoveHandlers(el, item, path, isFolder){
                 renderLauncher();
             }
         } else {
-            if (isFolder) openFolder(item);
+            if (isFolder) openFolder(item, path);
             resetInactivityTimer();
         }
         pointerId=null;
@@ -1468,12 +1671,26 @@ function attachMoveHandlers(el, item, path, isFolder){
         pointerId=null;
     });
 }
-
+ 
 function elementUnderPointer(x,y,draggedEl){
     draggedEl.style.pointerEvents="none";
-    const raw = document.elementFromPoint(x,y);
+    let raw = document.elementFromPoint(x,y);
+    let found = raw ? raw.closest(".appIcon") : null;
+    // El dedo/cursor rara vez cae exacto sobre el icono destino, sobre todo en touch;
+    // si el punto exacto falla, probamos un pequeño anillo de puntos alrededor antes de rendirnos.
+    if (!found || found===draggedEl){
+        const radius = 22;
+        const angles = [0,45,90,135,180,225,270,315];
+        for (const a of angles){
+            const rad = a * Math.PI/180;
+            const px = x + radius*Math.cos(rad), py = y + radius*Math.sin(rad);
+            const el2 = document.elementFromPoint(px,py);
+            const candidate = el2 ? el2.closest(".appIcon") : null;
+            if (candidate && candidate!==draggedEl){ found = candidate; break; }
+        }
+    }
     draggedEl.style.pointerEvents="";
-    return raw ? raw.closest(".appIcon") : null;
+    return found && found!==draggedEl ? found : null;
 }
 function updateDropHighlight(x,y,draggedEl){
     clearDropHighlights();
@@ -1485,18 +1702,18 @@ function updateDropHighlight(x,y,draggedEl){
 function clearDropHighlights(){
     document.querySelectorAll(".dropTargetHighlight").forEach(el=>el.classList.remove("dropTargetHighlight"));
 }
-
+ 
 function performDrop(x,y,path,isFolder,draggedEl){
     const targetEl = elementUnderPointer(x,y,draggedEl);
     clearDropHighlights();
-
+ 
     const folderModal = draggedEl.closest(".folderModal");
     if (folderModal && !isFolder){
         const content = folderModal.querySelector(".folderContent");
         const rect = content ? content.getBoundingClientRect() : null;
         const outsideFolderContent = !rect ||
             x < rect.left || x > rect.right || y < rect.top || y > rect.bottom;
-
+ 
         if (outsideFolderContent){
             const folderApps = path.array;
             const root = getActiveState();
@@ -1510,21 +1727,21 @@ function performDrop(x,y,path,isFolder,draggedEl){
             }
         }
     }
-
+ 
     if (!targetEl || targetEl===draggedEl) return;
     if (targetEl.dataset.itemType === "add-app") return;
-
+ 
     const container = draggedEl.parentElement;
     if (!container || !container.contains(targetEl)) return;
-
+ 
     const siblings = [...container.children];
     const targetIndex = siblings.indexOf(targetEl);
     if (targetIndex === -1) return;
-
+ 
     const arr = path.array;
     const sourceIndex = path.index;
     const targetIsFolder = targetEl.dataset.itemType === "folder";
-
+ 
     if (!isFolder && targetIsFolder && targetIndex !== sourceIndex){
         const [movedApp] = arr.splice(sourceIndex,1);
         const folderRealIndex = targetIndex > sourceIndex ? targetIndex-1 : targetIndex;
@@ -1537,23 +1754,23 @@ function performDrop(x,y,path,isFolder,draggedEl){
         }
         return;
     }
-
+ 
     if (targetIndex === sourceIndex) return;
-
+ 
     // En modo Mover, soltar un elemento sobre otro significa ocupar
     // la posición del elemento objetivo (intercambio/reordenamiento).
     // Esto es importante cuando el elemento arrastrado está antes del
     // objetivo: usar targetIndex - 1 hacía que [Folder, App] al mover
     // Folder sobre App terminara exactamente en la misma posición.
     const [moved] = arr.splice(sourceIndex,1);
-
+ 
     // targetIndex es la posición original del objetivo. Después de quitar
     // el elemento arrastrado, mantener ese índice hace que el elemento
     // arrastrado tome la posición que ocupaba el objetivo.
     const insertAt = Math.min(targetIndex, arr.length);
     arr.splice(insertAt,0,moved);
 }
-
+ 
 function renderDesktopAddAppTile(parent){
     const div = document.createElement("div");
     div.className = "appIcon addAppTile";
@@ -1573,7 +1790,7 @@ function renderDesktopAddAppTile(parent){
     });
     parent.appendChild(div);
 }
-
+ 
 function renderFolderAddAppTile(folder, parent){
     const div = document.createElement("div");
     div.className = "appIcon addAppTile";
@@ -1593,7 +1810,7 @@ function renderFolderAddAppTile(folder, parent){
     });
     parent.appendChild(div);
 }
-
+ 
 function refreshFolderModalGrid(modalEl, appsArray){
     const grid = modalEl.querySelector(".folderGrid");
     if (!grid) return;
@@ -1605,11 +1822,11 @@ function refreshFolderModalGrid(modalEl, appsArray){
     const folder = getActiveState().find(item=>item.type==="folder" && item.apps===appsArray);
     if (folder && currentMode === "edit") renderFolderAddAppTile(folder, grid);
 }
-
+ 
 /* =========================================================
    FOLDER: abrir / cerrar (animación zoom)
    ========================================================= */
-function openFolder(folder){
+function openFolder(folder, path){
     const maxIcons=35;
     const modal=document.createElement("div");
     modal.className="folderModal";
@@ -1632,6 +1849,22 @@ function openFolder(folder){
         closeFolderModalEl(modal);
     });
     header.appendChild(title);
+    // En modo Editar: botón de lápiz para renombrar/cambiar ícono/borrar el folder en sí
+    // (el toque directo sobre el folder ahora abre su contenido, no este modal de edición).
+    if (currentMode === "edit" && path){
+        const editFolderBtn=document.createElement("button");
+        editFolderBtn.className="folderModalEditBtn";
+        editFolderBtn.type="button";
+        editFolderBtn.setAttribute("aria-label", t("editFolder") || "Editar folder");
+        editFolderBtn.setAttribute("title", t("editFolder") || "Editar folder");
+        editFolderBtn.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
+        editFolderBtn.addEventListener("click",(e)=>{
+            e.stopPropagation();
+            closeFolderModalEl(modal);
+            openEditFolder(path);
+        });
+        header.appendChild(editFolderBtn);
+    }
     header.appendChild(closeBtn);
     const grid=document.createElement("div");
     grid.className="folderGrid";
@@ -1643,7 +1876,7 @@ function openFolder(folder){
     content.appendChild(header);
     content.appendChild(grid);
     modal.appendChild(content);
-
+ 
     modal.addEventListener("click",(e)=>{
         if (e.target===modal) closeFolderModalEl(modal);
     });
@@ -1655,7 +1888,7 @@ function openFolder(folder){
         modal.classList.toggle("dropToDesktop", !inside);
     });
     modal.addEventListener("pointerup",()=>modal.classList.remove("dropToDesktop"));
-
+ 
     document.body.appendChild(modal);
     requestAnimationFrame(()=>{ modal.classList.add("open"); });
 }
@@ -1667,7 +1900,7 @@ function closeFolderModalEl(modal){
     modal.addEventListener("transitionend", onEnd, {once:true});
     setTimeout(onEnd, 320);
 }
-
+ 
 /* =========================================================
    RENDER: LAUNCHER PRINCIPAL
    ========================================================= */
@@ -1684,10 +1917,10 @@ function renderLauncher(){
         if (item.type==="folder") renderFolderIcon(item,grid,path);
         else renderApp(item,grid,path);
     });
-
+ 
     const emptyAddSlot = document.getElementById("emptyAddAppSlot");
     if (emptyAddSlot) emptyAddSlot.innerHTML="";
-
+ 
     // Desktop vacío: + Add App queda junto a las instrucciones existentes.
     if (state.length === 0) {
         if (emptyAddSlot) renderDesktopAddAppTile(emptyAddSlot);
@@ -1695,18 +1928,18 @@ function renderLauncher(){
     } else if (currentMode === "edit") {
         renderDesktopAddAppTile(grid);
     }
-
+ 
     updateEmptyState();
     updateSavedIndicator();
 }
-
+ 
 /* =========================================================
    MODAL: AÑADIR APP  (con detección automática de iconos)
    ========================================================= */
 let addAppTargetFolder = null;
 let addAppTargetFolderIndex = -1;
 let addType = "app"; // "app" | "folder" — estado del toggle del modal Añadir
-
+ 
 function setAddType(type){
     addType = type;
     document.getElementById("addTypeAppBtn").classList.toggle("active", type==="app");
@@ -1716,12 +1949,12 @@ function setAddType(type){
     document.getElementById("addModalTitle").textContent = type==="app" ? t("addAppTitle") : t("addFolderTitle");
     document.getElementById("saveAddBtn").textContent = type==="app" ? t("saveApp") : t("saveFolder");
 }
-
+ 
 function handleAddSave(){
     if (addType === "folder") saveFolder();
     else saveApp();
 }
-
+ 
 function populateFolderAppList(){
     const state = getActiveState();
     const list = document.getElementById("folderAppList");
@@ -1734,7 +1967,7 @@ function populateFolderAppList(){
         list.appendChild(div);
     });
 }
-
+ 
 function openAddModal(targetFolder = null, initialType = "app"){
     addAppTargetFolder = targetFolder;
     addAppTargetFolderIndex = -1;
@@ -1747,17 +1980,17 @@ function openAddModal(targetFolder = null, initialType = "app"){
     document.getElementById("appIcon").value="";
     document.getElementById("appIconOptions").innerHTML="";
     document.getElementById("iconPreview").style.display="none";
-
+ 
     document.getElementById("folderName").value="";
     document.getElementById("folderIcon").value="";
     document.getElementById("folderIconPreview").style.display="none";
     populateFolderAppList();
-
+ 
     // No se permiten subfolders: dentro de un folder, el toggle se oculta y solo se puede añadir App.
     const canBeFolder = !targetFolder;
     document.getElementById("addTypeToggle").style.display = canBeFolder ? "flex" : "none";
     setAddType(canBeFolder ? initialType : "app");
-
+ 
     closeSidePanel();
     document.getElementById("addModal").style.display="block";
 }
@@ -1766,9 +1999,46 @@ function closeAddModal(){
     addAppTargetFolder = null;
     addAppTargetFolderIndex = -1;
 }
-
+ 
+function openSlugModal(){
+    closeSidePanel();
+    document.getElementById("slugInfoModal").style.display="block";
+}
+function closeSlugModal(){
+    document.getElementById("slugInfoModal").style.display="none";
+}
+async function shareLauncher(){
+    const url = window.location.href; // incluye query params y hash (#...)
+    const shareData = { title: "SlugLauncher", text: t("shareText"), url: url };
+    try {
+        if (navigator.share) {
+            await navigator.share(shareData);
+        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(url);
+            alert(t("urlCopied"));
+        } else {
+            // Último recurso si tampoco hay Clipboard API disponible
+            window.prompt(t("urlCopied"), url);
+        }
+    } catch (err) {
+        // El usuario canceló el share sheet, u ocurrió un error: no hacemos nada ruidoso
+        if (err && err.name !== "AbortError") {
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(url);
+                    alert(t("urlCopied"));
+                }
+            } catch(_) { /* silencioso */ }
+        }
+    } finally {
+        closeSlugModal();
+    }
+}
+ 
 let _iconCandidates = [];
-
+const addIconCtx  = { candidates: _iconCandidates, rowId:"appIconOptions",     iconInputId:"appIcon",     previewId:"iconPreview" };
+const editIconCtx = { candidates: [],              rowId:"editAppIconOptions", iconInputId:"editAppIcon", previewId:"editIconPreview" };
+ 
 document.getElementById("appURL").addEventListener("input", () => {
     const url = document.getElementById("appURL").value.trim();
     if (isValidAppURL(url)){
@@ -1778,21 +2048,42 @@ document.getElementById("appURL").addEventListener("input", () => {
             const base = domain.split(".")[0];
             nameField.value = base.charAt(0).toUpperCase() + base.slice(1);
         }
-        detectIcons(domain);
+        detectIconsFor(domain, addIconCtx);
     } else {
-        _iconCandidates = [];
+        addIconCtx.candidates.length = 0;
         document.getElementById("appIconOptions").innerHTML="";
     }
 });
-
+ 
+document.getElementById("editAppURL").addEventListener("input", () => {
+    const url = document.getElementById("editAppURL").value.trim();
+    if (isValidAppURL(url)){
+        const {domain} = getAppURLParts(url);
+        detectIconsFor(domain, editIconCtx);
+    } else {
+        editIconCtx.candidates.length = 0;
+        document.getElementById("editAppIconOptions").innerHTML="";
+    }
+});
+ 
 document.getElementById("appIcon").addEventListener("input", () => {
     const icon = document.getElementById("appIcon").value.trim();
     const preview = document.getElementById("iconPreview");
     if (!icon){ preview.style.display="none"; return; }
     preview.src = normalize(icon);
     preview.style.display = "block";
+    renderIconOptionsFor(addIconCtx);
 });
-
+ 
+document.getElementById("editAppIcon").addEventListener("input", () => {
+    const icon = document.getElementById("editAppIcon").value.trim();
+    const preview = document.getElementById("editIconPreview");
+    if (!icon){ preview.style.display="none"; return; }
+    preview.src = normalize(icon);
+    preview.style.display = "block";
+    renderIconOptionsFor(editIconCtx);
+});
+ 
 function bindIconPreview(inputId, previewId){
     const input = document.getElementById(inputId);
     const preview = document.getElementById(previewId);
@@ -1806,7 +2097,7 @@ function bindIconPreview(inputId, previewId){
 }
 bindIconPreview("folderIcon","folderIconPreview");
 bindIconPreview("editFolderIcon","editFolderIconPreview");
-
+ 
 /* =========================================================
    ICONOS SVG (svgapi.com) — apoyo para elegir icono al añadir apps/folders
    ========================================================= */
@@ -1816,7 +2107,7 @@ function openSvgApiSearch(nameFieldId){
     const url = query ? `https://svgapi.com/?q=${encodeURIComponent(query)}` : "https://svgapi.com/";
     window.open(url, "_blank", "noopener");
 }
-
+ 
 /* =========================================================
    BUSCADOR RÁPIDO (lupa en la cabecera)
    ========================================================= */
@@ -1834,21 +2125,21 @@ function flattenSearchIndex(){
     });
     return items;
 }
-
+ 
 function renderSearchResults(query){
     const list = document.getElementById("searchResultsList");
     const noResults = document.getElementById("searchNoResults");
     const items = flattenSearchIndex();
     const q = query.trim().toLowerCase();
     const filtered = q ? items.filter(it => it.name.toLowerCase().includes(q)) : items;
-
+ 
     list.innerHTML = "";
     if (filtered.length === 0){
         noResults.style.display = "block";
         return;
     }
     noResults.style.display = "none";
-
+ 
     filtered.slice(0,60).forEach(item=>{
         const row = document.createElement("div");
         row.className = "searchResultItem";
@@ -1863,7 +2154,7 @@ function renderSearchResults(query){
         list.appendChild(row);
     });
 }
-
+ 
 function openSearchModal(){
     closeSidePanel();
     const overlay = document.getElementById("searchModalOverlay");
@@ -1877,7 +2168,7 @@ function openSearchModal(){
 function closeSearchModal(){
     document.getElementById("searchModalOverlay").classList.remove("open");
 }
-
+ 
 document.getElementById("searchBtn").addEventListener("click", openSearchModal);
 document.getElementById("searchInput").addEventListener("input", (e)=>{ renderSearchResults(e.target.value); });
 document.getElementById("searchModalOverlay").addEventListener("click",(e)=>{
@@ -1886,27 +2177,27 @@ document.getElementById("searchModalOverlay").addEventListener("click",(e)=>{
 document.addEventListener("keydown",(e)=>{
     if (e.key === "Escape" && document.getElementById("searchModalOverlay").classList.contains("open")) closeSearchModal();
 });
-
-function detectIcons(domain){
-    _iconCandidates = [];
+ 
+function detectIconsFor(domain, ctx){
+    ctx.candidates.length = 0;
     const s2 = `https://www.google.com/s2/favicons?sz=128&domain=${encodeURIComponent(domain)}`;
-    _iconCandidates.push({url:s2, label:"S2"});
-    selectIconOption(s2);
-    renderIconOptions();
-
+    ctx.candidates.push({url:s2, label:"S2"});
+    selectIconOptionFor(s2, ctx);
+    renderIconOptionsFor(ctx);
+ 
     const guesses = [ `https://${domain}/favicon.ico`, `https://${domain}/apple-touch-icon.png` ];
     guesses.forEach(u=>{
         const img = new Image();
         img.onload = () => {
-            if (img.naturalWidth > 0 && !_iconCandidates.find(c=>c.url===u)){
-                _iconCandidates.push({url:u, label:"favicon"});
-                renderIconOptions();
+            if (img.naturalWidth > 0 && !ctx.candidates.find(c=>c.url===u)){
+                ctx.candidates.push({url:u, label:"favicon"});
+                renderIconOptionsFor(ctx);
             }
         };
         img.onerror = () => {};
         img.src = u;
     });
-
+ 
     // Mejor esfuerzo: og:image (puede fallar por CORS, se ignora silenciosamente)
     fetch(`https://${domain}`, {mode:"cors"}).then(r=>r.text()).then(html=>{
         let m = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
@@ -1915,37 +2206,38 @@ function detectIcons(domain){
             let og = m[1];
             if (og.startsWith("//")) og = "https:"+og;
             else if (og.startsWith("/")) og = `https://${domain}${og}`;
-            if (!_iconCandidates.find(c=>c.url===og)){
-                _iconCandidates.push({url:og, label:"OG"});
-                renderIconOptions();
+            if (!ctx.candidates.find(c=>c.url===og)){
+                ctx.candidates.push({url:og, label:"OG"});
+                renderIconOptionsFor(ctx);
             }
         }
     }).catch(()=>{});
 }
-
-function renderIconOptions(){
-    const row = document.getElementById("appIconOptions");
+ 
+function renderIconOptionsFor(ctx){
+    const row = document.getElementById(ctx.rowId);
+    if (!row) return;
     row.innerHTML="";
-    const current = stripProtocol(document.getElementById("appIcon").value.trim());
-    _iconCandidates.forEach(c=>{
+    const current = stripProtocol(document.getElementById(ctx.iconInputId).value.trim());
+    ctx.candidates.forEach(c=>{
         const img=document.createElement("img");
         img.src=c.url;
         img.title=c.label;
         img.className="iconOption" + (stripProtocol(c.url)===current ? " selectedIcon":"");
-        img.onclick=()=>selectIconOption(c.url);
+        img.onclick=()=>selectIconOptionFor(c.url, ctx);
         row.appendChild(img);
     });
 }
-function selectIconOption(url){
-    document.getElementById("appIcon").value = stripProtocol(url);
-    const preview = document.getElementById("iconPreview");
+function selectIconOptionFor(url, ctx){
+    document.getElementById(ctx.iconInputId).value = stripProtocol(url);
+    const preview = document.getElementById(ctx.previewId);
     preview.src = normalize(url);
     preview.style.display="block";
-    document.querySelectorAll("#appIconOptions .iconOption").forEach(el=>{
+    document.querySelectorAll(`#${ctx.rowId} .iconOption`).forEach(el=>{
         el.classList.toggle("selectedIcon", stripProtocol(el.src)===stripProtocol(url));
     });
 }
-
+ 
 function persistActiveState(state){
     globalSaved = 0;
     if (currentMode === "normal"){
@@ -1953,7 +2245,7 @@ function persistActiveState(state){
         appsState = parseHash();
     }
 }
-
+ 
 function refreshOpenFolderForIndex(folderIndex){
     if (folderIndex < 0) return;
     const state = getActiveState();
@@ -1962,26 +2254,26 @@ function refreshOpenFolderForIndex(folderIndex){
     const modal = document.querySelector(".folderModal");
     if (modal) refreshFolderModalGrid(modal, folder.apps || []);
 }
-
+ 
 function saveApp(){
     const name = document.getElementById("appName").value.trim();
     const urlRaw = document.getElementById("appURL").value.trim();
     let iconRaw = document.getElementById("appIcon").value.trim();
-
+ 
     if (!name || !urlRaw) { alert(t("invalidData")); return; }
     if (!isValidAppURL(urlRaw)) { alert(t("invalidDomain")); return; }
     const {url:fullURL, domain} = getAppURLParts(urlRaw);
     if (!iconRaw){ iconRaw = stripProtocol(`https://www.google.com/s2/favicons?sz=128&domain=${domain}`); }
-
+ 
     const newApp = {
         type:"app",
         name,
-        url:normalize(stripProtocol(fullURL)),
+        url:normalize(domain),
         icon:normalize(iconRaw)
     };
-
+ 
     const state = getActiveState();
-
+ 
     if (addAppTargetFolder){
         const folderIndex = addAppTargetFolderIndex;
         const currentFolder = state[folderIndex];
@@ -1998,13 +2290,13 @@ function saveApp(){
         refreshOpenFolderForIndex(folderIndex);
         return;
     }
-
+ 
     state.push(newApp);
     persistActiveState(state);
     closeAddModal();
     renderLauncher();
 }
-
+ 
 /* =========================================================
    MODAL: AÑADIR FOLDER (comparte modal unificado con Añadir App)
    ========================================================= */
@@ -2012,25 +2304,25 @@ function saveFolder(){
     const name = document.getElementById("folderName").value.trim();
     if (!name){ alert(t("invalidName")); return; }
     const iconRaw = document.getElementById("folderIcon").value.trim();
-
+ 
     const state = getActiveState();
     const checks = [...document.querySelectorAll("#folderAppList input:checked")];
     const selectedIndexes = checks
         .map(c=>parseInt(c.dataset.rootIndex,10))
         .filter(i=>Number.isInteger(i) && i>=0 && i<state.length)
         .sort((a,b)=>a-b);
-
+ 
     const selectedSet = new Set(selectedIndexes);
     const selectedApps = [];
     const remaining = [];
-
+ 
     state.forEach((item,index)=>{
         if (selectedSet.has(index)) selectedApps.push(item);
         else remaining.push(item);
     });
-
+ 
     remaining.push({type:"folder", name, icon: iconRaw ? normalize(iconRaw) : "", apps:selectedApps});
-
+ 
     if (currentMode === "normal"){
         serializeHash(remaining);
         appsState = parseHash();
@@ -2038,11 +2330,11 @@ function saveFolder(){
         workingState = remaining;
         globalSaved = 0;
     }
-
+ 
     closeAddModal();
     renderLauncher();
 }
-
+ 
 /* =========================================================
    MODAL: EDITAR APP (dentro de modo Editar)
    ========================================================= */
@@ -2055,6 +2347,18 @@ function openEditApp(path){
     const preview = document.getElementById("editIconPreview");
     preview.src = app.icon;
     preview.style.display = "block";
+    editIconCtx.candidates.length = 0;
+    document.getElementById("editAppIconOptions").innerHTML = "";
+    // El icono actual del app siempre aparece primero en la galería (ya seleccionado),
+    // aunque la detección automática por dominio tarde o no encuentre nada.
+    if (app.icon){
+        editIconCtx.candidates.push({url:normalize(app.icon), label:"actual"});
+        renderIconOptionsFor(editIconCtx);
+    }
+    if (isValidAppURL(app.url)){
+        const {domain} = getAppURLParts(app.url);
+        detectIconsFor(domain, editIconCtx);
+    }
     document.getElementById("editAppModal").style.display="block";
     resetInactivityTimer();
 }
@@ -2069,16 +2373,17 @@ function moveFromEditApp(){
     closeEditAppModal();
     enterMoveModeForPath(path);
 }
-
+ 
 document.getElementById("editAppIcon").addEventListener("input", () => {
     const icon = document.getElementById("editAppIcon").value.trim();
     const preview = document.getElementById("editIconPreview");
     if (!icon){ preview.style.display="none"; return; }
     preview.src = normalize(icon);
     preview.style.display = "block";
+    renderIconOptionsFor(editIconCtx);
 });
-
-
+ 
+ 
 function isValidAppURL(value){
     let raw = (value || "").trim();
     if (!raw) return false;
@@ -2097,23 +2402,23 @@ function getAppURLParts(value){
     const u = new URL(raw);
     return { url: u.href, domain: u.hostname };
 }
-
+ 
 function saveEditedApp(){
     if (!editingPath) return;
     const app = editingPath.array[editingPath.index];
     const name = document.getElementById("editAppName").value.trim();
     const urlRaw = document.getElementById("editAppURL").value.trim();
     let iconRaw = document.getElementById("editAppIcon").value.trim();
-
+ 
     if (!name || !urlRaw) { alert(t("invalidData")); return; }
     if (!isValidAppURL(urlRaw)) { alert(t("invalidDomain")); return; }
     const {url:fullURL, domain} = getAppURLParts(urlRaw);
     if (!iconRaw){ iconRaw = stripProtocol(`https://www.google.com/s2/favicons?sz=128&domain=${domain}`); }
-
+ 
     app.name = name;
     app.url = normalize(stripProtocol(fullURL));
     app.icon = normalize(iconRaw);
-
+ 
     closeEditAppModal();
     renderLauncher();
 }
@@ -2123,7 +2428,7 @@ function deleteApp(){
     closeEditAppModal();
     renderLauncher();
 }
-
+ 
 /* =========================================================
    MODAL: EDITAR FOLDER (dentro de modo Editar)
    ========================================================= */
@@ -2136,7 +2441,7 @@ function openEditFolder(path){
     const iconPreview = document.getElementById("editFolderIconPreview");
     if (iconVal){ iconPreview.src = folder.icon; iconPreview.style.display="block"; }
     else { iconPreview.style.display="none"; }
-
+ 
     const list = document.getElementById("editFolderAppList");
     list.innerHTML="";
     folder.apps.forEach(app=>{
@@ -2161,7 +2466,7 @@ function moveFromEditFolder(){
     closeEditFolderModal();
     enterMoveModeForPath(path);
 }
-
+ 
 /* =========================================================
    MOVER DESDE EL MODAL DE EDICIÓN (botón "Mover")
    Cambia a modo Mover conservando los cambios en curso y resalta
@@ -2177,18 +2482,18 @@ function enterMoveModeForPath(path){
     currentMode = "move";
     updateHamburgerModeUI();
     renderLauncher();
-
+ 
     const openModal = document.querySelector(".folderModal");
     if (openModal && path.array !== getActiveState()){
         const state = getActiveState();
         const folder = state.find(item => item.type === "folder" && item.apps === path.array);
         if (folder) refreshFolderModalGrid(openModal, folder.apps || []);
     }
-
+ 
     resetInactivityTimer();
     requestAnimationFrame(()=> highlightItemAtPath(path));
 }
-
+ 
 function highlightItemAtPath(path){
     let grid;
     if (path.array === getActiveState()){
@@ -2209,16 +2514,16 @@ function saveEditedFolder(){
     const name = document.getElementById("editFolderName").value.trim();
     if (!name){ alert(t("invalidName")); return; }
     const iconRaw = document.getElementById("editFolderIcon").value.trim();
-
+ 
     const checks = [...document.querySelectorAll("#editFolderAppList input:checked")];
-
+ 
     folder.name = name;
     folder.icon = iconRaw ? normalize(iconRaw) : "";
     folder.apps = checks.map(c=>{
         const [n,u,i] = c.value.split(",");
         return { type:"app", name:n, url:normalize(u), icon:normalize(i) };
     });
-
+ 
     closeEditFolderModal();
     renderLauncher();
 }
@@ -2228,7 +2533,7 @@ function deleteFolder(){
     closeEditFolderModal();
     renderLauncher();
 }
-
+ 
 /* =========================================================
    EXPORT / IMPORT
    ========================================================= */
@@ -2240,25 +2545,67 @@ function markSavedAndRewriteHash(){
     location.hash = "#" + [globalPartString(), ...rest].join("#");
     updateSavedIndicator();
 }
+let urlIOMode = "export"; // "export" | "import"
+ 
 function exportConfig(){
     markSavedAndRewriteHash();
-    navigator.clipboard.writeText(location.href).then(()=>alert(t("urlCopied")));
+    urlIOMode = "export";
+    document.getElementById("urlIOTitle").textContent = t("exportUrl");
+    const field = document.getElementById("urlIOField");
+    field.value = location.href;
+    field.readOnly = true;
+    document.getElementById("urlIOPasteBtn").style.display = "none";
+    document.getElementById("urlIOPrimaryBtn").textContent = t("copyUrl");
     closeSidePanel();
+    document.getElementById("urlIOModal").style.display = "block";
+    setTimeout(()=>{ field.focus(); field.select(); }, 60);
 }
 function importConfig(){
-    const input = prompt("URL:");
-    if (!input) return;
-    try{
-        const url = new URL(input);
-        location.hash = url.hash;
-        parseGlobal();   // respeta tema/idioma/guardado tal cual vienen en la URL importada
-        applyTheme();
-        applyI18n();
-        renderLauncher();
-    }catch(e){ alert(t("invalidImportUrl")); }
+    urlIOMode = "import";
+    document.getElementById("urlIOTitle").textContent = t("importUrl");
+    const field = document.getElementById("urlIOField");
+    field.value = "";
+    field.readOnly = false;
+    document.getElementById("urlIOPasteBtn").style.display = (navigator.clipboard && navigator.clipboard.readText) ? "block" : "none";
+    document.getElementById("urlIOPrimaryBtn").textContent = t("importAction");
     closeSidePanel();
+    document.getElementById("urlIOModal").style.display = "block";
+    setTimeout(()=>{ field.focus(); }, 60);
 }
-
+async function pasteUrlIOField(){
+    try{
+        const text = await navigator.clipboard.readText();
+        if (text) document.getElementById("urlIOField").value = text;
+    }catch(e){ /* permiso denegado o no soportado: el usuario puede pegar manualmente en el campo */ }
+}
+function closeUrlIOModal(){
+    document.getElementById("urlIOModal").style.display = "none";
+}
+async function confirmUrlIOModal(){
+    const field = document.getElementById("urlIOField");
+    if (urlIOMode === "export"){
+        try{
+            await navigator.clipboard.writeText(field.value);
+            alert(t("urlCopied"));
+        }catch(e){
+            field.focus(); field.select(); // fallback: queda seleccionado para copiar manualmente
+        }
+        closeUrlIOModal();
+    } else {
+        const input = field.value.trim();
+        if (!input) return;
+        try{
+            const url = new URL(input);
+            location.hash = url.hash;
+            parseGlobal();   // respeta tema/idioma/guardado tal cual vienen en la URL importada
+            applyTheme();
+            applyI18n();
+            renderLauncher();
+            closeUrlIOModal();
+        }catch(e){ alert(t("invalidImportUrl")); }
+    }
+}
+ 
 /* =========================================================
    THEME / LANGUAGE SETTERS
    ========================================================= */
@@ -2269,7 +2616,7 @@ function setLanguage(lang){
     updateGlobalInHash();
     location.reload();
 }
-
+ 
 /* =========================================================
    SALVAR TU SLUGLAUNCHER (acceso directo)
    ========================================================= */
@@ -2278,7 +2625,7 @@ function detectPlatform(){
     const platform = navigator.platform || "";
     const uaDataPlatform = navigator.userAgentData && navigator.userAgentData.platform
         ? navigator.userAgentData.platform : "";
-
+ 
     // ChromeOS must be detected before Linux because ChromeOS reports Linux in many UAs.
     if (/CrOS/i.test(ua) || /ChromeOS/i.test(uaDataPlatform)) return "chromebook";
     if (/iPad|iPhone|iPod/i.test(ua) && !window.MSStream) return "ios";
@@ -2288,7 +2635,7 @@ function detectPlatform(){
     if (/Linux/i.test(platform || ua)) return "linux";
     return "unknown";
 }
-
+ 
 function downloadTextFile(filename, content, mime){
     const blob = new Blob([content], {type: mime || "text/plain;charset=utf-8"});
     const a = document.createElement("a");
@@ -2301,14 +2648,14 @@ function downloadTextFile(filename, content, mime){
     a.remove();
     setTimeout(()=>URL.revokeObjectURL(objectUrl), 2000);
 }
-
+ 
 function weblocXML(url){
     const safeUrl = String(url).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict><key>URL</key><string>${safeUrl}</string></dict></plist>`;
 }
-
+ 
 function sanitizeShortcutName(value){
     const base = String(value || "SlugLauncher")
         .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
@@ -2316,18 +2663,18 @@ function sanitizeShortcutName(value){
         .trim();
     return base || "SlugLauncher";
 }
-
+ 
 function getCurrentSlugLauncherURL(){
     // markSavedAndRewriteHash() updates the current hash synchronously before this is read.
     return window.location.href;
 }
-
+ 
 function getSaveInstructions(platform, filename){
     const commonUpdate = {
         title: "SlugLauncher guardado",
         update: "Si haces cambios en tus apps, folders, idioma o configuración, vuelve a guardar el SlugLauncher y reemplaza el acceso anterior para utilizar la URL actualizada."
     };
-
+ 
     if (platform === "windows") {
         return {
             ...commonUpdate,
@@ -2394,7 +2741,7 @@ function getSaveInstructions(platform, filename){
         ]
     };
 }
-
+ 
 function openSaveLauncherModal(instructions, url){
     const modal = document.getElementById("saveLauncherModal");
     const title = document.getElementById("saveLauncherTitle");
@@ -2402,7 +2749,7 @@ function openSaveLauncherModal(instructions, url){
     const steps = document.getElementById("saveLauncherSteps");
     const copyBtn = document.getElementById("saveLauncherCopyBtn");
     const doneBtn = document.getElementById("saveLauncherDoneBtn");
-
+ 
     title.textContent = instructions.title;
     intro.textContent = instructions.intro;
     steps.innerHTML = "";
@@ -2417,7 +2764,7 @@ function openSaveLauncherModal(instructions, url){
         div.appendChild(span);
         steps.appendChild(div);
     });
-
+ 
     const update = document.createElement("div");
     update.className = "saveLauncherStep";
     const strong = document.createElement("strong");
@@ -2427,10 +2774,10 @@ function openSaveLauncherModal(instructions, url){
     update.appendChild(strong);
     update.appendChild(span);
     steps.appendChild(update);
-
+ 
     copyBtn.textContent = "Copiar URL";
     doneBtn.textContent = "Cerrar";
-
+ 
     copyBtn.onclick = async ()=>{
         try{
             await navigator.clipboard.writeText(url);
@@ -2449,31 +2796,31 @@ function openSaveLauncherModal(instructions, url){
             setTimeout(()=>{ copyBtn.textContent = "Copiar URL"; }, 1800);
         }
     };
-
+ 
     const close = ()=>closeSaveLauncherModal();
     doneBtn.onclick = close;
     document.getElementById("saveLauncherClose").onclick = close;
     modal.onclick = e=>{ if (e.target === modal) close(); };
-
+ 
     modal.classList.add("open");
     modal.setAttribute("aria-hidden","false");
 }
-
+ 
 function closeSaveLauncherModal(){
     const modal = document.getElementById("saveLauncherModal");
     modal.classList.remove("open");
     modal.setAttribute("aria-hidden","true");
 }
-
+ 
 function saveSlugLauncher(){
     closeSidePanel();
     markSavedAndRewriteHash();
-
+ 
     const platform = detectPlatform();
     const url = getCurrentSlugLauncherURL();
     const name = sanitizeShortcutName("SlugLauncher");
     let filename = "";
-
+ 
     try{
         if (platform === "windows"){
             filename = `${name}.url`;
@@ -2486,7 +2833,7 @@ function saveSlugLauncher(){
             const desktop = `[Desktop Entry]\nType=Link\nName=${name}\nURL=${url}\nIcon=text-html\n`;
             downloadTextFile(filename, desktop, "application/x-desktop");
         }
-
+ 
         const instructions = getSaveInstructions(platform, filename);
         openSaveLauncherModal(instructions, url);
     }catch(err){
@@ -2496,29 +2843,33 @@ function saveSlugLauncher(){
         openSaveLauncherModal(instructions, url);
     }
 }
-
+ 
 document.addEventListener("keydown", e=>{
     if (e.key === "Escape"){
         const modal = document.getElementById("saveLauncherModal");
         if (modal && modal.classList.contains("open")) closeSaveLauncherModal();
+        const slugModal = document.getElementById("slugInfoModal");
+        if (slugModal && slugModal.style.display === "block") closeSlugModal();
+        const urlIOModal = document.getElementById("urlIOModal");
+        if (urlIOModal && urlIOModal.style.display === "block") closeUrlIOModal();
     }
 });
-
+ 
 /* =========================================================
    INIT
    ========================================================= */
 if (!location.hash || location.hash === "#") {
     const browserLang = (navigator.language || "en").toLowerCase().split("-")[0];
-
+ 
     const supportedLanguages = [
         "en", "es", "fr", "de", "pt",
         "it", "ru", "zh", "ja", "hi", "ar"
     ];
-
+ 
     const lang = supportedLanguages.includes(browserLang)
         ? browserLang
         : "en";
-
+ 
     history.replaceState(
         null,
         "",
@@ -2529,13 +2880,13 @@ parseGlobal();
 applyTheme();
 applyI18n();
 renderLauncher();
-
+ 
 window.addEventListener("hashchange", ()=>{
-    const wasEditing = currentMode !== "normal";
+    if (currentMode !== "normal"){ currentMode="normal"; workingState=null; clearTimeout(inactivityTimer); }
     parseGlobal();
     applyTheme();
     applyI18n();
-    if (!wasEditing) renderLauncher();
+    renderLauncher();
 });
 </script>
 </body>
