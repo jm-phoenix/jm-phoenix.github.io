@@ -254,6 +254,13 @@ body.theme-dark .appIcon .folderBadge { box-shadow:0 1px 4px rgba(0,0,0,0.8); bo
     50%     { transform:rotate(2deg); }
 }
 .wiggleMode .appIcon:not(.dragActive) { animation:wiggle .26s infinite ease-in-out; }
+/* Evita que el navegador se quede con el gesto (pull-to-refresh en iOS, swipe atrás/adelante
+   en ChromeOS táctil, menú contextual por long-press) desde el primer toque en modo mover,
+   en vez de esperar a que el JS detecte que empezó un arrastre. */
+.wiggleMode .appIcon, .wiggleMode .addAppTile {
+    touch-action: none;
+    -webkit-touch-callout: none;
+}
 .appIcon.dragActive { animation:none !important; box-shadow:0 14px 30px rgba(0,0,0,0.35); opacity:0.92; z-index:500; }
 .appIcon.dropTargetHighlight { outline:3px solid var(--accent); outline-offset:3px; background:rgba(0,122,255,0.12); }
 .addAppTile {
@@ -350,22 +357,8 @@ body.theme-dark .folderContent { background:var(--card-dark); }
     font-family:inherit;
 }
 body.theme-dark #sidePanel { background:var(--card-dark); }
-/* Entrada escalonada de los ítems del menú hamburguesa */
-#sidePanel > * { opacity:0; animation: animotion-fade-in-up .32s ease both; }
-#sidePanel > *:nth-child(1)  { animation-delay:.03s; }
-#sidePanel > *:nth-child(2)  { animation-delay:.06s; }
-#sidePanel > *:nth-child(3)  { animation-delay:.09s; }
-#sidePanel > *:nth-child(4)  { animation-delay:.12s; }
-#sidePanel > *:nth-child(5)  { animation-delay:.15s; }
-#sidePanel > *:nth-child(6)  { animation-delay:.18s; }
-#sidePanel > *:nth-child(7)  { animation-delay:.21s; }
-#sidePanel > *:nth-child(8)  { animation-delay:.24s; }
-#sidePanel > *:nth-child(9)  { animation-delay:.27s; }
-#sidePanel > *:nth-child(10) { animation-delay:.30s; }
-#sidePanel > *:nth-child(11) { animation-delay:.33s; }
-#sidePanel > *:nth-child(n+12) { animation-delay:.36s; }
 @media (prefers-reduced-motion: reduce) {
-    #sidePanel, #sidePanel > * { animation:none !important; opacity:1 !important; }
+    #sidePanel { animation:none !important; }
 }
 /* Cierre animado del panel + overlay */
 @keyframes sidePanelSlideOut { from { transform:translateX(0); } to { transform:translateX(100%); } }
@@ -1465,6 +1458,40 @@ function openSidePanel(){
     const overlay = document.getElementById("sidePanelOverlay");
     overlay.classList.remove("closing");
     overlay.style.display="block";
+    staggerSidePanelItems();
+}
+function staggerSidePanelItems(){
+    // Animación de entrada hecha en JS (no CSS @keyframes) a propósito: en iOS Safari,
+    // las animaciones CSS declaradas en hijos de un contenedor que pasa de display:none
+    // a block a veces nunca llegan a dispararse, dejando el contenido en opacity:0 para
+    // siempre (menú "en blanco"). Controlando opacity/transform desde JS evitamos eso,
+    // y el timeout de seguridad garantiza que el menú siempre termine visible.
+    const panel = document.getElementById("sidePanel");
+    if (!panel) return;
+    const items = Array.from(panel.children);
+    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    clearTimeout(panel._staggerSafety);
+    if (reduceMotion){
+        items.forEach(el=>{ el.style.transition=""; el.style.transitionDelay=""; el.style.opacity="1"; el.style.transform="none"; });
+        return;
+    }
+    items.forEach(el=>{
+        el.style.transition = "none";
+        el.style.opacity = "0";
+        el.style.transform = "translateY(10px)";
+    });
+    // Fuerza un reflow para que el navegador registre el estado inicial antes de animar
+    void panel.offsetHeight;
+    items.forEach((el,i)=>{
+        el.style.transition = "opacity .3s ease, transform .3s ease";
+        el.style.transitionDelay = (i*0.03)+"s";
+        el.style.opacity = "1";
+        el.style.transform = "translateY(0)";
+    });
+    // Red de seguridad: si por lo que sea la transición no corre, el menú igual queda visible
+    panel._staggerSafety = setTimeout(()=>{
+        items.forEach(el=>{ el.style.transition=""; el.style.transitionDelay=""; el.style.opacity="1"; el.style.transform="none"; });
+    }, 900);
 }
 function closeSidePanel(e){
     if (e && e.target && e.target.id!=="sidePanelOverlay"){
@@ -1530,8 +1557,15 @@ function attachMoveHandlers(el, item, path, isFolder){
         if (currentMode!=="move") return;
         e.preventDefault();
         pointerId = e.pointerId; startX=e.clientX; startY=e.clientY; dragging=false;
+        el.style.touchAction = "none"; // ya lo cubre .wiggleMode por CSS, pero lo reforzamos aquí también
         try{ el.setPointerCapture(pointerId); }catch(err){}
         resetInactivityTimer();
+    });
+
+    // En touchscreens (ChromeOS, tablets con mouse emulado) un long-press durante el
+    // arrastre puede disparar el menú contextual nativo; lo bloqueamos en modo mover.
+    el.addEventListener("contextmenu",(e)=>{
+        if (currentMode==="move") e.preventDefault();
     });
 
     el.addEventListener("pointermove",(e)=>{
@@ -1583,9 +1617,23 @@ function attachMoveHandlers(el, item, path, isFolder){
 
 function elementUnderPointer(x,y,draggedEl){
     draggedEl.style.pointerEvents="none";
-    const raw = document.elementFromPoint(x,y);
+    let raw = document.elementFromPoint(x,y);
+    let found = raw ? raw.closest(".appIcon") : null;
+    // El dedo/cursor rara vez cae exacto sobre el icono destino, sobre todo en touch;
+    // si el punto exacto falla, probamos un pequeño anillo de puntos alrededor antes de rendirnos.
+    if (!found || found===draggedEl){
+        const radius = 22;
+        const angles = [0,45,90,135,180,225,270,315];
+        for (const a of angles){
+            const rad = a * Math.PI/180;
+            const px = x + radius*Math.cos(rad), py = y + radius*Math.sin(rad);
+            const el2 = document.elementFromPoint(px,py);
+            const candidate = el2 ? el2.closest(".appIcon") : null;
+            if (candidate && candidate!==draggedEl){ found = candidate; break; }
+        }
+    }
     draggedEl.style.pointerEvents="";
-    return raw ? raw.closest(".appIcon") : null;
+    return found && found!==draggedEl ? found : null;
 }
 function updateDropHighlight(x,y,draggedEl){
     clearDropHighlights();
