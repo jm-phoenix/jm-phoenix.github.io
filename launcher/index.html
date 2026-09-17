@@ -2213,11 +2213,20 @@ document.addEventListener("keydown",(e)=>{
     if (e.key === "Escape" && document.getElementById("searchModalOverlay").classList.contains("open")) closeSearchModal();
 });
 
-function detectIconsFor(domain, ctx){
-    ctx.candidates.length = 0;
+function detectIconsFor(domain, ctx, options = {}){
+    // preserveCurrent=true: se usa al abrir "Editar App" para AÑADIR sugerencias
+    // sin borrar ni reemplazar el icono custom que el usuario ya tenía guardado.
+    const preserveCurrent = !!options.preserveCurrent;
+    if (!preserveCurrent){
+        ctx.candidates.length = 0;
+    }
     const s2 = `https://www.google.com/s2/favicons?sz=128&domain=${encodeURIComponent(domain)}`;
-    ctx.candidates.push({url:s2, label:"S2"});
-    selectIconOptionFor(s2, ctx);
+    if (!ctx.candidates.find(c=>c.url===s2)){
+        ctx.candidates.push({url:s2, label:"S2"});
+    }
+    if (!preserveCurrent){
+        selectIconOptionFor(s2, ctx);
+    }
     renderIconOptionsFor(ctx);
 
     const guesses = [ `https://${domain}/favicon.ico`, `https://${domain}/apple-touch-icon.png` ];
@@ -2392,7 +2401,7 @@ function openEditApp(path){
     }
     if (isValidAppURL(app.url)){
         const {domain} = getAppURLParts(app.url);
-        detectIconsFor(domain, editIconCtx);
+        detectIconsFor(domain, editIconCtx, {preserveCurrent:true});
     }
     document.getElementById("editAppModal").style.display="block";
     resetInactivityTimer();
