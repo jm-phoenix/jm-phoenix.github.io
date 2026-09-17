@@ -1223,7 +1223,12 @@ function normalize(str) {
     str = str.trim();
     return /^https?:\/\//i.test(str) ? str : "https://" + str;
 }
-function stripProtocol(str){ return (str||"").replace(/^https?:\/\//i,''); }
+// Solo se "oculta" el prefijo https:// (el protocolo por defecto que normalize() vuelve a
+// añadir al leer). El http:// explícito se conserva: si se ocultara igual que https, no
+// habría forma de distinguir después "esto era http" de "esto era el default https", y
+// cualquier app/ícono servido por HTTP (ej. un dispositivo LAN sin TLS, como 192.168.x.x)
+// terminaría forzado a HTTPS al guardar o recargar, rompiendo la conexión.
+function stripProtocol(str){ return (str||"").replace(/^https:\/\//i,''); }
 function isValidDomain(domain){ return /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(domain); }
 function escapeHtml(str){
     return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -2312,7 +2317,7 @@ function saveApp(){
     const newApp = {
         type:"app",
         name,
-        url:normalize(domain),
+        url:normalize(fullURL),
         icon:normalize(iconRaw)
     };
 
@@ -2434,8 +2439,10 @@ function isValidAppURL(value){
     if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) raw = "https://" + raw;
     try{
         const u = new URL(raw);
-        return (u.protocol === "http:" || u.protocol === "https:") &&
-               /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(u.hostname);
+        if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+        const domainPattern = /^[a-z0-9.-]+\.[a-z]{2,}$/i;
+        const ipv4Pattern = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/;
+        return domainPattern.test(u.hostname) || ipv4Pattern.test(u.hostname);
     }catch(e){
         return false;
     }
@@ -2460,7 +2467,7 @@ function saveEditedApp(){
     if (!iconRaw){ iconRaw = stripProtocol(`https://www.google.com/s2/favicons?sz=128&domain=${domain}`); }
 
     app.name = name;
-    app.url = normalize(stripProtocol(fullURL));
+    app.url = normalize(fullURL);
     app.icon = normalize(iconRaw);
 
     closeEditAppModal();
