@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SlugLauncher: un lanzador de aplicaciones configurable mediante URL">
+  <meta name="color-scheme" content="light dark">
+  <title>SlugLauncher</title>
+  <link rel="stylesheet" href="./css/styles.css">
+  <script type="module" src="./js/app.js"></script>
+</head>
+<body>
+  <header class="site-header" id="siteHeader">
+    <button class="brand" id="brandButton" type="button" aria-label="SlugLauncher">
+      <span class="brand-mark" aria-hidden="true">◆</span><span>SlugLauncher</span>
+    </button>
+    <nav class="header-actions" aria-label="Acciones principales">
+      <button class="icon-button" id="searchButton" type="button" aria-label="Buscar" title="Buscar">⌕</button>
+      <button class="icon-button" id="menuButton" type="button" aria-controls="sidePanel" aria-expanded="false" aria-label="Abrir menú">☰</button>
+    </nav>
+  </header>
+
+  <main id="mainContent" class="main-content" tabindex="-1">
+    <section id="emptyState" class="empty-state" hidden aria-labelledby="emptyTitle">
+      <h1 id="emptyTitle">Bienvenido a SlugLauncher</h1>
+      <p id="emptyBody">Añade tu primera aplicación para comenzar.</p>
+      <button class="primary-button" id="emptyAddButton" type="button">Añadir aplicación</button>
+    </section>
+    <section id="launcherGrid" class="launcher-grid" aria-label="Aplicaciones"></section>
+  </main>
+
+  <footer class="site-footer"><span id="footerText">Hecho con amor por Inriris</span><span id="saveStatus" role="status"></span></footer>
+  <div id="unsavedIndicator" aria-hidden="true"></div>
+
+  <aside id="sidePanel" class="side-panel" aria-label="Menú" aria-hidden="true" inert>
+    <div class="panel-heading"><h2 id="menuTitle">Menú</h2><button class="icon-button" id="closeMenuButton" type="button" aria-label="Cerrar menú">×</button></div>
+    <button class="menu-button" id="addAppButton" type="button">Añadir aplicación</button>
+    <button class="menu-button" id="addFolderButton" type="button">Añadir carpeta</button>
+    <button class="menu-button" id="exportButton" type="button">Exportar URL</button>
+    <button class="menu-button" id="importButton" type="button">Importar URL</button>
+    <label class="field-label" for="themeSelect" id="themeLabel">Tema</label>
+    <select id="themeSelect"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Oscuro</option></select>
+    <label class="field-label" for="languageSelect" id="languageLabel">Idioma</label>
+    <select id="languageSelect"></select>
+  </aside>
+  <div id="panelBackdrop" class="backdrop" hidden></div>
+
+  <dialog id="editorDialog" class="dialog" aria-labelledby="editorTitle">
+    <form id="editorForm" method="dialog">
+      <h2 id="editorTitle">Añadir aplicación</h2>
+      <input type="hidden" id="editId">
+      <label for="nameInput" id="nameLabel">Nombre</label><input id="nameInput" name="name" required maxlength="80" autocomplete="off">
+      <label for="urlInput" id="urlLabel">URL</label><input id="urlInput" name="url" type="url" required inputmode="url" placeholder="https://ejemplo.com">
+      <label for="iconInput" id="iconLabel">Icono URL (opcional)</label><input id="iconInput" name="icon" type="url" inputmode="url">
+      <div class="dialog-actions"><button class="secondary-button" id="cancelButton" value="cancel" type="button">Cancelar</button><button class="primary-button" id="saveButton" value="default" type="submit">Guardar</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="folderDialog" class="dialog" aria-labelledby="folderTitle">
+    <form id="folderForm" method="dialog"><h2 id="folderTitle">Añadir carpeta</h2><label for="folderNameInput">Nombre</label><input id="folderNameInput" required maxlength="80" autocomplete="off"><div class="dialog-actions"><button class="secondary-button" type="button" data-close-dialog="folderDialog">Cancelar</button><button class="primary-button" type="submit">Guardar</button></div></form>
+  </dialog>
+  <dialog id="searchDialog" class="dialog search-dialog" aria-labelledby="searchTitle">
+    <form method="dialog"><h2 id="searchTitle">Buscar</h2><input id="searchInput" type="search" placeholder="Buscar por nombre…" autocomplete="off"><div id="searchResults" class="search-results"></div><button class="secondary-button" type="submit">Cerrar</button></form>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
