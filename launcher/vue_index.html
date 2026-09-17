@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Slug Launcher</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Animotion CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/animotion-mcp/animotion-mcp.github.io@main/css/keyframes.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/animotion-mcp/animotion-mcp.github.io@main/css/keyframes-part2.css">
+<link rel="icon" type="image/png" sizes="90x90" href="favicon.png">
+
+<!-- Vue 3 Global Build -->
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+<style>
+:root {
+    --bg-light: #fffEf7;
+    --bg-dark: #0C0C0C;
+    --card-light: #ffffff;
+    --card-dark: #1e1e20;
+    --text-light: #1c1c1e;
+    --text-dark: #f2f2f7;
+    --accent: #007aff;
+    --accent-dark: #0a84ff;
+}
+
+body.theme-light {
+    background-color: var(--bg-light);
+    background-image:
+        radial-gradient(circle at 15% -10%, rgba(0,122,255,0.07), transparent 45%),
+        radial-gradient(circle at 100% 0%, rgba(74,144,226,0.06), transparent 40%);
+    background-attachment: fixed;
+    color: var(--text-light);
+}
+body.theme-dark {
+    background-color: var(--bg-dark);
+    background-image:
+        radial-gradient(circle at 12% -10%, rgba(10,132,255,0.10), transparent 42%),
+        radial-gradient(circle at 100% 0%, rgba(74,50,180,0.08), transparent 45%),
+        radial-gradient(circle at 50% 110%, rgba(10,132,255,0.05), transparent 50%);
+    background-attachment: fixed;
+    color: var(--text-dark);
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+    margin: 0;
+    padding: 0;
+    transition: background .2s ease, color .2s ease;
+}
+
+/* ---------- HEADER ---------- */
+#header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(247,246,224,0.72);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    border-bottom: 1px solid rgba(127,127,127,0.14);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
+    transition: box-shadow .2s ease, background .2s ease;
+}
+body.theme-dark #header {
+    background: rgba(0,0,0,0.55);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.07);
+}
+body.modeActive #header { box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 2px 10px rgba(0,122,255,0.35); }
+body.theme-dark.modeActive #header { box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 2px 14px rgba(10,132,255,0.4); }
+#header h1 { margin:0; font-size:19px; font-weight:700; display:flex; align-items:center; gap:8px; }
+#titleLabel { cursor:pointer; transition:opacity .15s ease, transform .15s ease; border-radius:10px; }
+#titleLabel:hover { opacity:0.75; }
+#titleLabel:active { transform:scale(.97); }
+.titleIcon { width:22px; height:22px; flex-shrink:0; transform:scale(1.5); transform-origin:center center; }
+#headerActions { display:flex; align-items:center; gap:4px; }
+#searchBtn, #editBtn, #burgerBtn {
+    border:none; background:transparent; color:inherit; font-size:22px; cursor:pointer;
+    width:36px; height:36px; border-radius:10px;
+    transition:background .15s ease, transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 0 0 rgba(74,144,226,0);
+}
+#searchBtn svg, #editBtn svg { width:19px; height:19px; }
+#searchBtn:hover, #editBtn:hover, #burgerBtn:hover {
+    background: rgba(127,127,127,0.15); transform:scale(1.1);
+    box-shadow:0 0 14px 2px rgba(74,144,226,0.35);
+}
+body.theme-dark #searchBtn:hover, body.theme-dark #editBtn:hover, body.theme-dark #burgerBtn:hover {
+    box-shadow:0 0 16px 3px rgba(10,132,255,0.45);
+}
+#searchBtn:active, #editBtn:active, #burgerBtn:active { transform:scale(.9); }
+
+/* ---------- FOOTER ---------- */
+#footer {
+    position: fixed;
+    left:0; right:0; bottom:0;
+    z-index: 1000;
+    padding: 10px 12px;
+    text-align:center;
+    font-size:12px;
+    opacity:0.85;
+    background: rgba(247,246,224,0.72);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    border-top: 1px solid rgba(127,127,127,0.14);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
+}
+body.theme-dark #footer {
+    background: rgba(0,0,0,0.55);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* ---------- MAIN CONTENT ---------- */
+#main {
+    padding: 78px 20px 64px;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+/* ---------- BORDE ROJO ---------- */
+#unsavedIndicator {
+    position: fixed; inset: 0; z-index: 1500;
+    border: 4px solid #ff3b30;
+    box-sizing: border-box;
+    pointer-events: none;
+    display: none;
+}
+body.unsavedBorder #unsavedIndicator { display: block; }
+#footerSaved { font-weight:600; }
+body.unsavedBorder #footerSaved { color:#ff3b30; opacity:1; }
+
+/* ---------- ESTADO VACÍO ---------- */
+#emptyStateHelp {
+    position: relative;
+    max-width: 420px;
+    margin: 30px auto 24px;
+    padding: 22px 22px 20px;
+    border-radius: 22px;
+    background: var(--card-light);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    text-align: center;
+    animation: animotion-bounce-in .55s both;
+}
+body.theme-dark #emptyStateHelp { background: var(--card-dark); box-shadow:0 6px 18px rgba(0,0,0,0.6); }
+#emptyStateHelp h2 { margin: 0 0 10px; font-size: 18px; }
+#emptyStateHelp p { margin: 0; font-size: 14px; line-height: 1.5; opacity: 0.85; }
+#emptyAddAppSlot { margin-top:16px; display:flex; justify-content:center; align-items:center; }
+#emptyAddAppSlot .appIcon { width:150px; max-width:72%; }
+
+#emptyLangHint {
+    margin: 14px 0 0;
+    padding-top: 12px;
+    border-top: 1px solid rgba(127,127,127,0.25);
+    font-size: 11.5px;
+    line-height: 1.7;
+    opacity: 0.65;
+}
+
+/* ---------- GRID PRINCIPAL ---------- */
+#launcherGrid, .folderGrid {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+}
+#launcherGrid { max-width: 1100px; margin: 0 auto; }
+
+/* ---------- ICONOS (con borde de 1px según el tema) ---------- */
+/* ---------- ICONOS (borde gris suavizado) ---------- */
+.appIcon {
+    aspect-ratio: 1 / 1;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:10%; box-sizing:border-box;
+    border-radius:24%; background:var(--card-light);
+    border: 1px solid rgba(0, 0, 0, 0.08); /* Gris claro sutil para tema claro */
+    box-shadow:0 1px 2px rgba(0,0,0,0.05), 0 10px 22px rgba(0,0,0,0.10), 0 0 0 0 rgba(74,144,226,0);
+    transition:transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .35s ease, background .2s ease, outline .1s ease, border-color .2s ease;
+    cursor:pointer; position:relative;
+    touch-action: manipulation;
+    -webkit-user-select:none; user-select:none;
+    min-width: 0; min-height: 0; overflow: hidden;
+}
+
+body.theme-dark .appIcon {
+    background:var(--card-dark);
+    border: 1px solid rgba(255, 255, 255, 0.12); /* Gris oscuro sutil para tema oscuro */
+    box-shadow:0 1px 2px rgba(0,0,0,0.5), 0 10px 26px rgba(0,0,0,0.75), 0 0 0 0 rgba(10,132,255,0);
+}
+.appIcon img, .appIcon .folderSvgIcon { width:54%; height:54%; aspect-ratio:1/1; object-fit:contain; margin-bottom:8%; border-radius:24%; }
+.appIcon img { pointer-events:none; -webkit-user-drag:none; user-drag:none; }
+
+.appIcon:hover {
+    transform:translate3d(0,-5px,0) scale(1.06);
+    box-shadow:0 2px 4px rgba(0,0,0,0.06), 0 18px 32px rgba(0,0,0,0.16), 0 0 13px 3px rgba(74,144,226,0.4);
+}
+body.theme-dark .appIcon:hover {
+    box-shadow:0 2px 4px rgba(0,0,0,0.3), 0 10px 22px rgba(0,0,0,0.5), 0 0 17px 4px rgba(10,132,255,0.55);
+}
+
+.folderIconWrap { position:relative; width:54%; height:54%; margin-bottom:8%; }
+.folderIconWrap .folderSvgIcon { width:100%; height:100%; margin-bottom:0; }
+.folderOverlayIcon {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:46%; height:46%; object-fit:contain; pointer-events:none;
+    filter:brightness(0);
+}
+.appIcon span {
+    font-size:clamp(10px,2.6vw,14px); font-weight:500; color:var(--text-light);
+    max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+body.theme-dark .appIcon span { color:var(--text-dark); }
+
+.appIcon .folderBadge {
+    position:absolute; top:4px; right:4px;
+    min-width:30px; height:30px; padding:0 6px;
+    border-radius:999px;
+    background:#4A90E2; color:#fff;
+    font-size:14px; font-weight:700; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    box-sizing:border-box;
+    box-shadow:0 1px 4px rgba(0,0,0,0.4);
+    z-index:2; pointer-events:none; white-space:nowrap; max-width:none;
+}
+body.theme-dark .appIcon .folderBadge { box-shadow:0 1px 4px rgba(0,0,0,0.8); border:1px solid rgba(255,255,255,0.15); }
+
+.editModeItem { outline:2px dashed rgba(0,122,255,0.55); outline-offset:3px; }
+
+@keyframes wiggle {
+    0%,100% { transform:rotate(-2deg); }
+    50%     { transform:rotate(2deg); }
+}
+.wiggleMode .appIcon:not(.dragActive) { animation:wiggle .26s infinite ease-in-out; }
+.wiggleMode .appIcon, .wiggleMode .addAppTile { touch-action: none; -webkit-touch-callout: none; }
+.appIcon.dragActive { animation:none !important; box-shadow:0 14px 30px rgba(0,0,0,0.35); opacity:0.92; z-index:500; }
+.appIcon.dropTargetHighlight { outline:3px solid var(--accent); outline-offset:3px; background:rgba(0,122,255,0.12); }
+
+.addAppTile {
+    aspect-ratio: 1 / 1;
+    border:2px dashed rgba(0,122,255,0.45);
+    background:transparent;
+    box-shadow:none;
+}
+.addAppTile:hover { transform:scale(1.03); }
+.addAppTile .addAppPlus {
+    position:relative; width:54%; height:0; padding-bottom:54%;
+    border-radius:50%; box-sizing:border-box; border:2px solid currentColor; color:var(--accent);
+    margin-bottom:0;
+}
+.addAppTile .addAppPlusIcon {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:clamp(16px,3.2vw,24px); height:clamp(16px,3.2vw,24px); stroke:currentColor;
+}
+.addAppTile span { color:var(--accent); }
+
+/* ---------- FOLDER MODAL (fondo idéntico al desktop + luz acentuada) ---------- */
+.folderModal {
+    position:fixed; inset:0; z-index:999;
+    display:flex; justify-content:center; align-items:center;
+    background:rgba(0,0,0,0);
+    backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px);
+    transition: background .25s ease, backdrop-filter .25s ease;
+    padding:20px; box-sizing:border-box;
+}
+.folderModal.open {
+    background:rgba(0,0,0,0.35);
+    backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+}
+.folderContent {
+    background:var(--bg-light);
+    padding:20px; border-radius:28px;
+    width:90%; max-width:600px; max-height:80vh; overflow:auto;
+    transform:scale(.82); opacity:0;
+    box-shadow:0 15px 45px rgba(0,0,0,0.12), 0 0 35px 5px rgba(74,144,226,0.35);
+    transition: transform .38s cubic-bezier(.34,1.56,.64,1), opacity .25s ease, box-shadow .35s ease, background .2s ease;
+}
+body.theme-dark .folderContent {
+    background:var(--bg-dark);
+    box-shadow:0 15px 45px rgba(0,0,0,0.6), 0 0 45px 8px rgba(10,132,255,0.45);
+}
+.folderModal.open .folderContent { transform:scale(1); opacity:1; }
+
+.folderModalHeader {
+    position:relative; display:flex; align-items:center; justify-content:center;
+    min-height:36px; margin-bottom:14px;
+}
+.folderModalHeader h2 { width:100%; padding:0 42px; box-sizing:border-box; }
+.folderModalClose, .folderModalEditBtn {
+    position:absolute; top:0; width:36px; height:36px; border:0; border-radius:50%;
+    background:rgba(127,127,127,.12); color:inherit; font-size:20px; line-height:1;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:3;
+    transition:background .15s ease, transform .1s ease;
+}
+.folderModalClose { right:0; }
+.folderModalEditBtn { left:0; }
+.folderModalEditBtn svg { width:17px; height:17px; }
+.folderModalClose:hover, .folderModalEditBtn:hover { background:rgba(127,127,127,.22); }
+.folderModalClose:active, .folderModalEditBtn:active { transform:scale(.94); }
+
+.folderModal.dropToDesktop .folderContent {
+    outline:3px dashed var(--accent); outline-offset:6px;
+}
+
+/* ---------- MODALS GENERALES ---------- */
+.modalOverlay {
+    position:fixed; inset:0; z-index:1001;
+    background:rgba(0,0,0,0.38);
+    backdrop-filter:blur(22px) saturate(160%);
+    -webkit-backdrop-filter:blur(22px) saturate(160%);
+    animation: animotion-fade-in .22s ease both;
+    display:flex; justify-content:center; align-items:center; padding:20px; box-sizing:border-box;
+}
+
+#sidePanelOverlay {
+    position:fixed; inset:0; z-index:1001;
+    background:rgba(0,0,0,0.35); backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px);
+}
+#sidePanel {
+    position:fixed; top:0; right:0; width:280px; height:100%;
+    background:var(--card-light); box-shadow:-4px 0 20px rgba(0,0,0,0.18);
+    padding:20px 18px; box-sizing:border-box; overflow-y:auto; overscroll-behavior:contain;
+    animation: animotion-slide-in-right .34s cubic-bezier(.16,1,.3,1) both;
+    font-family:inherit;
+}
+body.theme-dark #sidePanel { background:var(--card-dark); }
+#sidePanelOverlay.closing #sidePanel { animation: sidePanelSlideOut .26s cubic-bezier(.4,0,.68,.06) both; }
+
+.modalBox {
+    background:var(--card-light); padding:24px; border-radius:30px;
+    width:100%; max-width:350px; margin:auto;
+    animation: animotion-bounce-in .5s both;
+    max-height:80vh; overflow:auto;
+    box-shadow:0 20px 60px rgba(0,0,0,0.25), 0 0 30px 4px rgba(74,144,226,0.22);
+}
+body.theme-dark .modalBox {
+    background:var(--card-dark);
+    box-shadow:0 20px 60px rgba(0,0,0,0.7), 0 0 40px 6px rgba(10,132,255,0.3);
+}
+.modalBox input:not([type="checkbox"]):not([type="radio"]), .modalBox textarea, .modalBox select {
+    width:100%; padding:11px 12px; margin-bottom:12px; border-radius:14px;
+    border:1px solid rgba(127,127,127,0.35); box-sizing:border-box;
+    font-size:16px; background:var(--card-light); color:var(--text-light);
+    transition:background .2s ease, color .2s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.modalBox input::placeholder, .modalBox textarea::placeholder { color:inherit; opacity:0.45; }
+.modalBox input:not([type="checkbox"]):not([type="radio"]):focus, .modalBox textarea:focus, .modalBox select:focus {
+    outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,122,255,0.18);
+}
+body.theme-dark .modalBox input:not([type="checkbox"]):not([type="radio"]), body.theme-dark .modalBox textarea, body.theme-dark .modalBox select {
+    background:rgba(255,255,255,0.06); color:var(--text-dark); border-color:rgba(255,255,255,0.14); color-scheme:dark;
+}
+body.theme-dark .modalBox input:not([type="checkbox"]):not([type="radio"]):focus, body.theme-dark .modalBox textarea:focus, body.theme-dark .modalBox select:focus {
+    border-color:var(--accent-dark); box-shadow:0 0 0 3px rgba(10,132,255,0.22);
+}
+.modalBox input[type="checkbox"] { width:auto; margin:0; accent-color:var(--accent); flex-shrink:0; }
+body.theme-dark .modalBox input[type="checkbox"] { accent-color:var(--accent-dark); }
+
+@media (max-width: 600px) {
+    .modalBox input:not([type="checkbox"]):not([type="radio"]), .modalBox textarea, .modalBox select { font-size:16px !important; }
+}
+.modalBox button {
+    width:100%; padding:11px; border:none; border-radius:16px;
+    background:var(--accent); color:white; font-size:15px; cursor:pointer; margin-bottom:8px;
+    transition:background .15s ease, transform .1s ease;
+}
+.modalBox button:hover { background:var(--accent-dark); }
+.modalBox button:active { transform:scale(.98); }
+.modalBox .fieldLabel { font-size:13px; font-weight:600; margin-bottom:6px; opacity:0.75; }
+.modalBox .helperLink {
+    display:inline-block; font-size:13px; color:var(--accent); text-decoration:none;
+    margin:-4px 0 12px; cursor:pointer;
+}
+body.theme-dark .modalBox .helperLink { color:var(--accent-dark); }
+.iconPreviewImg { width:64px; height:64px; border-radius:16px; margin-bottom:10px; object-fit:contain; }
+
+.segmentedControl {
+    display:flex; background:rgba(127,127,127,0.15); border-radius:13px; padding:3px; margin-bottom:14px;
+}
+.modalBox .segmentedControl button.segmentBtn {
+    flex:1; width:auto; border:none; background:transparent; padding:8px 6px; border-radius:10px;
+    font-size:14px; font-weight:600; cursor:pointer; color:inherit; opacity:0.6; margin-bottom:0;
+    transition:background .15s ease, opacity .15s ease;
+}
+.modalBox .segmentedControl button.segmentBtn.active {
+    background:var(--card-light); opacity:1; box-shadow:0 1px 5px rgba(0,0,0,0.16);
+}
+body.theme-dark .modalBox .segmentedControl button.segmentBtn.active {
+    background:var(--card-dark); box-shadow:0 1px 5px rgba(0,0,0,0.55);
+}
+
+@keyframes pendingMovePulse {
+    0%,100% { box-shadow:0 0 0 0 rgba(0,122,255,0.55); }
+    50%     { box-shadow:0 0 0 12px rgba(0,122,255,0); }
+}
+.pendingMoveHighlight { animation:pendingMovePulse .55s ease 3; }
+
+.appSelectItem { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+
+.iconOptionsRow { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+.iconOption {
+    width:44px; height:44px; border-radius:12px; object-fit:contain; background:#eee;
+    padding:4px; box-sizing:border-box; cursor:pointer; border:2px solid transparent;
+    transition:border .15s ease, transform .1s ease;
+}
+.iconOption:hover { transform:scale(1.08); }
+.iconOption.selectedIcon { border-color:var(--accent); }
+body.theme-dark .iconOption { background:rgba(255,255,255,0.08); }
+body.theme-dark .iconOption.selectedIcon { border-color:var(--accent-dark); }
+
+/* ---------- SIDE PANEL MENU ---------- */
+.sideMenuLink {
+    display:block; margin-bottom:4px; padding:9px 10px; border-radius:12px;
+    color:var(--text-light); text-decoration:none; cursor:pointer; font-size:15px; font-weight:500;
+    letter-spacing:.01em; transition:background .15s ease;
+}
+body.theme-dark .sideMenuLink { color:var(--text-dark); }
+.sideMenuLink:hover { background:rgba(0,122,255,0.12); color:var(--accent); }
+body.theme-dark .sideMenuLink:hover { background:rgba(10,132,255,0.18); color:var(--accent-dark); }
+.sideMenuSectionTitle {
+    font-size:11.5px; font-weight:700; margin-top:20px; margin-bottom:8px; opacity:0.85;
+    text-transform:uppercase; letter-spacing:.08em; padding:0 10px; color:var(--accent);
+}
+body.theme-dark .sideMenuSectionTitle { color:var(--accent-dark); }
+
+/* ---------- SALVAR SLUGLAUNCHER ---------- */
+#saveLauncherBox {
+    width:100%; max-width:430px; max-height:82vh; overflow:auto;
+    background:var(--card-light); color:var(--text-light); border-radius:28px; padding:24px;
+    box-shadow:0 24px 70px rgba(0,0,0,.3); position:relative;
+}
+body.theme-dark #saveLauncherBox { background:var(--card-dark); color:var(--text-dark); }
+#saveLauncherBox h2 { margin:0 34px 8px 0; font-size:20px; }
+#saveLauncherBox p { margin:0 0 14px; font-size:14px; line-height:1.5; }
+.saveLauncherStep {
+    padding:13px 14px; margin:10px 0; border-radius:16px; background:rgba(127,127,127,.10);
+    font-size:14px; line-height:1.5;
+}
+.saveLauncherStep strong { display:block; margin-bottom:4px; }
+#saveLauncherClose {
+    position:absolute; top:14px; right:14px; width:36px; height:36px; border:0; border-radius:50%;
+    background:rgba(127,127,127,.12); color:inherit; font-size:25px; line-height:36px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+}
+#saveLauncherClose:hover { background:rgba(127,127,127,.22); }
+
+/* ---------- BUSCADOR RÁPIDO ---------- */
+#searchModalBox {
+    background:var(--card-light); border-radius:26px; width:100%; max-width:480px;
+    margin-top:20px; box-shadow:0 24px 70px rgba(0,0,0,0.3); padding:14px; box-sizing:border-box;
+    max-height:74vh; display:flex; flex-direction:column;
+}
+body.theme-dark #searchModalBox { background:var(--card-dark); }
+.searchInputRow {
+    display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:16px;
+    background:rgba(127,127,127,0.12); margin-bottom:10px; flex-shrink:0;
+}
+.searchInputRow svg { width:18px; height:18px; opacity:0.55; flex-shrink:0; }
+#searchInput { flex:1; border:none; outline:none; background:transparent; font-size:16px; color:inherit; min-width:0; }
+.searchResultsList { overflow-y:auto; overscroll-behavior:contain; }
+.searchResultItem { display:flex; align-items:center; gap:12px; padding:9px 10px; border-radius:14px; cursor:pointer; }
+.searchResultItem:hover { background:rgba(0,122,255,0.12); }
+body.theme-dark .searchResultItem:hover { background:rgba(10,132,255,0.18); }
+.searchResultItem img { width:34px; height:34px; border-radius:9px; object-fit:contain; flex-shrink:0; }
+.searchResultName { font-size:14.5px; font-weight:500; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.searchResultFolder { font-size:11.5px; opacity:0.55; flex-shrink:0; max-width:38%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.searchNoResults { padding:24px 10px; text-align:center; font-size:14px; opacity:0.6; }
+</style>
+</head>
+<body>
+
+<div id="app">
+    <!-- HEADER -->
+    <div id="header">
+        <h1 id="titleLabel" @click="openSlugModal" role="button" tabindex="0">
+            <svg class="titleIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 263.935 263.935" aria-hidden="true"><path fill="#4A90E2" d="m188.835,93.248c-6.319-10.976-13.982-18.705-18.862-22.973l17.009-40.097c7.051-0.929 12.529-7.305 12.529-15.022-2.84217e-14-8.357-6.415-15.156-14.301-15.156-7.888,0-14.305,6.799-14.305,15.155 0,3.18 0.934,6.13 2.52,8.57l-16.621,39.184-35.194-14.011c-1.115-7.186-7.002-12.691-14.095-12.691-7.888,0-14.305,6.798-14.305,15.153 0,8.355 6.417,15.152 14.305,15.152 3.448,0 6.615-1.3 9.088-3.462l36.296,14.449c-1.008,10.456-3.716,33.415-9.006,46.189-12.34,29.792-29.63,42.078-44.886,52.918-12.398,8.811-24.109,17.132-30.532,32.639-11.676,28.183 3.698,48.68 12.504,53.703 1.148,0.655 2.431,0.985 3.716,0.985 1.093,0 2.187-0.238 3.202-0.718 2.212-1.044 3.776-3.102 4.189-5.513 0.136-0.79 0.257-1.617 0.383-2.479 0.689-4.737 1.402-9.635 6.399-15.682 3.186-3.854 11.276-6.456 20.646-9.469 21.782-7.005 54.699-17.59 72.607-60.826 13.996-33.786 5.939-59.976-3.286-75.998zm-10.571,70.26c-15.252,36.821-41.917,45.396-63.342,52.286-11.61,3.734-21.637,6.958-27.616,14.194-2.808,3.398-4.75,6.664-6.123,9.708-2.275-5.955-3.152-14.324 1.149-24.71 4.771-11.52 13.859-17.977 25.364-26.152 16.067-11.417 36.063-25.627 50.054-59.405 4.72-11.395 7.541-28.744 9.069-41.188 2.947,3.324 6.143,7.499 9.017,12.491 10.972,19.057 11.788,40.177 2.428,62.776z"/></svg>
+            <span>Launcher</span>
+        </h1>
+        <div id="headerActions">
+            <button v-if="currentMode === 'normal'" id="searchBtn" type="button" :aria-label="t('searchLabel')" @click="openSearchModal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </button>
+            <button v-if="currentMode === 'normal'" id="editBtn" type="button" :aria-label="t('editIcons')" @click="enterEditMode">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+            </button>
+            <button id="burgerBtn" type="button" @click="handleBurgerClick">
+                <span v-if="currentMode === 'normal'">&#9776;</span>
+                <span v-else>&#10005;</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- BORDE ROJO INDICADOR -->
+    <div id="unsavedIndicator"></div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div id="main">
+        <!-- ESTADO VACÍO -->
+        <div id="emptyStateHelp" v-if="activeState.length === 0">
+            <h2>{{ t('emptyTitle') }}</h2>
+            <p>{{ t('emptyBody') }}</p>
+            <div id="emptyLangHint">&#2630; {{ langSwitchHintText }}</div>
+            <div id="emptyAddAppSlot">
+                <div class="appIcon addAppTile" @click="openAddModal(null, 'app')">
+                    <div class="addAppPlus">
+                        <svg class="addAppPlusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GRID PRINCIPAL -->
+        <div id="launcherGrid" :class="{ wiggleMode: currentMode === 'move' }">
+            <template v-for="(item, idx) in activeState" :key="idx">
+                <!-- APP ICON -->
+                <div v-if="item.type === 'app'"
+                     class="appIcon"
+                     :class="{ editModeItem: currentMode === 'edit', dragActive: dragData.dragging && dragData.index === idx && dragData.isRoot }"
+                     :data-index="idx"
+                     @click="handleItemClick(item, { array: activeState, index: idx })"
+                     @pointerdown="handlePointerDown($event, { array: activeState, index: idx }, false)"
+                     @pointermove="handlePointerMove($event)"
+                     @pointerup="handlePointerUp($event)"
+                     @pointercancel="handlePointerUp($event)">
+                    <img :src="item.icon || FALLBACK_ICON" @error="$event.target.src = FALLBACK_ICON" draggable="false">
+                    <span>{{ item.name }}</span>
+                </div>
+
+                <!-- FOLDER ICON -->
+                <div v-else-if="item.type === 'folder'"
+                     class="appIcon folderIcon"
+                     :class="{ editModeItem: currentMode === 'edit', dragActive: dragData.dragging && dragData.index === idx && dragData.isRoot }"
+                     :data-index="idx"
+                     @click="handleItemClick(item, { array: activeState, index: idx })"
+                     @pointerdown="handlePointerDown($event, { array: activeState, index: idx }, true)"
+                     @pointermove="handlePointerMove($event)"
+                     @pointerup="handlePointerUp($event)"
+                     @pointercancel="handlePointerUp($event)">
+                    <div class="folderIconWrap">
+                        <svg class="folderSvgIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#4A90E2"><path d="M10 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V8C22 6.9 21.1 6 20 6H12L10 4Z"/></svg>
+                        <img v-if="item.icon" class="folderOverlayIcon" :src="item.icon" draggable="false" @error="$event.target.style.display='none'">
+                    </div>
+                    <span>{{ item.name }}</span>
+                    <span class="folderBadge">{{ (item.apps || []).length }}</span>
+                </div>
+            </template>
+
+            <!-- TILE "+ AÑADIR APP" EN MODO EDITAR -->
+            <div v-if="currentMode === 'edit' && activeState.length > 0" class="appIcon addAppTile" @click="openAddModal(null, 'app')">
+                <div class="addAppPlus">
+                    <svg class="addAppPlusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div id="footer">
+        <span>{{ t('footer') }}</span>
+        <span id="footerSaved"> &middot; {{ globalSaved === 1 ? '&#10003; ' + t('savedYes') : '&#9888; ' + t('savedNo') }}</span>
+    </div>
+
+    <!-- FOLDER MODAL -->
+    <div v-if="openFolderData" class="folderModal open" :class="{ dropToDesktop: dropToDesktop }" @click.self="closeFolderModal">
+        <div class="folderContent">
+            <div class="folderModalHeader">
+                <button v-if="currentMode === 'edit'" class="folderModalEditBtn" type="button" @click="openEditFolderFromModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                </button>
+                <h2>{{ openFolderData.folder.name }}</h2>
+                <button class="folderModalClose" type="button" @click="closeFolderModal">&times;</button>
+            </div>
+            <div class="folderGrid" :class="{ wiggleMode: currentMode === 'move' }">
+                <div v-for="(app, aIdx) in openFolderData.folder.apps" :key="aIdx"
+                     class="appIcon"
+                     :class="{ editModeItem: currentMode === 'edit' }"
+                     @click="handleItemClick(app, { array: openFolderData.folder.apps, index: aIdx })"
+                     @pointerdown="handlePointerDown($event, { array: openFolderData.folder.apps, index: aIdx }, false)"
+                     @pointermove="handlePointerMove($event)"
+                     @pointerup="handlePointerUp($event)"
+                     @pointercancel="handlePointerUp($event)">
+                    <img :src="app.icon || FALLBACK_ICON" @error="$event.target.src = FALLBACK_ICON" draggable="false">
+                    <span>{{ app.name }}</span>
+                </div>
+                <div v-if="currentMode === 'edit'" class="appIcon addAppTile" @click="openAddModal(openFolderData.folder, 'app')">
+                    <div class="addAppPlus">
+                        <svg class="addAppPlusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIDE PANEL -->
+    <div v-if="sidePanelOpen" id="sidePanelOverlay" :class="{ closing: sidePanelClosing }" @click.self="closeSidePanel">
+        <div id="sidePanel">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-weight:700;">{{ t('menu') }}</span>
+                <button style="border:none;background:transparent;font-size:18px;cursor:pointer;color:inherit;" @click="closeSidePanel">&#10005;</button>
+            </div>
+
+            <div class="sideMenuSectionTitle">{{ t('actionsSection') }}</div>
+            <a class="sideMenuLink" @click="enterEditMode">{{ t('editIcons') }}</a>
+            <a class="sideMenuLink" @click="enterMoveMode">{{ t('moveIcons') }}</a>
+            <a class="sideMenuLink" @click="saveSlugLauncher">{{ t('saveLauncher') }}</a>
+
+            <div class="sideMenuSectionTitle">{{ t('addSection') }}</div>
+            <a class="sideMenuLink" @click="openAddModal(null, 'app')">{{ t('addApp') }}</a>
+            <a class="sideMenuLink" @click="openAddModal(null, 'folder')">{{ t('addFolder') }}</a>
+
+            <div class="sideMenuSectionTitle">{{ t('configSection') }}</div>
+            <a class="sideMenuLink" @click="exportConfig">{{ t('exportUrl') }}</a>
+            <a class="sideMenuLink" @click="importConfig">{{ t('importUrl') }}</a>
+
+            <div class="sideMenuSectionTitle">{{ t('theme') }}</div>
+            <a class="sideMenuLink" @click="setTheme(0)">{{ t('themeDark') }}</a>
+            <a class="sideMenuLink" @click="setTheme(1)">{{ t('themeLight') }}</a>
+            <a class="sideMenuLink" @click="setTheme(2)">{{ t('themeSystem') }}</a>
+
+            <div class="sideMenuSectionTitle">{{ t('lang') }}</div>
+            <select id="langSelect" :value="globalLang" @change="setLanguage($event.target.value)">
+                <option v-for="code in supportedLangs" :key="code" :value="code">{{ code.toUpperCase() }}</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- MODAL AÑADIR (APP / FOLDER) -->
+    <div v-if="addModalOpen" class="modalOverlay">
+        <div class="modalBox">
+            <h3 style="margin-top:0;">{{ addType === 'app' ? t('addAppTitle') : t('addFolderTitle') }}</h3>
+
+            <div v-if="!addAppTargetFolder" class="segmentedControl">
+                <button type="button" class="segmentBtn" :class="{ active: addType === 'app' }" @click="addType = 'app'">{{ t('addApp') }}</button>
+                <button type="button" class="segmentBtn" :class="{ active: addType === 'folder' }" @click="addType = 'folder'">{{ t('addFolder') }}</button>
+            </div>
+
+            <div v-if="addType === 'app'">
+                <input v-model="addAppForm.url" :placeholder="t('placeholderURL')" @input="onAddAppUrlInput">
+                <input v-model="addAppForm.name" :placeholder="t('placeholderName')">
+                <div class="fieldLabel">{{ t('iconOptionsLabel') }}</div>
+                <div class="iconOptionsRow">
+                    <img v-for="c in addAppIconCandidates" :key="c.url" :src="c.url" :title="c.label"
+                         class="iconOption" :class="{ selectedIcon: stripProtocol(c.url) === stripProtocol(addAppForm.icon) }"
+                         @click="addAppForm.icon = stripProtocol(c.url)">
+                </div>
+                <input v-model="addAppForm.icon" :placeholder="t('placeholderIcon')">
+                <img v-if="addAppForm.icon" class="iconPreviewImg" :src="normalize(addAppForm.icon)">
+                <a class="helperLink" @click="openSvgApiSearch(addAppForm.name)">{{ t('svgApiLink') }}</a>
+            </div>
+
+            <div v-else>
+                <input v-model="addFolderForm.name" :placeholder="t('placeholderName')">
+                <div class="fieldLabel">{{ t('folderIconLabel') }}</div>
+                <input v-model="addFolderForm.icon" :placeholder="t('placeholderIcon')">
+                <img v-if="addFolderForm.icon" class="iconPreviewImg" :src="normalize(addFolderForm.icon)">
+                <a class="helperLink" @click="openSvgApiSearch(addFolderForm.name)">{{ t('svgApiLink') }}</a>
+                <div style="max-height:200px;overflow:auto;margin-bottom:12px;">
+                    <div v-for="(item, index) in rootAppsList" :key="index" class="appSelectItem">
+                        <input type="checkbox" :value="index" v-model="addFolderSelectedApps">
+                        <span>{{ item.name }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <button @click="handleAddSave">{{ addType === 'app' ? t('saveApp') : t('saveFolder') }}</button>
+            <button style="background:#aaa;" @click="closeAddModal">{{ t('cancel') }}</button>
+        </div>
+    </div>
+
+    <!-- MODAL EDIT APP -->
+    <div v-if="editAppModalOpen" class="modalOverlay">
+        <div class="modalBox">
+            <h3 style="margin-top:0;">{{ t('editAppTitle') }}</h3>
+            <input v-model="editAppForm.url" :placeholder="t('placeholderURL')" @input="onEditAppUrlInput">
+            <input v-model="editAppForm.name" :placeholder="t('placeholderName')">
+            <div class="fieldLabel">{{ t('iconOptionsLabel') }}</div>
+            <div class="iconOptionsRow">
+                <img v-for="c in editAppIconCandidates" :key="c.url" :src="c.url" :title="c.label"
+                     class="iconOption" :class="{ selectedIcon: stripProtocol(c.url) === stripProtocol(editAppForm.icon) }"
+                     @click="editAppForm.icon = stripProtocol(c.url)">
+            </div>
+            <input v-model="editAppForm.icon" :placeholder="t('placeholderIcon')">
+            <img v-if="editAppForm.icon" class="iconPreviewImg" :src="normalize(editAppForm.icon)">
+            <a class="helperLink" @click="openSvgApiSearch(editAppForm.name)">{{ t('svgApiLink') }}</a>
+
+            <button @click="saveEditedApp">{{ t('saveEditApp') }}</button>
+            <button style="background:#8e8e93;" @click="moveFromEditApp">{{ t('moveItem') }}</button>
+            <button style="background:#aaa;" @click="closeEditAppModal">{{ t('cancel') }}</button>
+            <button style="background:#ff3b30;" @click="deleteApp">{{ t('deleteApp') }}</button>
+        </div>
+    </div>
+
+    <!-- MODAL EDIT FOLDER -->
+    <div v-if="editFolderModalOpen" class="modalOverlay">
+        <div class="modalBox">
+            <h3 style="margin-top:0;">{{ t('editFolderTitle') }}</h3>
+            <input v-model="editFolderForm.name" :placeholder="t('placeholderName')">
+            <div class="fieldLabel">{{ t('folderIconLabel') }}</div>
+            <input v-model="editFolderForm.icon" :placeholder="t('placeholderIcon')">
+            <img v-if="editFolderForm.icon" class="iconPreviewImg" :src="normalize(editFolderForm.icon)">
+            <a class="helperLink" @click="openSvgApiSearch(editFolderForm.name)">{{ t('svgApiLink') }}</a>
+
+            <div style="max-height:200px;overflow:auto;margin-bottom:12px;">
+                <div v-for="(app, index) in editFolderAppsList" :key="index" class="appSelectItem">
+                    <input type="checkbox" :value="index" v-model="editFolderSelectedApps">
+                    <span>{{ app.name }}</span>
+                </div>
+            </div>
+
+            <button @click="saveEditedFolder">{{ t('saveEditFolder') }}</button>
+            <button style="background:#8e8e93;" @click="moveFromEditFolder">{{ t('moveItem') }}</button>
+            <button style="background:#aaa;" @click="closeEditFolderModal">{{ t('cancel') }}</button>
+            <button style="background:#ff3b30;" @click="deleteFolder">{{ t('deleteFolder') }}</button>
+        </div>
+    </div>
+
+    <!-- MODAL SLUG INFO -->
+    <div v-if="slugModalOpen" class="modalOverlay">
+        <div class="modalBox">
+            <h3 style="margin-top:0;">SlugLauncher</h3>
+            <p style="margin-top:0;opacity:0.75;font-size:14px;line-height:1.5;">{{ t('slugQuestion') }}</p>
+            <a href="https://git.inriris.com/sluglauncher.html" target="_blank" rel="noopener" style="text-decoration:none;">
+                <button type="button">{{ t('slugCreate') }}</button>
+            </a>
+            <button type="button" @click="shareLauncher">{{ t('slugShare') }}</button>
+            <button type="button" style="background:#aaa;" @click="slugModalOpen = false">{{ t('cancel') }}</button>
+        </div>
+    </div>
+
+    <!-- MODAL EXPORT / IMPORT -->
+    <div v-if="urlIOModalOpen" class="modalOverlay">
+        <div class="modalBox">
+            <h3 style="margin-top:0;">{{ urlIOMode === 'export' ? t('exportUrl') : t('importUrl') }}</h3>
+            <textarea v-model="urlIOValue" rows="3" style="resize:vertical;width:100%;box-sizing:border-box;" :readonly="urlIOMode === 'export'"></textarea>
+            <button v-if="urlIOMode === 'import'" type="button" style="background:#8e8e93;" @click="pasteUrlIO">{{ t('pasteAction') }}</button>
+            <button type="button" @click="confirmUrlIOModal">{{ urlIOMode === 'export' ? t('copyUrl') : t('importAction') }}</button>
+            <button type="button" style="background:#aaa;" @click="urlIOModalOpen = false">{{ t('cancel') }}</button>
+        </div>
+    </div>
+
+    <!-- MODAL SALVAR / INSTALAR -->
+    <div v-if="saveLauncherModalOpen" class="modalOverlay">
+        <div id="saveLauncherBox">
+            <button id="saveLauncherClose" type="button" @click="saveLauncherModalOpen = false">&times;</button>
+            <h2>{{ saveLauncherInstructions?.title }}</h2>
+            <p>{{ saveLauncherInstructions?.intro }}</p>
+            <div>
+                <div v-for="([heading, body], idx) in saveLauncherInstructions?.steps" :key="idx" class="saveLauncherStep">
+                    <strong>{{ heading }}</strong>
+                    <span>{{ body }}</span>
+                </div>
+                <div class="saveLauncherStep">
+                    <strong>Si haces cambios</strong>
+                    <span>{{ saveLauncherInstructions?.update }}</span>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:16px;">
+                <button type="button" style="background:rgba(127,127,127,.18);color:inherit;flex:1;" @click="copySaveUrl">{{ copyBtnText }}</button>
+                <button type="button" style="flex:1;" @click="saveLauncherModalOpen = false">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BUSCADOR RÁPIDO -->
+    <div v-if="searchModalOpen" class="modalOverlay" @click.self="searchModalOpen = false">
+        <div id="searchModalBox">
+            <div class="searchInputRow">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" v-model="searchQuery" id="searchInput" autocomplete="off" :placeholder="t('searchPlaceholder')">
+            </div>
+            <div class="searchResultsList">
+                <div v-for="(item, idx) in filteredSearchResults" :key="idx" class="searchResultItem" @click="openSearchItem(item)">
+                    <img :src="item.icon || FALLBACK_ICON" @error="$event.target.src = FALLBACK_ICON">
+                    <span class="searchResultName">{{ item.name }}</span>
+                    <span v-if="item.folder" class="searchResultFolder">{{ item.folder }}</span>
+                </div>
+                <div v-if="filteredSearchResults.length === 0" class="searchNoResults">{{ t('searchNoResults') }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const { createApp, ref, reactive, computed, watch, watchEffect, onMounted, nextTick } = Vue;
+
+const FALLBACK_ICON = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#9aa0a6"><rect x="3" y="3" width="18" height="18" rx="5"/></svg>'
+);
+
+const i18n = {
+    en: { title:"Slug Launcher", menu:"Menu", exitMode:"Exit mode", actionsSection:"Actions", editIcons:"Edit icons", moveIcons:"Move icons", saveLauncher:"Save your SlugLauncher", addSection:"Add", configSection:"Config", addApp:"Add App", addFolder:"Add Folder", exportUrl:"Export URL", importUrl:"Import URL", theme:"Theme", lang:"Language", themeDark:"Dark", themeLight:"Light", themeSystem:"System", addAppTitle:"Add App", saveApp:"Save", cancel:"Cancel", editFolder:"Edit folder", addFolderTitle:"Create Folder", saveFolder:"Create Folder", editAppTitle:"Edit App", saveEditApp:"Save changes", deleteApp:"Delete App", editFolderTitle:"Edit Folder", saveEditFolder:"Save changes", deleteFolder:"Delete Folder", footer:"Made with love by Inriris", savedYes:"Saved", savedNo:"Not saved", emptyTitle:"Welcome to your SlugLauncher!", emptyBody:"Slug Launcher is an app launcher that stores your whole setup right in the URL \u2014 no accounts, no servers. Tap the \u2630 menu to choose your language and theme, then add your first icon to get started.", placeholderName:"Name", placeholderURL:"URL", placeholderIcon:"Icon URL (optional)", iconOptionsLabel:"Icon", searchLabel:"Search", searchPlaceholder:"Search by name...", searchNoResults:"No results", moveItem:"Move", svgApiLink:"🔍 Find an SVG icon on svgapi.com", folderIconLabel:"Folder icon (optional, shown in black)", invalidData:"Invalid data", invalidDomain:"Invalid domain", invalidName:"Invalid name", selectApps:"Select apps", urlCopied:"URL copied to clipboard", invalidImportUrl:"Invalid URL", slugQuestion:"What would you like to do?", slugCreate:"Create your own SlugLauncher", slugShare:"Share your launcher", shareText:"Check out my SlugLauncher", copyUrl:"Copy", importAction:"Import", pasteAction:"Paste" },
+    es: { title:"Slug Launcher", menu:"Menú", exitMode:"Salir del modo", actionsSection:"Acciones", editIcons:"Editar iconos", moveIcons:"Mover iconos", saveLauncher:"Salvar tu SlugLauncher", addSection:"Añadir", configSection:"Configuración", addApp:"Añadir App", addFolder:"Añadir Folder", exportUrl:"Exportar URL", importUrl:"Importar URL", theme:"Tema", lang:"Idioma", themeDark:"Obscuro", themeLight:"Claro", themeSystem:"Sistema", addAppTitle:"Añadir App", saveApp:"Guardar", cancel:"Cancelar", editFolder:"Editar folder", addFolderTitle:"Crear Folder", saveFolder:"Crear Folder", editAppTitle:"Editar App", saveEditApp:"Guardar cambios", deleteApp:"Eliminar App", editFolderTitle:"Editar Folder", saveEditFolder:"Guardar cambios", deleteFolder:"Eliminar Folder", footer:"Hecho con amor por Inriris", savedYes:"Guardado", savedNo:"No guardado", emptyTitle:"¡Bienvenido a tu SlugLauncher!", emptyBody:"Slug Launcher es un lanzador de apps que guarda toda tu configuración en la URL, sin cuentas ni servidores. Toca el menú \u2630 para elegir tu idioma y tema, y luego añade tu primer icono para empezar.", placeholderName:"Nombre", placeholderURL:"URL", placeholderIcon:"Icono URL (opcional)", iconOptionsLabel:"Icono", searchLabel:"Buscar", searchPlaceholder:"Buscar por nombre...", searchNoResults:"Sin resultados", moveItem:"Mover", svgApiLink:"🔍 Buscar icono SVG en svgapi.com", folderIconLabel:"Icono del folder (opcional, se muestra en negro)", invalidData:"Datos inválidos", invalidDomain:"Dominio no válido", invalidName:"Nombre inválido", selectApps:"Selecciona apps", urlCopied:"URL copiado al portapapeles", invalidImportUrl:"URL inválido", slugQuestion:"¿Qué te gustaría hacer?", slugCreate:"Crear tu propio SlugLauncher", slugShare:"Compartir tu launcher", shareText:"Mira mi SlugLauncher", copyUrl:"Copiar", importAction:"Importar", pasteAction:"Pegar" },
+    fr: { title:"Slug Launcher", menu:"Menu", exitMode:"Quitter le mode", actionsSection:"Actions", editIcons:"Modifier icônes", moveIcons:"Déplacer icônes", saveLauncher:"Enregistrer votre SlugLauncher", addSection:"Ajouter", configSection:"Configuration", addApp:"Ajouter App", addFolder:"Ajouter Dossier", exportUrl:"Exporter URL", importUrl:"Importer URL", theme:"Thème", lang:"Langue", themeDark:"Sombre", themeLight:"Clair", themeSystem:"Système", addAppTitle:"Ajouter App", saveApp:"Enregistrer", cancel:"Annuler", editFolder:"Modifier le dossier", addFolderTitle:"Créer Dossier", saveFolder:"Créer Dossier", editAppTitle:"Modifier App", saveEditApp:"Enregistrer les modifications", deleteApp:"Supprimer App", editFolderTitle:"Modifier Dossier", saveEditFolder:"Enregistrer les modifications", deleteFolder:"Supprimer Dossier", footer:"Fait avec amour par Inriris", savedYes:"Enregistré", savedNo:"Non enregistré", emptyTitle:"Bienvenue sur votre SlugLauncher !", emptyBody:"Slug Launcher est un lanceur d'applications qui enregistre toute votre configuration directement dans l'URL, sans compte ni serveur.", placeholderName:"Nom", placeholderURL:"URL", placeholderIcon:"URL de l'icône (optionnel)", iconOptionsLabel:"Icône", searchLabel:"Rechercher", searchPlaceholder:"Rechercher par nom...", searchNoResults:"Aucun résultat", moveItem:"Déplacer", svgApiLink:"🔍 Chercher une icône SVG sur svgapi.com", folderIconLabel:"Icône du dossier (optionnel, affichée en noir)", invalidData:"Données invalides", invalidDomain:"Domaine invalide", invalidName:"Nom invalide", selectApps:"Sélectionnez des apps", urlCopied:"URL copiée dans le presse-papiers", invalidImportUrl:"URL invalide", slugQuestion:"Que souhaitez-vous faire ?", slugCreate:"Créer votre propre SlugLauncher", slugShare:"Partager votre launcher", shareText:"Découvre mon SlugLauncher", copyUrl:"Copier", importAction:"Importer", pasteAction:"Coller" },
+    de: { title:"Slug Launcher", menu:"Menü", exitMode:"Modus verlassen", actionsSection:"Aktionen", editIcons:"Symbole bearbeiten", moveIcons:"Symbole verschieben", saveLauncher:"SlugLauncher speichern", addSection:"Hinzufügen", configSection:"Konfiguration", addApp:"App hinzufügen", addFolder:"Ordner hinzufügen", exportUrl:"URL exportieren", importUrl:"URL importieren", theme:"Theme", lang:"Sprache", themeDark:"Dunkel", themeLight:"Hell", themeSystem:"System", addAppTitle:"App hinzufügen", saveApp:"Speichern", cancel:"Abbrechen", editFolder:"Ordner bearbeiten", addFolderTitle:"Ordner erstellen", saveFolder:"Ordner erstellen", editAppTitle:"App bearbeiten", saveEditApp:"Änderungen speichern", deleteApp:"App löschen", editFolderTitle:"Ordner bearbeiten", saveEditFolder:"Änderungen speichern", deleteFolder:"Ordner löschen", footer:"Mit Liebe gemacht von Inriris", savedYes:"Gespeichert", savedNo:"Nicht gespeichert", emptyTitle:"Willkommen bei deinem SlugLauncher!", emptyBody:"Slug Launcher ist ein App-Launcher, der deine gesamte Einrichtung direkt in der URL speichert.", placeholderName:"Name", placeholderURL:"URL", placeholderIcon:"Symbol-URL (optional)", iconOptionsLabel:"Symbol", searchLabel:"Suchen", searchPlaceholder:"Nach Namen suchen...", searchNoResults:"Keine Ergebnisse", moveItem:"Verschieben", svgApiLink:"🔍 SVG-Symbol auf svgapi.com suchen", folderIconLabel:"Ordner-Symbol (optional, wird schwarz angezeigt)", invalidData:"Ungültige Daten", invalidDomain:"Ungültige Domain", invalidName:"Ungültiger Name", selectApps:"Apps auswählen", urlCopied:"URL in die Zwischenablage kopiert", invalidImportUrl:"Ungültige URL", slugQuestion:"Was möchtest du tun?", slugCreate:"Erstelle deinen eigenen SlugLauncher", slugShare:"Deinen Launcher teilen", shareText:"Schau dir meinen SlugLauncher an", copyUrl:"Kopieren", importAction:"Importieren", pasteAction:"Einfügen" },
+    pt: { title:"Slug Launcher", menu:"Menu", exitMode:"Sair do modo", actionsSection:"Ações", editIcons:"Editar ícones", moveIcons:"Mover ícones", saveLauncher:"Salvar seu SlugLauncher", addSection:"Adicionar", configSection:"Configuração", addApp:"Adicionar App", addFolder:"Adicionar Pasta", exportUrl:"Exportar URL", importUrl:"Importar URL", theme:"Tema", lang:"Idioma", themeDark:"Escuro", themeLight:"Claro", themeSystem:"Sistema", addAppTitle:"Adicionar App", saveApp:"Salvar", cancel:"Cancelar", editFolder:"Editar pasta", addFolderTitle:"Criar Pasta", saveFolder:"Criar Pasta", editAppTitle:"Editar App", saveEditApp:"Salvar alterações", deleteApp:"Excluir App", editFolderTitle:"Editar Pasta", saveEditFolder:"Salvar alterações", deleteFolder:"Excluir Pasta", footer:"Feito com amor por Inriris", savedYes:"Salvo", savedNo:"Não salvo", emptyTitle:"Bem-vindo ao seu SlugLauncher!", emptyBody:"O Slug Launcher é um launcher de apps que guarda toda a sua configuração diretamente na URL.", placeholderName:"Nome", placeholderURL:"URL", placeholderIcon:"URL do ícone (opcional)", iconOptionsLabel:"Ícone", searchLabel:"Buscar", searchPlaceholder:"Buscar por nome...", searchNoResults:"Nenhum resultado", moveItem:"Mover", svgApiLink:"🔍 Buscar ícone SVG em svgapi.com", folderIconLabel:"Ícone da pasta (opcional, exibido em preto)", invalidData:"Dados inválidos", invalidDomain:"Domínio inválido", invalidName:"Nome inválido", selectApps:"Selecione apps", urlCopied:"URL copiada para a área de transferência", invalidImportUrl:"URL inválida", slugQuestion:"O que você gostaria de fazer?", slugCreate:"Criar seu próprio SlugLauncher", slugShare:"Compartilhar seu launcher", shareText:"Veja meu SlugLauncher", copyUrl:"Copiar", importAction:"Importar", pasteAction:"Colar" },
+    it: { title:"Slug Launcher", menu:"Menu", exitMode:"Esci dalla modalità", actionsSection:"Azioni", editIcons:"Modifica icone", moveIcons:"Sposta icone", saveLauncher:"Salva il tuo SlugLauncher", addSection:"Aggiungi", configSection:"Configurazione", addApp:"Aggiungi App", addFolder:"Aggiungi Cartella", exportUrl:"Esporta URL", importUrl:"Importa URL", theme:"Tema", lang:"Lingua", themeDark:"Scuro", themeLight:"Chiaro", themeSystem:"Sistema", addAppTitle:"Aggiungi App", saveApp:"Salva", cancel:"Annulla", editFolder:"Modifica cartella", addFolderTitle:"Crea Cartella", saveFolder:"Crea Cartella", editAppTitle:"Modifica App", saveEditApp:"Salva modifiche", deleteApp:"Elimina App", editFolderTitle:"Modifica Cartella", saveEditFolder:"Salva modifiche", deleteFolder:"Elimina Cartella", footer:"Fatto con amore da Inriris", savedYes:"Salvato", savedNo:"Non salvato", emptyTitle:"Benvenuto nel tuo SlugLauncher!", emptyBody:"Slug Launcher è un launcher di app che salva tutta la tua configurazione direttamente nell'URL.", placeholderName:"Nome", placeholderURL:"URL", placeholderIcon:"URL icona (opzionale)", iconOptionsLabel:"Icona", searchLabel:"Cerca", searchPlaceholder:"Cerca per nome...", searchNoResults:"Nessun risultato", moveItem:"Sposta", svgApiLink:"🔍 Cerca un'icona SVG su svgapi.com", folderIconLabel:"Icona della cartella (opzionale, mostrata in nero)", invalidData:"Dati non validi", invalidDomain:"Dominio non valido", invalidName:"Nome non valido", selectApps:"Seleziona app", urlCopied:"URL copiato negli appunti", invalidImportUrl:"URL non valido", slugQuestion:"Cosa vorresti fare?", slugCreate:"Crea il tuo SlugLauncher", slugShare:"Condividi il tuo launcher", shareText:"Guarda il mio SlugLauncher", copyUrl:"Copia", importAction:"Importa", pasteAction:"Incolla" },
+    ru: { title:"Slug Launcher", menu:"Меню", exitMode:"Выйти из режима", actionsSection:"Действия", editIcons:"Редактировать значки", moveIcons:"Переместить значки", saveLauncher:"Сохранить SlugLauncher", addSection:"Добавить", configSection:"Настройки", addApp:"Добавить приложение", addFolder:"Добавить папку", exportUrl:"Экспорт URL", importUrl:"Импорт URL", theme:"Тема", lang:"Язык", themeDark:"Тёмная", themeLight:"Светлая", themeSystem:"Системная", addAppTitle:"Добавить приложение", saveApp:"Сохранить", cancel:"Отмена", editFolder:"Изменить папку", addFolderTitle:"Создать папку", saveFolder:"Создать папку", editAppTitle:"Редактировать приложение", saveEditApp:"Сохранить изменения", deleteApp:"Удалить приложение", editFolderTitle:"Редактировать папку", saveEditFolder:"Сохранить изменения", deleteFolder:"Удалить папку", footer:"Сделано с любовью от Inriris", savedYes:"Сохранено", savedNo:"Не сохранено", emptyTitle:"Добро пожаловать в ваш SlugLauncher!", emptyBody:"Slug Launcher — это лаунчер приложений, который хранит все настройки прямо в URL.", placeholderName:"Имя", placeholderURL:"URL", placeholderIcon:"URL значка (необязательно)", iconOptionsLabel:"Значок", searchLabel:"Поиск", searchPlaceholder:"Поиск по имени...", searchNoResults:"Нет результатов", moveItem:"Переместить", svgApiLink:"🔍 Найти SVG-значок на svgapi.com", folderIconLabel:"Значок папки (необязательно, отображается чёрным)", invalidData:"Неверные данные", invalidDomain:"Неверный домен", invalidName:"Неверное имя", selectApps:"Выберите приложения", urlCopied:"URL скопирован в буфер обмена", invalidImportUrl:"Неверный URL", slugQuestion:"Что вы хотите сделать?", slugCreate:"Создать свой SlugLauncher", slugShare:"Поделиться своим лаунчером", shareText:"Посмотри мой SlugLauncher", copyUrl:"Копировать", importAction:"Импортировать", pasteAction:"Вставить" },
+    zh: { title:"Slug Launcher", menu:"菜单", exitMode:"退出模式", actionsSection:"操作", editIcons:"编辑图标", moveIcons:"移动图标", saveLauncher:"保存你的 SlugLauncher", addSection:"添加", configSection:"设置", addApp:"添加应用", addFolder:"添加文件夹", exportUrl:"导出URL", importUrl:"导入URL", theme:"主题", lang:"语言", themeDark:"深色", themeLight:"浅色", themeSystem:"系统", addAppTitle:"添加应用", saveApp:"保存", cancel:"取消", editFolder:"编辑文件夹", addFolderTitle:"创建文件夹", saveFolder:"创建文件夹", editAppTitle:"编辑应用", saveEditApp:"保存更改", deleteApp:"删除应用", editFolderTitle:"编辑文件夹", saveEditFolder:"保存更改", deleteFolder:"删除文件夹", footer:"由 Inriris 用心制作", savedYes:"已保存", savedNo:"未保存", emptyTitle:"欢迎使用你的 SlugLauncher！", emptyBody:"Slug Launcher 是一款应用启动器，它把所有设置直接保存在网址（URL）中。", placeholderName:"名称", placeholderURL:"URL", placeholderIcon:"图标 URL（可选）", iconOptionsLabel:"图标", searchLabel:"搜索", searchPlaceholder:"按名称搜索...", searchNoResults:"没有结果", moveItem:"移动", svgApiLink:"🔍 在 svgapi.com 上查找 SVG 图标", folderIconLabel:"文件夹图标（可选，以黑色显示）", invalidData:"数据无效", invalidDomain:"域名无效", invalidName:"名称无效", selectApps:"请选择应用", urlCopied:"URL 已复制到剪贴板", invalidImportUrl:"URL 无效", slugQuestion:"你想做什么？", slugCreate:"创建你自己的 SlugLauncher", slugShare:"分享你的启动器", shareText:"看看我的 SlugLauncher", copyUrl:"复制", importAction:"导入", pasteAction:"粘贴" },
+    ja: { title:"Slug Launcher", menu:"メニュー", exitMode:"モードを終了", actionsSection:"操作", editIcons:"アイコンを編集", moveIcons:"アイコンを移動", saveLauncher:"SlugLauncherを保存", addSection:"追加", configSection:"設定", addApp:"アプリ追加", addFolder:"フォルダ追加", exportUrl:"URLエクスポート", importUrl:"URLインポート", theme:"テーマ", lang:"言語", themeDark:"ダーク", themeLight:"ライト", themeSystem:"システム", addAppTitle:"アプリ追加", saveApp:"保存", cancel:"キャンセル", editFolder:"フォルダを編集", addFolderTitle:"フォルダ作成", saveFolder:"フォルダ作成", editAppTitle:"アプリ編集", saveEditApp:"変更を保存", deleteApp:"アプリ削除", editFolderTitle:"フォルダ編集", saveEditFolder:"変更を保存", deleteFolder:"フォルダ削除", footer:"Inririsが愛を込めて作りました", savedYes:"保存済み", savedNo:"未保存", emptyTitle:"SlugLauncherへようこそ！", emptyBody:"Slug Launcherは、設定をすべてURLに直接保存するアプリランチャーです。", placeholderName:"名前", placeholderURL:"URL", placeholderIcon:"アイコンURL（任意）", iconOptionsLabel:"アイコン", searchLabel:"検索", searchPlaceholder:"名前で検索...", searchNoResults:"該当なし", moveItem:"移動", svgApiLink:"🔍 svgapi.comでSVGアイコンを探す", folderIconLabel:"フォルダアイコン（任意、黒色で表示）", invalidData:"データが無効です", invalidDomain:"ドメインが無効です", invalidName:"名前が無効です", selectApps:"アプリを選択してください", urlCopied:"URL assistをクリップボードにコピーしました", invalidImportUrl:"URLが無効です", slugQuestion:"何をしますか？", slugCreate:"自分のSlugLauncherを作成", slugShare:"ランチャーを共有", shareText:"私のSlugLauncherを見てね", copyUrl:"コピー", importAction:"インポート", pasteAction:"貼り付け" },
+    hi: { title:"Slug Launcher", menu:"मेनू", exitMode:"मोड से बाहर निकलें", actionsSection:"कार्य", editIcons:"आइकन संपादित करें", moveIcons:"आइकन ले जाएं", saveLauncher:"अपना SlugLauncher सहेजें", addSection:"जोड़ें", configSection:"सेटिंग्स", addApp:"ऐप जोड़ें", addFolder:"फ़ोल्डर जोड़ें", exportUrl:"URL निर्यात करें", importUrl:"URL आयात करें", theme:"थीम", lang:"भाषा", themeDark:"डार्क", themeLight:"लाइट", themeSystem:"सिस्टम", addAppTitle:"ऐप जोड़ें", saveApp:"सहेजें", cancel:"रद्द करें", editFolder:"फ़ोल्डर संपादित करें", addFolderTitle:"फ़ोल्डर बनाएं", saveFolder:"फ़ोल्डर बनाएं", editAppTitle:"ऐप संपादित करें", saveEditApp:"परिवर्तन सहेजें", deleteApp:"ऐप हटाएं", editFolderTitle:"फ़ोल्डर संपादित करें", saveEditFolder:"परिवर्तन सहेजें", deleteFolder:"फ़ोल्डर हटाएं", footer:"Inriris द्वारा प्यार से बनाया गया", savedYes:"सहेजा गया", savedNo:"सहेजा नहीं गया", emptyTitle:"आपके SlugLauncher में आपका स्वागत है!", emptyBody:"Slug Launcher एक ऐप लॉन्चर है जो आपकी पूरी सेटिंग सीधे URL में सहेजता है।", placeholderName:"नाम", placeholderURL:"URL", placeholderIcon:"आइकन URL (वैकल्पिक)", iconOptionsLabel:"आइकन", searchLabel:"खोजें", searchPlaceholder:"नाम से खोजें...", searchNoResults:"कोई परिणाम नहीं", moveItem:"स्थानांतरित करें", svgApiLink:"🔍 svgapi.com पर SVG आइकन खोजें", folderIconLabel:"फ़ोल्डर आइकन (वैकल्पिक, काले रंग में दिखेगा)", invalidData:"अमान्य डेटा", invalidDomain:"अमान्य डोमेन", invalidName:"अमान्य नाम", selectApps:"ऐप्स चुनें", urlCopied:"URL क्लिपबोर्ड पर कॉपी किया गया", invalidImportUrl:"अमान्य URL", slugQuestion:"आप क्या करना चाहेंगे?", slugCreate:"अपना खुद का SlugLauncher बनाएं", slugShare:"अपना लॉन्चर शेयर करें", shareText:"मेरा SlugLauncher देखें", copyUrl:"कॉपी करें", importAction:"आयात करें", pasteAction:"पेस्ट करें" },
+    ar: { title:"Slug Launcher", menu:"القائمة", exitMode:"الخروج من الوضع", actionsSection:"إجراءات", editIcons:"تعديل الأيقونات", moveIcons:"نقل الأيقونات", saveLauncher:"حفظ SlugLauncher الخاص بك", addSection:"إضافة", configSection:"الإعدادات", addApp:"إضافة تطبيق", addFolder:"إضافة مجلد", exportUrl:"تصدير URL", importUrl:"استيراد URL", theme:"السمة", lang:"اللغة", themeDark:"داكن", themeLight:"فاتح", themeSystem:"النظام", addAppTitle:"إضافة تطبيق", saveApp:"حفظ", cancel:"إلغاء", editFolder:"تعديل المجلد", addFolderTitle:"إنشاء مجلد", saveFolder:"إنشاء مجلد", editAppTitle:"تعديل تطبيق", saveEditApp:"حفظ التغييرات", deleteApp:"حذف تطبيق", editFolderTitle:"تعديل مجلد", saveEditFolder:"حفظ التغييرات", deleteFolder:"حفظ التغييرات", footer:"صُنع بحب بواسطة Inriris", savedYes:"محفوظ", savedNo:"غير محفوظ", emptyTitle:"مرحبًا بك في SlugLauncher الخاص بك!", emptyBody:"Slug Launcher هو مشغّل تطبيقات يحفظ كل إعداداتك مباشرة في الرابط (URL).", placeholderName:"الاسم", placeholderURL:"URL", placeholderIcon:"رابط الأيقونة (اختياري)", iconOptionsLabel:"الأيقونة", searchLabel:"بحث", searchPlaceholder:"ابحث بالاسم...", searchNoResults:"لا توجد نتائج", moveItem:"نقل", svgApiLink:"🔍 ابحث عن أيقونة SVG على svgapi.com", folderIconLabel:"أيقونة المجلد (اختياري، تظهر باللون الأسود)", invalidData:"بيانات غير صالحة", invalidDomain:"نطاق غير صالح", invalidName:"اسم غير صالح", selectApps:"اختر التطبيقات", urlCopied:"تم نسخ الرابط", invalidImportUrl:"رابط غير صالح", slugQuestion:"ماذا تريد أن تفعل؟", slugCreate:"أنشئ SlugLauncher الخاص بك", slugShare:"شارك اللانشر الخاص بك", shareText:"شاهد SlugLauncher الخاص بي", copyUrl:"نسخ", importAction:"استيراد", pasteAction:"لصق" }
+};
+
+const LANGUAGE_SWITCH_HINTS = [
+    "Change to English", "Cambia a español", "Passer en français", "Auf Deutsch wechseln",
+    "Mudar para português", "Passa all'italiano", "Переключить на русский", "切换到中文",
+    "日本語に切り替える", "हिंदी में बदलें", "التغيير إلى العربية"
+];
+
+createApp({
+    setup() {
+        const appsState = ref([]);
+        const workingState = ref(null);
+        const currentMode = ref('normal');
+        const globalTheme = ref(1);
+        const globalLang = ref('es');
+        const globalSaved = ref(0);
+
+        const sidePanelOpen = ref(false);
+        const sidePanelClosing = ref(false);
+
+        const addModalOpen = ref(false);
+        const addType = ref('app');
+        const addAppTargetFolder = ref(null);
+        const addAppForm = reactive({ url: '', name: '', icon: '' });
+        const addAppIconCandidates = ref([]);
+        const addFolderForm = reactive({ name: '', icon: '' });
+        const addFolderSelectedApps = ref([]);
+
+        const editAppModalOpen = ref(false);
+        const editAppForm = reactive({ url: '', name: '', icon: '' });
+        const editAppIconCandidates = ref([]);
+        const editingPath = ref(null);
+
+        const editFolderModalOpen = ref(false);
+        const editFolderForm = reactive({ name: '', icon: '' });
+        const editFolderSelectedApps = ref([]);
+        const editingFolderPath = ref(null);
+
+        const openFolderData = ref(null);
+        const searchModalOpen = ref(false);
+        const searchQuery = ref('');
+        const slugModalOpen = ref(false);
+        const urlIOModalOpen = ref(false);
+        const urlIOMode = ref('export');
+        const urlIOValue = ref('');
+
+        const saveLauncherModalOpen = ref(false);
+        const saveLauncherInstructions = ref(null);
+        const saveLauncherUrl = ref('');
+        const copyBtnText = ref('Copiar URL');
+
+        const dragData = reactive({
+            dragging: false, pointerId: null, startX: 0, startY: 0, dx: 0, dy: 0,
+            path: null, isFolder: false, index: null, isRoot: true, el: null
+        });
+        const dropToDesktop = ref(false);
+
+        let inactivityTimer = null;
+        let timerSuspended = false;
+
+        const supportedLangs = Object.keys(i18n);
+
+        function t(key) {
+            const dict = i18n[globalLang.value] || i18n.en;
+            return dict[key] !== undefined ? dict[key] : (i18n.en[key] || key);
+        }
+
+        const activeState = computed(() => {
+            return currentMode.value === 'normal' ? appsState.value : (workingState.value || appsState.value);
+        });
+
+        const effectiveThemeClass = computed(() => {
+            if (globalTheme.value === 2) {
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                return prefersDark ? 'theme-dark' : 'theme-light';
+            }
+            return globalTheme.value === 0 ? 'theme-dark' : 'theme-light';
+        });
+
+        const isUnsavedBorder = computed(() => globalSaved.value === 0 && activeState.value.length > 0);
+        const langSwitchHintText = computed(() => LANGUAGE_SWITCH_HINTS.join("  ·  "));
+
+        const rootAppsList = computed(() => activeState.value.filter(item => item.type === 'app'));
+        const editFolderAppsList = computed(() => editingFolderPath.value ? (editingFolderPath.value.array[editingFolderPath.value.index].apps || []) : []);
+
+        const flattenedSearchIndex = computed(() => {
+            const items = [];
+            activeState.value.forEach(entry => {
+                if (entry.type === "app") {
+                    items.push({ name: entry.name, url: entry.url, icon: entry.icon, folder: null });
+                } else if (entry.type === "folder") {
+                    (entry.apps || []).forEach(a => {
+                        items.push({ name: a.name, url: a.url, icon: a.icon, folder: entry.name });
+                    });
+                }
+            });
+            return items;
+        });
+
+        const filteredSearchResults = computed(() => {
+            const q = searchQuery.value.trim().toLowerCase();
+            if (!q) return flattenedSearchIndex.value;
+            return flattenedSearchIndex.value.filter(it => it.name.toLowerCase().includes(q));
+        });
+
+        // Sincronización automática de clases en el <body>
+        watchEffect(() => {
+            document.body.classList.remove('theme-light', 'theme-dark');
+            document.body.classList.add(effectiveThemeClass.value);
+            document.body.classList.toggle('unsavedBorder', isUnsavedBorder.value);
+            document.body.classList.toggle('modeActive', currentMode.value !== 'normal');
+        });
+
+        function normalize(str) {
+            if (!str) return "";
+            str = str.trim();
+            return /^https?:\/\//i.test(str) ? str : "https://" + str;
+        }
+        function stripProtocol(str) { return (str || "").replace(/^https?:\/\//i, ''); }
+        function globalPartString() { return `GLOBAL:${globalTheme.value},${globalLang.value},${globalSaved.value}`; }
+
+        function getDecodedHashString() {
+            const h = window.location.hash;
+            if (!h) return "";
+            try { return decodeURIComponent(h); } catch(e) { return h; }
+        }
+
+        function parseGlobal() {
+            const hash = getDecodedHashString().substring(1);
+            if (!hash) return;
+            const parts = hash.split("#").filter(Boolean);
+            if (parts.length && parts[0].startsWith("GLOBAL:")) {
+                const gl = parts[0].replace("GLOBAL:", "");
+                const [themeStr, langStr, savedStr] = gl.split(",");
+                const tnum = parseInt(themeStr, 10);
+                if (!isNaN(tnum) && tnum >= 0 && tnum <= 2) globalTheme.value = tnum;
+                if (langStr && i18n[langStr.toLowerCase()]) globalLang.value = langStr.toLowerCase();
+                globalSaved.value = (savedStr === "1") ? 1 : 0;
+            }
+        }
+
+        function parseHash() {
+            const hash = getDecodedHashString().substring(1);
+            if (!hash) return [];
+            const items = hash.split("#").filter(Boolean).filter(p => !p.startsWith("GLOBAL:"));
+            const result = [];
+            items.forEach(item => {
+                if (item.startsWith("FOLDER:")) {
+                    const parts = item.split("|");
+                    let header = parts[0].replace("FOLDER:", "");
+                    let folderIcon = "";
+                    const headerSplit = header.split("::");
+                    if (headerSplit.length > 1) {
+                        folderIcon = headerSplit.pop();
+                        header = headerSplit.join("::");
+                    }
+                    const folderName = header;
+                    const apps = parts.slice(1).filter(Boolean).map(slug => {
+                        const fields = slug.split(",");
+                        const name = fields.shift() || "";
+                        const url = fields.shift() || "";
+                        const icon = fields.join(",");
+                        return { type: "app", name, url: normalize(url), icon: normalize(icon) };
+                    });
+                    result.push({ type: "folder", name: folderName, icon: folderIcon ? normalize(folderIcon) : "", apps });
+                } else {
+                    const fields = item.split(",");
+                    const name = fields.shift() || "";
+                    const url = fields.shift() || "";
+                    const icon = fields.join(",");
+                    result.push({ type: "app", name, url: normalize(url), icon: normalize(icon) });
+                }
+            });
+            return result;
+        }
+
+        function serializeHash() {
+            const state = activeState.value;
+            const parts = [globalPartString()];
+            state.forEach(item => {
+                if (item.type === "folder") {
+                    const appsSlugs = (item.apps || []).map(a => `${a.name},${stripProtocol(a.url)},${stripProtocol(a.icon)}`).join("|");
+                    const iconPart = item.icon ? `::${stripProtocol(item.icon)}` : "";
+                    parts.push(`FOLDER:${item.name}${iconPart}${appsSlugs ? "|" + appsSlugs : ""}`);
+                } else {
+                    parts.push(`${item.name},${stripProtocol(item.url)},${stripProtocol(item.icon)}`);
+                }
+            });
+            window.location.hash = "#" + parts.join("#");
+        }
+
+        function resetInactivityTimer() {
+            if (currentMode.value === 'normal' || timerSuspended) return;
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => { exitCurrentMode(); }, 10000);
+        }
+
+        function commitMode() {
+            if (currentMode.value === 'normal') return;
+            clearTimeout(inactivityTimer);
+            timerSuspended = false;
+            globalSaved.value = 0;
+            serializeHash();
+            currentMode.value = 'normal';
+            workingState.value = null;
+        }
+
+        function exitCurrentMode() { commitMode(); }
+        function enterEditMode() {
+            if (currentMode.value === 'move') commitMode();
+            appsState.value = parseHash();
+            workingState.value = JSON.parse(JSON.stringify(appsState.value));
+            currentMode.value = 'edit';
+            closeSidePanel();
+            resetInactivityTimer();
+        }
+        function enterMoveMode() {
+            if (currentMode.value === 'edit') commitMode();
+            appsState.value = parseHash();
+            workingState.value = JSON.parse(JSON.stringify(appsState.value));
+            currentMode.value = 'move';
+            closeSidePanel();
+            resetInactivityTimer();
+        }
+
+        function handleBurgerClick() {
+            if (currentMode.value !== 'normal') exitCurrentMode();
+            else sidePanelOpen.value = true;
+        }
+
+        function closeSidePanel() {
+            if (!sidePanelOpen.value) return;
+            sidePanelClosing.value = true;
+            setTimeout(() => { sidePanelOpen.value = false; sidePanelClosing.value = false; }, 260);
+        }
+
+        function handleItemClick(item, path) {
+            if (currentMode.value === 'normal') {
+                if (item.type === 'folder') openFolderData.value = { folder: item, path };
+                else window.open(item.url, '_blank');
+            } else if (currentMode.value === 'edit') {
+                if (item.type === 'folder') openFolderData.value = { folder: item, path };
+                else openEditApp(path);
+                resetInactivityTimer();
+            }
+        }
+
+        function openFolderModal(item, path) { openFolderData.value = { folder: item, path }; }
+        function closeFolderModal() { openFolderData.value = null; dropToDesktop.value = false; }
+        function openEditFolderFromModal() {
+            if (!openFolderData.value) return;
+            const path = openFolderData.value.path;
+            closeFolderModal();
+            openEditFolder(path);
+        }
+
+        /* ---------- POINTER DRAG & DROP ---------- */
+        function handlePointerDown(e, path, isFolder) {
+            if (currentMode.value !== 'move') return;
+            e.preventDefault();
+            dragData.pointerId = e.pointerId;
+            dragData.startX = e.clientX;
+            dragData.startY = e.clientY;
+            dragData.dragging = false;
+            dragData.path = path;
+            dragData.isFolder = isFolder;
+            dragData.index = path.index;
+            dragData.isRoot = (path.array === activeState.value);
+            dragData.el = e.currentTarget;
+            try { e.currentTarget.setPointerCapture(e.pointerId); } catch(err){}
+            resetInactivityTimer();
+        }
+
+        function handlePointerMove(e) {
+            if (currentMode.value !== 'move' || dragData.pointerId !== e.pointerId) return;
+            const dx = e.clientX - dragData.startX;
+            const dy = e.clientY - dragData.startY;
+            if (!dragData.dragging && Math.hypot(dx, dy) > 8) {
+                dragData.dragging = true;
+                timerSuspended = true;
+                clearTimeout(inactivityTimer);
+            }
+            if (dragData.dragging && dragData.el) {
+                e.preventDefault();
+                dragData.el.style.transform = `translate(${dx}px,${dy}px) scale(1.06)`;
+                if (openFolderData.value) {
+                    const modalEl = dragData.el.closest('.folderModal');
+                    if (modalEl) {
+                        const content = modalEl.querySelector('.folderContent');
+                        if (content) {
+                            const rect = content.getBoundingClientRect();
+                            dropToDesktop.value = (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom);
+                        }
+                    }
+                }
+            }
+        }
+
+        function handlePointerUp(e) {
+            if (currentMode.value !== 'move' || dragData.pointerId !== e.pointerId) return;
+            if (dragData.dragging && dragData.el) {
+                performDrop(e.clientX, e.clientY);
+                dragData.el.style.transform = "";
+                dragData.dragging = false;
+                timerSuspended = false;
+                resetInactivityTimer();
+            } else if (!dragData.dragging && dragData.path) {
+                const item = dragData.path.array[dragData.path.index];
+                if (item && item.type === 'folder') openFolderModal(item, dragData.path);
+                resetInactivityTimer();
+            }
+            dragData.pointerId = null;
+            dragData.el = null;
+            dropToDesktop.value = false;
+        }
+
+        function performDrop(x, y) {
+            if (!dragData.path) return;
+            const path = dragData.path;
+            const isFolder = dragData.isFolder;
+
+            if (openFolderData.value && !isFolder && dropToDesktop.value) {
+                const folderApps = path.array;
+                const root = activeState.value;
+                const sourceIndex = path.index;
+                if (folderApps && root && sourceIndex >= 0 && sourceIndex < folderApps.length) {
+                    const [movedApp] = folderApps.splice(sourceIndex, 1);
+                    root.push(movedApp);
+                    globalSaved.value = 0;
+                    return;
+                }
+            }
+
+            if (!dragData.el) return;
+            dragData.el.style.pointerEvents = "none";
+            const raw = document.elementFromPoint(x, y);
+            dragData.el.style.pointerEvents = "";
+            const targetEl = raw ? raw.closest('.appIcon') : null;
+
+            if (!targetEl || targetEl === dragData.el || targetEl.classList.contains('addAppTile')) return;
+
+            const container = dragData.el.parentElement;
+            if (!container || !container.contains(targetEl)) return;
+
+            const siblings = [...container.children];
+            const targetIndex = siblings.indexOf(targetEl);
+            if (targetIndex === -1) return;
+
+            const arr = path.array;
+            const sourceIndex = path.index;
+            const targetIsFolder = targetEl.classList.contains('folderIcon');
+
+            if (!isFolder && targetIsFolder && targetIndex !== sourceIndex) {
+                const [movedApp] = arr.splice(sourceIndex, 1);
+                const folderRealIndex = targetIndex > sourceIndex ? targetIndex - 1 : targetIndex;
+                const folderObj = arr[folderRealIndex];
+                if (folderObj && folderObj.type === "folder") {
+                    folderObj.apps = folderObj.apps || [];
+                    folderObj.apps.push(movedApp);
+                    globalSaved.value = 0;
+                } else {
+                    arr.splice(sourceIndex, 0, movedApp);
+                }
+                return;
+            }
+
+            if (targetIndex === sourceIndex) return;
+
+            const [moved] = arr.splice(sourceIndex, 1);
+            const insertAt = Math.min(targetIndex, arr.length);
+            arr.splice(insertAt, 0, moved);
+            globalSaved.value = 0;
+        }
+
+        /* ---------- DETECCIÓN DE ICONOS ---------- */
+        function detectIconsFor(domain, candidatesRef, iconRef) {
+            candidatesRef.value = [];
+            const s2 = `https://www.google.com/s2/favicons?sz=128&domain=${encodeURIComponent(domain)}`;
+            candidatesRef.value.push({ url: s2, label: "S2" });
+            if (!iconRef.value) iconRef.value = stripProtocol(s2);
+
+            const guesses = [`https://${domain}/favicon.ico`, `https://${domain}/apple-touch-icon.png`];
+            guesses.forEach(u => {
+                const img = new Image();
+                img.onload = () => {
+                    if (img.naturalWidth > 0 && !candidatesRef.value.find(c => c.url === u)) {
+                        candidatesRef.value.push({ url: u, label: "favicon" });
+                    }
+                };
+                img.src = u;
+            });
+        }
+
+        function onAddAppUrlInput() {
+            const url = addAppForm.url.trim();
+            if (isValidAppURL(url)) {
+                const domain = getDomain(url);
+                if (!addAppForm.name) {
+                    const base = domain.split(".")[0];
+                    addAppForm.name = base.charAt(0).toUpperCase() + base.slice(1);
+                }
+                detectIconsFor(domain, addAppIconCandidates, ref(addAppForm.icon));
+            } else {
+                addAppIconCandidates.value = [];
+            }
+        }
+
+        function onEditAppUrlInput() {
+            const url = editAppForm.url.trim();
+            if (isValidAppURL(url)) {
+                const domain = getDomain(url);
+                detectIconsFor(domain, editAppIconCandidates, ref(editAppForm.icon));
+            } else {
+                editAppIconCandidates.value = [];
+            }
+        }
+
+        function isValidAppURL(val) {
+            let raw = (val || "").trim();
+            if (!raw) return false;
+            if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) raw = "https://" + raw;
+            try {
+                const u = new URL(raw);
+                return (u.protocol === "http:" || u.protocol === "https:") && /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(u.hostname);
+            } catch(e) { return false; }
+        }
+
+        function getDomain(val) {
+            let raw = (val || "").trim();
+            if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) raw = "https://" + raw;
+            return new URL(raw).hostname;
+        }
+
+        /* ---------- AÑADIR APP / FOLDER ---------- */
+        function openAddModal(targetFolder = null, initialType = 'app') {
+            addAppTargetFolder.value = targetFolder;
+            addAppForm.url = ''; addAppForm.name = ''; addAppForm.icon = '';
+            addAppIconCandidates.value = [];
+            addFolderForm.name = ''; addFolderForm.icon = '';
+            addFolderSelectedApps.value = [];
+            addType.value = targetFolder ? 'app' : initialType;
+            closeSidePanel();
+            addModalOpen.value = true;
+        }
+        function closeAddModal() { addModalOpen.value = false; addAppTargetFolder.value = null; }
+
+        function handleAddSave() {
+            if (addType.value === 'folder') saveFolder();
+            else saveApp();
+        }
+
+        function saveApp() {
+            if (!addAppForm.name || !addAppForm.url) { alert(t('invalidData')); return; }
+            if (!isValidAppURL(addAppForm.url)) { alert(t('invalidDomain')); return; }
+            const domain = getDomain(addAppForm.url);
+            let icon = addAppForm.icon.trim();
+            if (!icon) icon = stripProtocol(`https://www.google.com/s2/favicons?sz=128&domain=${domain}`);
+
+            const newApp = { type: "app", name: addAppForm.name, url: normalize(domain), icon: normalize(icon) };
+
+            if (addAppTargetFolder.value) {
+                addAppTargetFolder.value.apps = addAppTargetFolder.value.apps || [];
+                addAppTargetFolder.value.apps.push(newApp);
+            } else {
+                activeState.value.push(newApp);
+            }
+
+            globalSaved.value = 0;
+            if (currentMode.value === 'normal') serializeHash();
+            closeAddModal();
+        }
+
+        function saveFolder() {
+            if (!addFolderForm.name.trim()) { alert(t('invalidName')); return; }
+            const state = activeState.value;
+            const selectedSet = new Set(addFolderSelectedApps.value);
+            const selectedApps = [];
+            const remaining = [];
+
+            let appCounter = 0;
+            state.forEach((item) => {
+                if (item.type === 'app') {
+                    if (selectedSet.has(appCounter)) selectedApps.push(item);
+                    else remaining.push(item);
+                    appCounter++;
+                } else {
+                    remaining.push(item);
+                }
+            });
+
+            remaining.push({
+                type: "folder",
+                name: addFolderForm.name.trim(),
+                icon: addFolderForm.icon ? normalize(addFolderForm.icon) : "",
+                apps: selectedApps
+            });
+
+            if (currentMode.value === 'normal') {
+                appsState.value = remaining;
+                serializeHash();
+            } else {
+                workingState.value = remaining;
+                globalSaved.value = 0;
+            }
+            closeAddModal();
+        }
+
+        /* ---------- EDITAR APP ---------- */
+        function openEditApp(path) {
+            editingPath.value = path;
+            const app = path.array[path.index];
+            editAppForm.url = stripProtocol(app.url);
+            editAppForm.name = app.name;
+            editAppForm.icon = stripProtocol(app.icon);
+            editAppIconCandidates.value = [];
+            if (app.icon) editAppIconCandidates.value.push({ url: normalize(app.icon), label: "actual" });
+            if (isValidAppURL(app.url)) detectIconsFor(getDomain(app.url), editAppIconCandidates, ref(editAppForm.icon));
+            editAppModalOpen.value = true;
+            resetInactivityTimer();
+        }
+
+        function closeEditAppModal() { editAppModalOpen.value = false; editingPath.value = null; }
+
+        function saveEditedApp() {
+            if (!editingPath.value) return;
+            const app = editingPath.value.array[editingPath.value.index];
+            if (!editAppForm.name || !editAppForm.url) { alert(t('invalidData')); return; }
+            if (!isValidAppURL(editAppForm.url)) { alert(t('invalidDomain')); return; }
+            const domain = getDomain(editAppForm.url);
+            let icon = editAppForm.icon.trim();
+            if (!icon) icon = stripProtocol(`https://www.google.com/s2/favicons?sz=128&domain=${domain}`);
+
+            app.name = editAppForm.name;
+            app.url = normalize(domain);
+            app.icon = normalize(icon);
+            globalSaved.value = 0;
+            closeEditAppModal();
+        }
+
+        function deleteApp() {
+            if (!editingPath.value) return;
+            editingPath.value.array.splice(editingPath.value.index, 1);
+            globalSaved.value = 0;
+            closeEditAppModal();
+        }
+
+        function moveFromEditApp() {
+            closeEditAppModal();
+            enterMoveMode();
+        }
+
+        /* ---------- EDITAR FOLDER ---------- */
+        function openEditFolder(path) {
+            editingFolderPath.value = path;
+            const folder = path.array[path.index];
+            editFolderForm.name = folder.name;
+            editFolderForm.icon = stripProtocol(folder.icon || "");
+            editFolderSelectedApps.value = (folder.apps || []).map((_, idx) => idx);
+            editFolderModalOpen.value = true;
+            resetInactivityTimer();
+        }
+
+        function closeEditFolderModal() { editFolderModalOpen.value = false; editingFolderPath.value = null; }
+
+        function saveEditedFolder() {
+            if (!editingFolderPath.value) return;
+            const folder = editingFolderPath.value.array[editingFolderPath.value.index];
+            if (!editFolderForm.name.trim()) { alert(t('invalidName')); return; }
+
+            folder.name = editFolderForm.name.trim();
+            folder.icon = editFolderForm.icon ? normalize(editFolderForm.icon) : "";
+            const currentApps = folder.apps || [];
+            folder.apps = editFolderSelectedApps.value.map(idx => currentApps[idx]).filter(Boolean);
+
+            globalSaved.value = 0;
+            closeEditFolderModal();
+        }
+
+        function deleteFolder() {
+            if (!editingFolderPath.value) return;
+            editingFolderPath.value.array.splice(editingFolderPath.value.index, 1);
+            globalSaved.value = 0;
+            closeEditFolderModal();
+        }
+
+        function moveFromEditFolder() {
+            closeEditFolderModal();
+            enterMoveMode();
+        }
+
+        /* ---------- EXPORTAR / IMPORTAR / SALVAR ---------- */
+        function openSlugModal() { closeSidePanel(); slugModalOpen.value = true; }
+
+        async function shareLauncher() {
+            const url = window.location.href;
+            try {
+                if (navigator.share) await navigator.share({ title: "SlugLauncher", text: t("shareText"), url });
+                else if (navigator.clipboard) { await navigator.clipboard.writeText(url); alert(t("urlCopied")); }
+            } catch(err) {}
+            slugModalOpen.value = false;
+        }
+
+        function exportConfig() {
+            globalSaved.value = 1;
+            serializeHash();
+            urlIOMode.value = 'export';
+            urlIOValue.value = window.location.href;
+            closeSidePanel();
+            urlIOModalOpen.value = true;
+        }
+
+        function importConfig() {
+            urlIOMode.value = 'import';
+            urlIOValue.value = '';
+            closeSidePanel();
+            urlIOModalOpen.value = true;
+        }
+
+        async function pasteUrlIO() {
+            try {
+                if (navigator.clipboard) urlIOValue.value = await navigator.clipboard.readText();
+            } catch(e){}
+        }
+
+        async function confirmUrlIOModal() {
+            if (urlIOMode.value === 'export') {
+                try {
+                    await navigator.clipboard.writeText(urlIOValue.value);
+                    alert(t("urlCopied"));
+                } catch(e){}
+                urlIOModalOpen.value = false;
+            } else {
+                if (!urlIOValue.value.trim()) return;
+                try {
+                    const u = new URL(urlIOValue.value.trim());
+                    window.location.hash = u.hash;
+                    parseGlobal();
+                    appsState.value = parseHash();
+                    urlIOModalOpen.value = false;
+                } catch(e) { alert(t("invalidImportUrl")); }
+            }
+        }
+
+        function setTheme(tval) {
+            globalTheme.value = tval;
+            globalSaved.value = 0;
+            serializeHash();
+        }
+
+        function setLanguage(lang) {
+            globalLang.value = lang.toLowerCase();
+            globalSaved.value = 0;
+            serializeHash();
+        }
+
+        function saveSlugLauncher() {
+            closeSidePanel();
+            globalSaved.value = 1;
+            serializeHash();
+
+            const url = window.location.href;
+            const platform = detectPlatform();
+            let filename = "SlugLauncher";
+
+            try {
+                if (platform === "windows") {
+                    filename += ".url";
+                    downloadTextFile(filename, `[InternetShortcut]\r\nURL=${url}\r\n`, "application/x-mswinurl");
+                } else if (platform === "mac") {
+                    filename += ".webloc";
+                    const xml = `<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict><key>URL</key><string>${url.replace(/&/g,"&amp;")}</string></dict></plist>`;
+                    downloadTextFile(filename, xml, "application/xml");
+                } else if (platform === "linux") {
+                    filename += ".desktop";
+                    downloadTextFile(filename, `[Desktop Entry]\nType=Link\nName=SlugLauncher\nURL=${url}\nIcon=text-html\n`, "application/x-desktop");
+                }
+            } catch(e) {}
+
+            saveLauncherInstructions.value = {
+                title: "SlugLauncher guardado",
+                intro: filename ? `Se descargó ${filename}.` : "Tu SlugLauncher está actualizado.",
+                steps: [
+                    ["Siguiente paso", "Abre el archivo descargado para acceder a tu SlugLauncher."],
+                    ["Acceso rápido", "Añade este sitio a tu pantalla de inicio o escritorio según lo permita tu navegador."]
+                ],
+                update: "Si haces cambios en tus apps o configuración, vuelve a guardar el SlugLauncher para utilizar la URL actualizada."
+            };
+            saveLauncherUrl.value = url;
+            saveLauncherModalOpen.value = true;
+        }
+
+        function detectPlatform() {
+            const ua = navigator.userAgent || "";
+            if (/CrOS/i.test(ua)) return "chromebook";
+            if (/iPad|iPhone|iPod/i.test(ua)) return "ios";
+            if (/android/i.test(ua)) return "android";
+            if (/Win/i.test(ua)) return "windows";
+            if (/Mac/i.test(ua)) return "mac";
+            if (/Linux/i.test(ua)) return "linux";
+            return "unknown";
+        }
+
+        function downloadTextFile(filename, content, mime) {
+            const blob = new Blob([content], { type: mime });
+            const a = document.createElement("a");
+            const objUrl = URL.createObjectURL(blob);
+            a.href = objUrl; a.download = filename;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(objUrl), 2000);
+        }
+
+        async function copySaveUrl() {
+            try {
+                await navigator.clipboard.writeText(saveLauncherUrl.value);
+                copyBtnText.value = "URL copiada";
+                setTimeout(() => copyBtnText.value = "Copiar URL", 1600);
+            } catch(e){}
+        }
+
+        /* ---------- BUSCADOR RÁPIDO ---------- */
+        function openSearchModal() {
+            closeSidePanel();
+            searchQuery.value = '';
+            searchModalOpen.value = true;
+            nextTick(() => {
+                const input = document.getElementById('searchInput');
+                if (input) input.focus();
+            });
+        }
+
+        function openSearchItem(item) {
+            window.open(item.url, '_blank');
+            searchModalOpen.value = false;
+        }
+
+        function openSvgApiSearch(q) {
+            const url = q ? `https://svgapi.com/?q=${encodeURIComponent(q)}` : "https://svgapi.com/";
+            window.open(url, "_blank", "noopener");
+        }
+
+        /* ---------- INICIALIZACIÓN ---------- */
+        onMounted(() => {
+            if (!window.location.hash || window.location.hash === "#") {
+                const browserLang = (navigator.language || "en").toLowerCase().split("-")[0];
+                const lang = supportedLangs.includes(browserLang) ? browserLang : "en";
+                history.replaceState(null, "", window.location.pathname + "#GLOBAL:2," + lang + ",0");
+            }
+            parseGlobal();
+            appsState.value = parseHash();
+
+            window.addEventListener("hashchange", () => {
+                if (currentMode.value !== 'normal') { currentMode.value = 'normal'; workingState.value = null; }
+                parseGlobal();
+                appsState.value = parseHash();
+            });
+
+            window.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") {
+                    saveLauncherModalOpen.value = false;
+                    slugModalOpen.value = false;
+                    urlIOModalOpen.value = false;
+                    searchModalOpen.value = false;
+                    closeAddModal();
+                    closeEditAppModal();
+                    closeEditFolderModal();
+                }
+            });
+
+            ["click", "touchstart", "input"].forEach(evt => {
+                document.addEventListener(evt, () => { if (currentMode.value !== 'normal') resetInactivityTimer(); }, { passive: true });
+            });
+        });
+
+        return {
+            appsState, workingState, currentMode, globalTheme, globalLang, globalSaved,
+            activeState, effectiveThemeClass, isUnsavedBorder, langSwitchHintText,
+            supportedLangs, sidePanelOpen, sidePanelClosing, addModalOpen, addType,
+            addAppForm, addAppIconCandidates, addFolderForm, addFolderSelectedApps,
+            rootAppsList, editAppModalOpen, editAppForm, editAppIconCandidates,
+            editFolderModalOpen, editFolderForm, editFolderSelectedApps, editFolderAppsList,
+            openFolderData, searchModalOpen, searchQuery, filteredSearchResults,
+            slugModalOpen, urlIOModalOpen, urlIOMode, urlIOValue, saveLauncherModalOpen,
+            saveLauncherInstructions, copyBtnText, dragData, dropToDesktop, FALLBACK_ICON,
+            t, stripProtocol, normalize, handleBurgerClick, closeSidePanel, enterEditMode,
+            enterMoveMode, openAddModal, closeAddModal, closeEditAppModal, closeEditFolderModal, handleAddSave, onAddAppUrlInput,
+            onEditAppUrlInput, saveEditedApp, deleteApp, moveFromEditApp, saveEditedFolder,
+            deleteFolder, moveFromEditFolder, openFolderModal, closeFolderModal,
+            openEditFolderFromModal, handleItemClick, handlePointerDown, handlePointerMove,
+            handlePointerUp, exportConfig, importConfig, pasteUrlIO, confirmUrlIOModal,
+            setTheme, setLanguage, saveSlugLauncher, openSlugModal, shareLauncher,
+            copySaveUrl, openSearchModal, openSearchItem, openSvgApiSearch
+        };
+    }
+}).mount('#app');
+</script>
+</body>
+</html>
