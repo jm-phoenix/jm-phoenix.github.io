@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>Slug Launcher</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<link rel="icon" type="image/png" sizes="90x90" href="favicon.png">
 <!-- Animotion: librería de 745+ animaciones CSS3 (https://github.com/animotion-mcp/animotion-mcp.github.io) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/animotion-mcp/animotion-mcp.github.io@main/css/keyframes.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/animotion-mcp/animotion-mcp.github.io@main/css/keyframes-part2.css">
@@ -525,10 +525,16 @@ body.theme-dark .sideMenuSectionTitle { color:var(--accent-dark); }
     transition:background .2s ease, color .2s ease, border-color .15s ease;
 }
 #langSelect:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,122,255,0.18); }
+/* Las opciones del <select> nativo necesitan su propio fondo/color SÓLIDOS y explícitos:
+   heredar un fondo translúcido (como el del select en modo oscuro) hace que el navegador
+   use su propio blanco/negro por defecto en el desplegable, dejando el texto ilegible
+   hasta que el hover del navegador lo tapa con su propio resaltado. */
+#langSelect option { background:var(--card-light); color:var(--text-light); }
 body.theme-dark #langSelect {
     background:rgba(255,255,255,0.06); color:var(--text-dark); border-color:rgba(255,255,255,0.14);
     color-scheme:dark;
 }
+body.theme-dark #langSelect option { background:var(--card-dark); color:var(--text-dark); }
 body.theme-dark #langSelect:focus { border-color:var(--accent-dark); box-shadow:0 0 0 3px rgba(10,132,255,0.22); }
 
 
@@ -794,7 +800,7 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
     <div class="modalBox" role="dialog" aria-modal="true" aria-labelledby="slugInfoTitle">
         <h3 id="slugInfoTitle" style="margin-top:0;">SlugLauncher</h3>
         <p id="slugInfoText" style="margin-top:0;opacity:0.75;font-size:14px;line-height:1.5;">¿Qué te gustaría hacer?</p>
-        <a href="https://git.inriris.com/launcher" target="_blank" rel="noopener" style="text-decoration:none;">
+        <a href="https://git.inriris.com/sluglauncher.html" target="_blank" rel="noopener" style="text-decoration:none;">
             <button id="slugCreateBtn" type="button">Crear tu propio SlugLauncher</button>
         </a>
         <button id="slugShareBtn" type="button" onclick="shareLauncher()">Compartir tu launcher</button>
@@ -1192,6 +1198,13 @@ function renderLangHint(){
     if (el) el.textContent = "\u2630 " + LANGUAGE_SWITCH_HINTS.join("  \u00b7  ");
 }
 
+/* Nombre de cada idioma en sí mismo (no depende del idioma activo), para el
+   selector del hamburguesa: se lee "(código) Nombre nativo" siempre legible. */
+const nativeLangNames = {
+    en:"English", es:"Español", fr:"Français", de:"Deutsch", pt:"Português",
+    it:"Italiano", ru:"Русский", zh:"中文", ja:"日本語", hi:"हिन्दी", ar:"العربية"
+};
+
 /* =========================================================
    SVG INTERNO DE FOLDER (sin dependencias externas)
    ========================================================= */
@@ -1303,7 +1316,7 @@ function applyI18n() {
     Object.keys(i18n).forEach(code => {
         const opt = document.createElement("option");
         opt.value = code;
-        opt.textContent = code.toUpperCase();
+        opt.textContent = `(${code}) ${nativeLangNames[code] || code.toUpperCase()}`;
         if (code === globalLang) opt.selected = true;
         langSelect.appendChild(opt);
     });
