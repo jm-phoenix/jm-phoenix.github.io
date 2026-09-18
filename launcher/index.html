@@ -707,6 +707,8 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
         <a class="sideMenuLink" id="editIconsLink" onclick="enterEditMode()">Editar iconos</a>
         <a class="sideMenuLink" id="moveIconsLink" onclick="enterMoveMode()">Mover iconos</a>
         <a class="sideMenuLink" id="saveLauncherLink" onclick="saveSlugLauncher()">Salvar tu SlugLauncher</a>
+        <a class="sideMenuLink" id="slugCreateLink" href="https://git.inriris.com/launcher" target="_blank" rel="noopener" onclick="closeSidePanel()">Crear tu propio SlugLauncher</a>
+        <a class="sideMenuLink" id="slugShareLink" onclick="shareLauncher()">Compartir tu launcher</a>
 
         <div class="sideMenuSectionTitle" id="addSectionLabel">Añadir</div>
         <a class="sideMenuLink" id="addAppLink" onclick="openAddModal(null,'app')">Añadir App</a>
@@ -1246,6 +1248,8 @@ function applyI18n() {
     document.getElementById("editIconsLink").textContent = t("editIcons");
     document.getElementById("moveIconsLink").textContent = t("moveIcons");
     document.getElementById("saveLauncherLink").textContent = t("saveLauncher");
+    document.getElementById("slugCreateLink").textContent = t("slugCreate");
+    document.getElementById("slugShareLink").textContent = t("slugShare");
 
     document.getElementById("addSectionLabel").textContent = t("addSection");
     document.getElementById("addAppLink").textContent = t("addApp");
@@ -2048,6 +2052,7 @@ function closeSlugModal(){
     document.getElementById("slugInfoModal").style.display="none";
 }
 async function shareLauncher(){
+    closeSidePanel();
     const url = window.location.href; // incluye query params y hash (#...)
     const shareData = { title: "SlugLauncher", text: t("shareText"), url: url };
     try {
