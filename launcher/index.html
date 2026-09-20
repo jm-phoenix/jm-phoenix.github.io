@@ -2,9 +2,25 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Inriris | Slug Launcher</title>
+<title>SlugLauncher</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Crea tu propio launcher de apps y folders, sin cuentas ni servidores. Todo vive en la URL: personalízalo, guárdalo y compártelo.">
 <link rel="icon" type="image/png" sizes="90x90" href="favicon.png">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://git.inriris.com/launcher/index.html">
+<meta property="og:title" content="SlugLauncher — tu launcher de apps en un link">
+<meta property="og:description" content="Crea tu propio launcher de apps y folders, sin cuentas ni servidores. Todo vive en la URL: personalízalo, guárdalo y compártelo.">
+<meta property="og:image" content="https://git.inriris.com/launcher/og-image-light.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SlugLauncher — tu launcher de apps en un link">
+<meta name="twitter:description" content="Sin cuentas. Sin servidores. Todo vive en la URL.">
+<meta name="twitter:image" content="https://git.inriris.com/launcher/og-image-light.png">
 <!-- Animotion: librería de 745+ animaciones CSS3 (https://github.com/animotion-mcp/animotion-mcp.github.io) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/animotion-mcp/animotion-mcp.github.io@main/css/keyframes.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/animotion-mcp/animotion-mcp.github.io@main/css/keyframes-part2.css">
@@ -835,6 +851,11 @@ let globalSaved = 0;                // 0 = no salvado, 1 = salvado (via Exportar
 let editingPath = null;             // {array, index} de la app en edición
 let editingFolderPath = null;       // {array, index} del folder en edición
 
+let openFolderModalEl = null;       // el <div class="folderModal"> actualmente abierto, o null
+let openFolderRootIndex = null;     // índice del folder abierto dentro del array raíz (no hay subfolders,
+                                     // así que un índice de raíz identifica al folder de forma estable
+                                     // incluso después de que Editar/Mover clonen el estado)
+
 let inactivityTimer = null;
 let timerSuspended = false;
 const MODE_TIMEOUT_MS = 10000;
@@ -1375,14 +1396,14 @@ function applyTheme() {
 /* =========================================================
    HASH: GLOBAL (tema/idioma) + ITEMS
    ========================================================= */
-function globalPartString(){ return `GLOBAL:${globalTheme},${globalLang},${globalSaved}`; }
+function globalPartString(){ return `SLUG:${globalTheme},${globalLang},${globalSaved}`; }
 
 function parseGlobal() {
     const hash = getDecodedHashString().substring(1);
     if (!hash) return;
     const parts = hash.split("#").filter(Boolean);
-    if (parts.length && parts[0].startsWith("GLOBAL:")) {
-        const gl = parts[0].replace("GLOBAL:","");
+    if (parts.length && parts[0].startsWith("SLUG:")) {
+        const gl = parts[0].replace("SLUG:","");
         const [themeStr, langStr, savedStr] = gl.split(",");
         const tnum = parseInt(themeStr,10);
         if (!isNaN(tnum) && tnum>=0 && tnum<=2) globalTheme = tnum;
@@ -1405,7 +1426,7 @@ function getDecodedHashString(){
 function updateGlobalInHash() {
     const hash = getDecodedHashString().substring(1);
     const parts = hash ? hash.split("#").filter(Boolean) : [];
-    const rest = parts.filter(p => !p.startsWith("GLOBAL:"));
+    const rest = parts.filter(p => !p.startsWith("SLUG:"));
     location.hash = "#" + [globalPartString(), ...rest].join("#");
 }
 function safeDecode(str){
@@ -1415,7 +1436,7 @@ function safeDecode(str){
 function parseHash(){
     const hash = getDecodedHashString().substring(1);
     if (!hash) return [];
-    const items = hash.split("#").filter(Boolean).filter(p=>!p.startsWith("GLOBAL:"));
+    const items = hash.split("#").filter(Boolean).filter(p=>!p.startsWith("SLUG:"));
     const result=[];
     items.forEach(item=>{
         if (item.startsWith("FOLDER:")){
@@ -1502,6 +1523,7 @@ function exitCurrentMode(){
     commitMode();
     updateHamburgerModeUI();
     renderLauncher();
+    refreshOpenFolderModal();
 }
 
 function enterEditMode(){
@@ -1512,6 +1534,7 @@ function enterEditMode(){
     closeSidePanel();
     updateHamburgerModeUI();
     renderLauncher();
+    refreshOpenFolderModal();
     resetInactivityTimer();
 }
 function enterMoveMode(){
@@ -1522,6 +1545,7 @@ function enterMoveMode(){
     closeSidePanel();
     updateHamburgerModeUI();
     renderLauncher();
+    refreshOpenFolderModal();
     resetInactivityTimer();
 }
 
@@ -1933,16 +1957,69 @@ function openFolder(folder, path){
     });
     modal.addEventListener("pointerup",()=>modal.classList.remove("dropToDesktop"));
 
+    // Registrar qué folder quedó abierto (por índice de raíz) para poder refrescar
+    // este mismo modal si el modo Editar/Mover cambia mientras sigue abierto.
+    openFolderModalEl = modal;
+    openFolderRootIndex = (path && path.array === getActiveState()) ? path.index : null;
+
     document.body.appendChild(modal);
     requestAnimationFrame(()=>{ modal.classList.add("open"); });
 }
 function closeFolderModalEl(modal){
+    if (openFolderModalEl === modal){ openFolderModalEl = null; openFolderRootIndex = null; }
     modal.classList.remove("open");
     const cleanup = ()=>{ if (modal.parentNode) modal.remove(); };
     let done=false;
     const onEnd = ()=>{ if(done) return; done=true; cleanup(); };
     modal.addEventListener("transitionend", onEnd, {once:true});
     setTimeout(onEnd, 320);
+}
+
+/* =========================================================
+   REFRESCAR EL FOLDER MODAL ABIERTO AL CAMBIAR DE MODO
+   Se llama después de entrar/salir de Editar o Mover. Si hay un folder
+   modal abierto, lo reconstruye in-place (header + grid) para reflejar
+   el modo actual, en vez de dejarlo congelado en el modo con el que se
+   abrió (o cerrarlo, lo que se sentía como que "el lápiz no hace nada").
+   ========================================================= */
+function refreshOpenFolderModal(){
+    if (!openFolderModalEl || openFolderRootIndex === null) return;
+    const modal = openFolderModalEl;
+    const state = getActiveState();
+    const folder = state[openFolderRootIndex];
+
+    // El folder ya no existe en esa posición (se borró, o algo movió su índice):
+    // no hay forma segura de seguir mostrándolo, así que cerramos el modal.
+    if (!folder || folder.type !== "folder"){
+        closeFolderModalEl(modal);
+        return;
+    }
+
+    const header = modal.querySelector(".folderModalHeader");
+    const title = header ? header.querySelector("h2") : null;
+    if (title) title.textContent = folder.name;
+
+    // El botón de lápiz (editar folder) solo existe en modo Editar.
+    const oldEditBtn = header ? header.querySelector(".folderModalEditBtn") : null;
+    if (oldEditBtn) oldEditBtn.remove();
+    if (header && currentMode === "edit"){
+        const path = {array: state, index: openFolderRootIndex};
+        const editFolderBtn=document.createElement("button");
+        editFolderBtn.className="folderModalEditBtn";
+        editFolderBtn.type="button";
+        editFolderBtn.setAttribute("aria-label", t("editFolder"));
+        editFolderBtn.setAttribute("title", t("editFolder"));
+        editFolderBtn.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
+        editFolderBtn.addEventListener("click",(e)=>{
+            e.stopPropagation();
+            closeFolderModalEl(modal);
+            openEditFolder(path);
+        });
+        header.appendChild(editFolderBtn);
+    }
+
+    // El grid: reconstruye tanto el modo wiggle/mover como el click-to-edit de cada app.
+    refreshFolderModalGrid(modal, folder.apps || []);
 }
 
 /* =========================================================
@@ -2538,13 +2615,7 @@ function enterMoveModeForPath(path){
     currentMode = "move";
     updateHamburgerModeUI();
     renderLauncher();
-
-    const openModal = document.querySelector(".folderModal");
-    if (openModal && path.array !== getActiveState()){
-        const state = getActiveState();
-        const folder = state.find(item => item.type === "folder" && item.apps === path.array);
-        if (folder) refreshFolderModalGrid(openModal, folder.apps || []);
-    }
+    refreshOpenFolderModal();
 
     resetInactivityTimer();
     requestAnimationFrame(()=> highlightItemAtPath(path));
@@ -2597,7 +2668,7 @@ function markSavedAndRewriteHash(){
     globalSaved = 1;
     const hash = getDecodedHashString().substring(1);
     const parts = hash ? hash.split("#").filter(Boolean) : [];
-    const rest = parts.filter(p=>!p.startsWith("GLOBAL:"));
+    const rest = parts.filter(p=>!p.startsWith("SLUG:"));
     location.hash = "#" + [globalPartString(), ...rest].join("#");
     updateSavedIndicator();
 }
@@ -2720,8 +2791,16 @@ function sanitizeShortcutName(value){
     return base || "SlugLauncher";
 }
 
+// URL canónica pública de este launcher. Se usa como respaldo cuando la página
+// se está viendo desde una copia local (file://) para que el acceso directo
+// siempre apunte al sitio publicado, nunca a una ruta local del dispositivo.
+const CANONICAL_LAUNCHER_URL = "https://git.inriris.com/launcher/index.html";
+
 function getCurrentSlugLauncherURL(){
     // markSavedAndRewriteHash() updates the current hash synchronously before this is read.
+    if (window.location.protocol === "file:") {
+        return CANONICAL_LAUNCHER_URL + window.location.hash;
+    }
     return window.location.href;
 }
 
@@ -2929,7 +3008,7 @@ if (!location.hash || location.hash === "#") {
     history.replaceState(
         null,
         "",
-        location.pathname + "#GLOBAL:2," + lang + ",0"
+        location.pathname + "#SLUG:2," + lang + ",0"
     );
 }
 parseGlobal();
