@@ -1433,6 +1433,16 @@ function safeDecode(str){
     if (!str) return str;
     try { return decodeURIComponent(str); } catch(e){ return str; }
 }
+// Doble encode: getDecodedHashString() ya hace un decodeURIComponent sobre TODO
+// el hash antes de separar campos (para tolerar apps que re-codifican al compartir).
+// Si un nombre/URL/ícono trae literalmente #, ",", "|" o ":" (URLs con fragmento,
+// query strings con comas, etc.), un solo encode se deshace en ese paso global y
+// rompe el parseo de campos. Codificando dos veces, ese primer decode global solo
+// "pela" una capa (%2523 -> %23) y dejarlo como texto plano %23/%2C/%7C — que
+// luego safeDecode() sí resuelve correctamente a nivel de cada campo individual.
+function safeEncode(str){
+    return encodeURIComponent(encodeURIComponent(str||""));
+}
 function parseHash(){
     const hash = getDecodedHashString().substring(1);
     if (!hash) return [];
@@ -1473,16 +1483,16 @@ function serializeHash(state){
     state.forEach(item=>{
         if (item.type==="folder"){
             const appsSlugs = (item.apps || []).map(a=>{
-                const url = stripProtocol(a.url);
-                const icon = stripProtocol(a.icon);
-                return `${a.name},${url},${icon}`;
+                const url = safeEncode(stripProtocol(a.url));
+                const icon = safeEncode(stripProtocol(a.icon));
+                return `${safeEncode(a.name)},${url},${icon}`;
             }).join("|");
-            const iconPart = item.icon ? `::${stripProtocol(item.icon)}` : "";
-            parts.push(`FOLDER:${item.name}${iconPart}${appsSlugs ? "|" + appsSlugs : ""}`);
+            const iconPart = item.icon ? `::${safeEncode(stripProtocol(item.icon))}` : "";
+            parts.push(`FOLDER:${safeEncode(item.name)}${iconPart}${appsSlugs ? "|" + appsSlugs : ""}`);
         }else{
-            const url = stripProtocol(item.url);
-            const icon = stripProtocol(item.icon);
-            parts.push(`${item.name},${url},${icon}`);
+            const url = safeEncode(stripProtocol(item.url));
+            const icon = safeEncode(stripProtocol(item.icon));
+            parts.push(`${safeEncode(item.name)},${url},${icon}`);
         }
     });
     location.hash = "#" + parts.join("#");
