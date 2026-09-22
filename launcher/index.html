@@ -1423,10 +1423,26 @@ function getDecodedHashString(){
         return hashOriginal;
     }
 }
+// Devuelve los segmentos de apps/folders del hash TAL CUAL están (sin
+// decodificar), excluyendo el segmento SLUG:. updateGlobalInHash() y
+// markSavedAndRewriteHash() solo necesitan reescribir el segmento SLUG:
+// (tema/idioma/guardado) — si para eso decodificaran TODO el hash (como
+// hace getDecodedHashString(), pensado solo para lectura/parseHash) y
+// reescribieran "rest" ya decodificado, cada cambio de tema o idioma le
+// quitaría una capa a la doble codificación de safeEncode() en los datos
+// de las apps, corrompiendo con # o , tras un par de cambios. Por eso
+// aquí NO se toca el texto de "rest": se decodifica solo lo mínimo para
+// reconocer cuál segmento es el SLUG:, y el resto viaja intacto byte a byte.
+function getRawRestParts(){
+    const raw = window.location.hash.startsWith("#") ? window.location.hash.substring(1) : window.location.hash;
+    if (!raw) return [];
+    return raw.split("#").filter(Boolean).filter(p => {
+        const decoded = safeDecode(p);
+        return !p.startsWith("SLUG:") && !decoded.startsWith("SLUG:");
+    });
+}
 function updateGlobalInHash() {
-    const hash = getDecodedHashString().substring(1);
-    const parts = hash ? hash.split("#").filter(Boolean) : [];
-    const rest = parts.filter(p => !p.startsWith("SLUG:"));
+    const rest = getRawRestParts();
     location.hash = "#" + [globalPartString(), ...rest].join("#");
 }
 function safeDecode(str){
@@ -1647,7 +1663,7 @@ function renderApp(app, parent, path){
     div.className="appIcon";
     div.dataset.itemType="app";
     const iconSrc = app.icon || FALLBACK_ICON;
-    div.innerHTML = `<img draggable="false" src="${iconSrc}" onerror="this.onerror=null;this.src='${FALLBACK_ICON}'"><span>${escapeHtml(app.name)}</span>`;
+    div.innerHTML = `<img draggable="false" src="${escapeHtml(iconSrc)}" onerror="this.onerror=null;this.src='${FALLBACK_ICON}'"><span>${escapeHtml(app.name)}</span>`;
     const img = div.querySelector("img");
     if (img) img.addEventListener("dragstart", e=>e.preventDefault());
     attachItemInteraction(div, app, path, false);
@@ -1658,7 +1674,7 @@ function renderFolderIcon(folder,parent,path){
     div.className="appIcon folderIcon";
     div.dataset.itemType="folder";
     const count = folder.apps ? folder.apps.length : 0;
-    const overlay = folder.icon ? `<img class="folderOverlayIcon" draggable="false" src="${folder.icon}" onerror="this.style.display='none';">` : "";
+    const overlay = folder.icon ? `<img class="folderOverlayIcon" draggable="false" src="${escapeHtml(folder.icon)}" onerror="this.style.display='none';">` : "";
     div.innerHTML = `<div class="folderIconWrap">${FOLDER_SVG}${overlay}</div><span>${escapeHtml(folder.name)}</span><span class="folderBadge">${count}</span>`;
     attachItemInteraction(div, folder, path, true);
     parent.appendChild(div);
@@ -2276,7 +2292,7 @@ function renderSearchResults(query){
         const row = document.createElement("div");
         row.className = "searchResultItem";
         const iconSrc = item.icon || FALLBACK_ICON;
-        row.innerHTML = `<img src="${iconSrc}" onerror="this.onerror=null;this.src='${FALLBACK_ICON}'">` +
+        row.innerHTML = `<img src="${escapeHtml(iconSrc)}" onerror="this.onerror=null;this.src='${FALLBACK_ICON}'">` +
             `<span class="searchResultName">${escapeHtml(item.name)}</span>` +
             (item.folder ? `<span class="searchResultFolder">${escapeHtml(item.folder)}</span>` : "");
         row.addEventListener("click", ()=>{
@@ -2676,9 +2692,7 @@ function deleteFolder(){
    ========================================================= */
 function markSavedAndRewriteHash(){
     globalSaved = 1;
-    const hash = getDecodedHashString().substring(1);
-    const parts = hash ? hash.split("#").filter(Boolean) : [];
-    const rest = parts.filter(p=>!p.startsWith("SLUG:"));
+    const rest = getRawRestParts();
     location.hash = "#" + [globalPartString(), ...rest].join("#");
     updateSavedIndicator();
 }
@@ -3027,7 +3041,15 @@ applyI18n();
 renderLauncher();
 
 window.addEventListener("hashchange", ()=>{
-    if (currentMode !== "normal"){ currentMode="normal"; workingState=null; clearTimeout(inactivityTimer); }
+    // Antes: si currentMode no era "normal" (modo Editar/Mover con cambios aún
+    // no confirmados en workingState), este handler descartaba workingState
+    // sin guardarlo. Como setTheme()/setLanguage() escriben en location.hash
+    // sin importar el modo actual, algo tan cotidiano como cambiar el tema
+    // mientras se edita/renombra un ícono disparaba este evento y perdía en
+    // silencio la edición en curso. commitMode() persiste workingState (y de
+    // paso conserva el tema/idioma recién cambiados, ya presentes en
+    // globalTheme/globalLang) antes de volver a modo normal.
+    if (currentMode !== "normal"){ clearTimeout(inactivityTimer); commitMode(); }
     parseGlobal();
     applyTheme();
     applyI18n();
