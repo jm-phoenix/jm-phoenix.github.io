@@ -11,7 +11,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://git.inriris.com/launcher/index.html">
 <meta property="og:title" content="SlugLauncher — tu launcher de apps en un link">
-<meta property="og:description" content="Crea tu propio launcher de apps y folders, sin cuentas ni servidores. Todo vive en la URL: personalízalo, guárdalo y compártelo.">
+<meta property="og:description" content="Tu app launcher privado que no necesita cuenta ni base de datos. Añade tus apps favoritas, organízalas en folders, y compártelo con un link.">
 <meta property="og:image" content="https://git.inriris.com/launcher/og-image-light.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -859,6 +859,14 @@ let openFolderRootIndex = null;     // índice del folder abierto dentro del arr
 let inactivityTimer = null;
 let timerSuspended = false;
 const MODE_TIMEOUT_MS = 10000;
+// Límites de íconos (ver plan de límites acordado): DESKTOP_MAX es el máximo
+// de items (apps+folders) en el escritorio raíz; FOLDER_MAX es el máximo de
+// apps dentro de un folder. DESKTOP_OVERFLOW es el estado transitorio (el
+// folder-recolector recién creado sin apps preseleccionadas) permitido solo
+// mientras el usuario está forzado en modo Mover para resolverlo.
+const DESKTOP_MAX = 64;
+const FOLDER_MAX = 35;
+const DESKTOP_OVERFLOW = DESKTOP_MAX + 1;
 
 /* =========================================================
    DICCIONARIO i18n
@@ -1536,6 +1544,10 @@ function getActiveState(){ return currentMode === "normal" ? appsState : working
 
 function commitMode(){
     if (currentMode === "normal") return;
+    // Estado transitorio de sobrecupo (65): no se permite salir (ni confirmar
+    // el cambio) hasta bajar a 64 arrastrando un ícono a un folder con cupo.
+    // Sin aviso al usuario, como se definió: simplemente no se deja.
+    if (workingState && workingState.length >= DESKTOP_OVERFLOW) return;
     clearTimeout(inactivityTimer);
     timerSuspended = false;
     globalSaved = 0;
@@ -1812,7 +1824,7 @@ function performDrop(x,y,path,isFolder,draggedEl){
             const folderApps = path.array;
             const root = getActiveState();
             const sourceIndex = path.index;
-            if (folderApps && root && root !== folderApps && sourceIndex >= 0 && sourceIndex < folderApps.length){
+            if (folderApps && root && root !== folderApps && sourceIndex >= 0 && sourceIndex < folderApps.length && root.length < DESKTOP_MAX){
                 const [movedApp] = folderApps.splice(sourceIndex,1);
                 root.push(movedApp);
                 globalSaved = 0;
@@ -1840,7 +1852,7 @@ function performDrop(x,y,path,isFolder,draggedEl){
         const [movedApp] = arr.splice(sourceIndex,1);
         const folderRealIndex = targetIndex > sourceIndex ? targetIndex-1 : targetIndex;
         const folderObj = arr[folderRealIndex];
-        if (folderObj && folderObj.type==="folder"){
+        if (folderObj && folderObj.type==="folder" && (folderObj.apps||[]).length < FOLDER_MAX){
             folderObj.apps = folderObj.apps || [];
             folderObj.apps.push(movedApp);
         } else {
@@ -1910,18 +1922,18 @@ function refreshFolderModalGrid(modalEl, appsArray){
     if (!grid) return;
     grid.innerHTML="";
     grid.classList.toggle("wiggleMode", currentMode==="move");
-    appsArray.slice(0,35).forEach((app,idx)=>{
+    appsArray.slice(0,FOLDER_MAX).forEach((app,idx)=>{
         renderApp(app, grid, {array:appsArray, index:idx});
     });
     const folder = getActiveState().find(item=>item.type==="folder" && item.apps===appsArray);
-    if (folder && currentMode === "edit") renderFolderAddAppTile(folder, grid);
+    if (folder && currentMode === "edit" && appsArray.length < FOLDER_MAX) renderFolderAddAppTile(folder, grid);
 }
 
 /* =========================================================
    FOLDER: abrir / cerrar (animación zoom)
    ========================================================= */
 function openFolder(folder, path){
-    const maxIcons=35;
+    const maxIcons=FOLDER_MAX;
     const modal=document.createElement("div");
     modal.className="folderModal";
     const content=document.createElement("div");
@@ -1966,7 +1978,7 @@ function openFolder(folder, path){
     (folder.apps || []).slice(0,maxIcons).forEach((app,idx)=>{
         renderApp(app, grid, {array:folder.apps, index:idx});
     });
-    if (currentMode === "edit") renderFolderAddAppTile(folder, grid);
+    if (currentMode === "edit" && (folder.apps||[]).length < FOLDER_MAX) renderFolderAddAppTile(folder, grid);
     content.appendChild(header);
     content.appendChild(grid);
     modal.appendChild(content);
@@ -2049,12 +2061,57 @@ function refreshOpenFolderModal(){
 }
 
 /* =========================================================
+   LÍMITES DE ÍCONOS: recorta y avisa (una sola alerta consolidada) cuando
+   el hash trae, por fuera de la UI (link compartido o edición manual de la
+   URL), más de DESKTOP_MAX en el escritorio o más de FOLDER_MAX en algún
+   folder. Los ítems recortados se eliminan del hash, no solo de la vista.
+   ========================================================= */
+function enforceIconLimits(state){
+    const messages = [];
+    let changed = false;
+
+    if (state.length > DESKTOP_MAX){
+        const removedCount = state.length - DESKTOP_MAX;
+        const firstRemoved = state[DESKTOP_MAX];
+        const extra = removedCount > 1 ? ` y ${removedCount-1} más` : "";
+        messages.push(`Escritorio (máx. ${DESKTOP_MAX}): se eliminó "${firstRemoved.name}"${extra}.`);
+        state = state.slice(0, DESKTOP_MAX);
+        changed = true;
+    }
+
+    state.forEach(item=>{
+        if (item.type==="folder" && (item.apps||[]).length > FOLDER_MAX){
+            const removedCount = item.apps.length - FOLDER_MAX;
+            const firstRemoved = item.apps[FOLDER_MAX];
+            const extra = removedCount > 1 ? ` y ${removedCount-1} más` : "";
+            messages.push(`Folder "${item.name}" (máx. ${FOLDER_MAX}): se eliminó "${firstRemoved.name}"${extra}.`);
+            item.apps = item.apps.slice(0, FOLDER_MAX);
+            changed = true;
+        }
+    });
+
+    return {state, messages, changed};
+}
+
+/* =========================================================
    RENDER: LAUNCHER PRINCIPAL
    ========================================================= */
 function renderLauncher(){
-    if (currentMode === "normal") { appsState = parseHash(); }
+    if (currentMode === "normal") {
+        appsState = parseHash();
+        const {state: limited, messages, changed} = enforceIconLimits(appsState);
+        if (changed){
+            appsState = limited;
+            serializeHash(appsState);
+            alert(
+                "Se superó el límite de íconos y algunos se eliminaron permanentemente:\n\n" +
+                messages.join("\n") +
+                "\n\nPara conservarlos, edita el link, elimínalos o agrúpalos en un folder, y vuelve a cargar."
+            );
+        }
+    }
     const state = getActiveState();
-    const maxIcons = 64;
+    const maxIcons = DESKTOP_MAX;
     const limited = state.slice(0,maxIcons);
     const grid=document.getElementById("launcherGrid");
     grid.innerHTML="";
@@ -2116,6 +2173,11 @@ function populateFolderAppList(){
 }
 
 function openAddModal(targetFolder = null, initialType = "app"){
+    // Estado transitorio de sobrecupo (65): la única salida es arrastrar
+    // hacia un folder existente con cupo; no se permite crear otro folder
+    // nuevo desde el escritorio (subiría a 66). Sin aviso: simplemente no
+    // se abre el modal.
+    if (!targetFolder && getActiveState().length >= DESKTOP_OVERFLOW) return;
     addAppTargetFolder = targetFolder;
     addAppTargetFolderIndex = -1;
     if (targetFolder){
@@ -2134,9 +2196,13 @@ function openAddModal(targetFolder = null, initialType = "app"){
     populateFolderAppList();
 
     // No se permiten subfolders: dentro de un folder, el toggle se oculta y solo se puede añadir App.
-    const canBeFolder = !targetFolder;
-    document.getElementById("addTypeToggle").style.display = canBeFolder ? "flex" : "none";
-    setAddType(canBeFolder ? initialType : "app");
+    // Escritorio lleno (64): solo se permite crear un Folder para agrupar,
+    // no añadir más apps sueltas — se fuerza el tipo y se oculta el toggle
+    // para que no se pueda volver a "App".
+    const rootFull = !targetFolder && getActiveState().length >= DESKTOP_MAX;
+    const canToggle = !targetFolder && !rootFull;
+    document.getElementById("addTypeToggle").style.display = canToggle ? "flex" : "none";
+    setAddType(targetFolder ? "app" : (rootFull ? "folder" : initialType));
 
     closeSidePanel();
     document.getElementById("addModal").style.display="block";
@@ -2463,6 +2529,7 @@ function saveFolder(){
     const iconRaw = document.getElementById("folderIcon").value.trim();
 
     const state = getActiveState();
+    const rootWasFull = state.length >= DESKTOP_MAX;
     const checks = [...document.querySelectorAll("#folderAppList input:checked")];
     const selectedIndexes = checks
         .map(c=>parseInt(c.dataset.rootIndex,10))
@@ -2489,6 +2556,10 @@ function saveFolder(){
     }
 
     closeAddModal();
+    // El folder-recolector se crea con el escritorio ya en 64: forzar modo
+    // Mover para que el usuario siga organizando (ver regla 7, que además
+    // no deja salir de este modo mientras el escritorio siga en 65).
+    if (rootWasFull) enterMoveMode();
     renderLauncher();
 }
 
