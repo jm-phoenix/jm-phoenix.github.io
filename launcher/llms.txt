@@ -1,0 +1,133 @@
+# SlugLauncher — guía para agentes LLM
+
+> SlugLauncher es un app launcher de una sola página (sin cuenta, sin base de datos).
+> Todo su estado —tema, idioma, apps y folders— vive codificado en el `#hash` de la URL.
+> Este archivo enseña a cualquier LLM a generar/editar ese hash a mano y entregarle
+> al usuario un link final listo para abrir, sin necesidad de ejecutar la página.
+
+URL del archivo: https://git.inriris.com/launcher/index.html
+Código fuente: index.html en este mismo repo (git.inriris.com/launcher)
+
+## 1. Estructura general de la URL
+
+```
+https://git.inriris.com/launcher/index.html#SLUG:<tema>,<idioma>,<salvado>#<item1>#<item2>#...
+```
+
+- Cada segmento va separado por `#`.
+- El primer segmento SIEMPRE es `SLUG:` con 3 valores separados por coma.
+- Los siguientes segmentos son, en orden, los items del escritorio (apps y/o folders).
+  El orden de los segmentos = el orden en que se ven los iconos.
+
+### Segmento SLUG
+`SLUG:<tema>,<idioma>,<salvado>`
+
+- `<tema>`: `0` = oscuro, `1` = claro, `2` = seguir al sistema.
+- `<idioma>`: código de 2 letras (ver sección 4).
+- `<salvado>`: `1` = no muestra el borde rojo de "cambios sin guardar" al abrir; `0` = sí lo muestra.
+  Al entregar un link final y listo al usuario, usa siempre `1`.
+
+### Segmento de una app
+`<nombre>,<url>,<icono>`
+
+- Los 3 campos van codificados con doble `encodeURIComponent` (ver sección 3).
+- `<url>` e `<icono>` se guardan SIN el prefijo `https://` (se le quita antes de codificar;
+  al cargar la página se lo vuelve a anteponer automáticamente). Si la URL es `http://`
+  explícito, o de otro protocolo, ese prefijo si se conserva.
+- `<nombre>` no se le quita ningún prefijo, solo se codifica tal cual.
+
+### Segmento de un folder
+`FOLDER:<nombre>::<icono-folder>|<app1>|<app2>|...`
+
+- `<nombre>` y `<icono-folder>` van codificados igual que arriba (el icono de folder es opcional:
+  si no hay, se omite el `::<icono-folder>`).
+- Cada app dentro del folder usa el mismo formato `<nombre>,<url>,<icono>` que una app suelta,
+  y las apps se separan entre sí con `|`.
+- Un folder vacío es válido: `FOLDER:Trabajo` (sin ningún `|` después).
+
+## 2. Cómo crear un ícono (app)
+
+Para cada app que el usuario pida agregar:
+
+1. Pide o infiere: nombre visible, URL de destino, y (opcional) ícono.
+2. Valida la URL: debe resolver a un dominio (`ejemplo.com`) o IPv4 válido. Si el usuario
+   solo da un dominio sin protocolo (`notion.so`), asume `https://`.
+3. Ícono — para que NUNCA quede roto:
+   - Si el usuario no da un ícono explícito, usa siempre el servicio de favicons de Google:
+     `www.google.com/s2/favicons?sz=128&domain=<dominio>` (sin `https://`, se agrega solo).
+     Este servicio responde siempre con una imagen válida (nunca un 404 roto), incluso si el
+     sitio no tiene favicon propio — es la opción por defecto y la más segura.
+   - Si el usuario SÍ da una URL de ícono explícita, úsala tal cual, pero como no puedes
+     verificar en vivo que cargue (no tienes navegador), avísale en tu respuesta que si el
+     ícono no carga puede reemplazarlo luego desde "Editar" en el propio launcher.
+   - Nunca inventes ni "adivines" rutas de ícono (`/favicon.ico`, `/apple-touch-icon.png`, etc.)
+     por tu cuenta: esas son cosas que el propio SlugLauncher intenta detectar en vivo dentro
+     del navegador del usuario (con manejo de error incluido); tú, generando el link de
+     antemano, no tienes forma de comprobar que existan. Quédate con el favicon de Google
+     como default.
+4. Arma el segmento `<nombre>,<url-sin-https>,<icono-sin-https>` y codifica los 3 campos.
+
+## 3. Codificación de campos (obligatoria)
+
+Cada campo (`nombre`, `url`, `icono`) se codifica con **doble** `encodeURIComponent`, es decir:
+`encodeURIComponent(encodeURIComponent(texto))`. Esto es necesario para que comas, `#`, `|` y
+otros caracteres especiales dentro de nombres o URLs no rompan el parseo del hash.
+
+Antes de codificar `url` e `icono`, quítales el prefijo `https://` si lo tienen (ver sección 1).
+`nombre` se codifica directo, sin tocar prefijos.
+
+## 4. Idiomas soportados e inferencia
+
+Idiomas disponibles: `en, es, fr, de, pt, it, ru, zh, ja, hi, ar`.
+
+- Infiere el idioma a partir del idioma en el que el usuario te está escribiendo en la
+  conversación (no hay navegador del usuario disponible en este momento, así que no se puede
+  usar `navigator.language`; esa detección solo ocurre dentro de la página, la primera vez que
+  se abre sin hash).
+- Si el idioma de la conversación no está en la lista soportada, usa `en` por defecto.
+- Si más adelante el usuario pide cambiar de idioma explícitamente, respeta ese pedido aunque
+  no coincida con el idioma en que te escribe.
+
+## 5. Máximos y mínimos a vigilar
+
+- **Escritorio (raíz):** máximo **64** items en total (apps + folders juntos). Constante: `DESKTOP_MAX`.
+- **Dentro de un folder:** máximo **35** apps por folder. Constante: `FOLDER_MAX`.
+- No hay mínimo técnico (el launcher puede estar vacío), pero si vas a entregar un link
+  vacío avísale al usuario que verá la pantalla de ayuda inicial en vez de sus apps.
+- Si un pedido excede alguno de estos máximos:
+  1. No generes un link que los exceda — el propio SlugLauncher los recorta solo al cargar
+     (y elimina lo que sobra desde el final), pero es mejor prevenir que el usuario pierda
+     apps sin darse cuenta.
+  2. Avísale al usuario cuántas apps/folders sobran y pregúntale cuáles priorizar, o si
+     prefiere que agrupes algunas en un folder para hacer espacio.
+
+## 6. Preferencias que conviene preguntar (si no están claras)
+
+Antes de generar el link final, si el pedido es ambiguo pregunta por:
+- **Tema:** claro / oscuro / seguir al sistema.
+- **Organización:** ¿todas las apps sueltas en el escritorio, o agrupar algunas en folders?
+  Si el usuario menciona una categoría (ej. "mis apps de trabajo"), es una buena señal para
+  crear un folder con ese nombre.
+- **Nombres poco claros:** si una URL no deja claro qué nombre visible debería llevar el ícono,
+  pregunta o usa el nombre del dominio como fallback razonable.
+- **Orden:** si el usuario no indica un orden, usa el orden en que fue mencionando las apps.
+
+No preguntes por cosas que ya estén implícitas en el pedido (ej. si ya dio nombre + URL de
+cada app, no vuelvas a preguntar eso).
+
+## 7. Entrega final al usuario
+
+1. Arma la URL completa uniendo: `https://git.inriris.com/launcher/index.html` + `#SLUG:...` +
+   un `#` por cada item (app o folder), en ese orden.
+2. Entrégasela como un link listo para hacer clic (que abra directo la página nueva con
+   los apps/folders ya instalados, sin pasos extra).
+3. Explícale al usuario, brevemente, cómo reordenar o editar los iconos una vez adentro:
+   - Tocar el ícono de **lápiz/editar** en el header entra a modo Editar: desde ahí se puede
+     arrastrar cada ícono para reordenarlo, arrastrar un ícono sobre otro para crear un folder,
+     y tocar un ícono para editarlo (nombre, URL, ícono) o borrarlo.
+   - El modo Editar se cierra solo tras un rato de inactividad, o tocando el mismo botón de
+     nuevo para confirmar los cambios.
+   - Desde el menú (ícono de hamburguesa) puede cambiar tema e idioma, y usar "Guardar
+     SlugLauncher" para descargar un acceso directo del launcher actualizado.
+   - Cualquier cambio que haga genera una URL nueva (el hash cambia) — si quiere conservar
+     los cambios para la próxima vez, debe guardar/copiar esa URL actualizada.
