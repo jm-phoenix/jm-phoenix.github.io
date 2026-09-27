@@ -1,0 +1,10 @@
+# git.inriris.com
+
+Sitio con proyectos alojados por Inriris.
+
+## Proyectos
+
+- **SlugLauncher** — app launcher de una sola página, sin cuenta ni base de datos;
+  todo su estado vive en la URL. Guía completa para agentes LLM (formato del hash,
+  cómo crear/editar iconos y folders, límites, idiomas): /launcher/llms.txt
+  Página en vivo: https://git.inriris.com/launcher/index.html
