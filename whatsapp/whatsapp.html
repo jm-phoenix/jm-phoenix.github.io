@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor de Chat de WhatsApp Local</title>
+    <style>
+        :root {
+            --whatsapp-green: #00a884;
+            --whatsapp-dark: #111b21;
+            --whatsapp-panel: #202c33;
+            --whatsapp-bg: #efeae2;
+            --bubble-incoming: #202c33;
+            --bubble-outgoing: #005c4b;
+            --text-primary: #e9edef;
+            --text-secondary: #8696a0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--whatsapp-dark);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--whatsapp-panel);
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-bottom: 1px solid #2a3942;
+        }
+
+        /* Estilos de Modales */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(11, 20, 26, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-card {
+            background: var(--whatsapp-panel);
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border: 1px solid #2a3942;
+        }
+
+        .modal-card h2 {
+            margin-top: 0;
+            color: var(--whatsapp-green);
+        }
+
+        .modal-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            margin: 20px 0;
+            background: var(--whatsapp-dark);
+            color: var(--text-primary);
+            border: 1px solid #2a3942;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--whatsapp-green);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:disabled {
+            background-color: #2a3942;
+            color: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: #008f72;
+        }
+
+        /* Contenedor de Carga de Archivos */
+        #uploadSection {
+            padding: 20px;
+            text-align: center;
+            background: var(--whatsapp-dark);
+        }
+
+        /* Vista de Chat con Virtual Scrolling */
+        #chatViewport {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+            background-color: var(--whatsapp-bg);
+            display: none;
+        }
+
+        #totalSpacer {
+            position: relative;
+            width: 100%;
+        }
+
+        #chatContent {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 5%;
+        }
+
+        .chat-message {
+            display: flex;
+            margin-bottom: 8px;
+        }
+
+        .chat-message.sent {
+            justify-content: flex-end;
+        }
+
+        .chat-message.received {
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 65%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            word-wrap: break-word;
+            box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+        }
+
+        .chat-message.sent .message-bubble {
+            background-color: var(--bubble-outgoing);
+            color: #f0f2f5;
+        }
+
+        .chat-message.received .message-bubble {
+            background-color: var(--bubble-incoming);
+            color: #e9edef;
+        }
+
+        .msg-sender {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #53bdeb;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .msg-time {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            float: right;
+            margin-left: 10px;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>Visor de Chat Seguro de WhatsApp</header>
+
+    <!-- 1. Modal de Introducción / Privacidad -->
+    <div id="introPrivacyModal" class="modal-overlay">
+        <div class="modal-card">
+            <h2>🔒 Privacidad Garantizada</h2>
+            <p>Esta aplicación opera <strong>100% en tu dispositivo local</strong>.</p>
+            <p>Tus archivos ZIP o de texto nunca se suben a ningún servidor externo, no se recolectan ni se almacenan temporalmente en la nube. Todo el procesamiento ocurre directamente en la memoria de tu navegador.</p>
+            <button id="closeIntroModal" class="btn-primary">Entendido, continuar</button>
+        </div>
+    </div>
+
+    <!-- Sección de Carga -->
+    <div id="uploadSection">
+        <p style="color: var(--text-secondary);">Selecciona o arrastra tu archivo exportado de WhatsApp (_chat.txt):</p>
+        <input type="file" id="fileInput" accept=".txt" style="color: white; margin-top: 10px;">
+    </div>
+
+    <!-- 2. Modal de Chat Analizado y Selección de Usuario -->
+    <div id="analyzedModal" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <h2>📊 Chat Analizado</h2>
+            <p>Para configurar correctamente la visualización de los mensajes, por favor indica quién eres en esta conversación:</p>
+            
+            <select id="userSelectDropdown" class="form-select">
+                <option value="" disabled selected>-- Selecciona tu nombre --</option>
+            </select>
+            
+            <button id="confirmUserBtn" class="btn-primary" disabled>Ver Chat</button>
+        </div>
+    </div>
+
+    <!-- 3. Contenedor de Chat con Virtual Scrolling para archivos gigantes -->
+    <div id="chatViewport">
+        <div id="totalSpacer">
+            <div id="chatContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let allParsedMessages = [];
+        let windowMyIdentifiedName = "";
+        const ITEM_HEIGHT = 75; // Altura estimada en píxeles por cada burbuja de mensaje
+        const VISIBLE_COUNT = 25; // Cantidad de elementos renderizados simultáneamente en DOM
+
+        const viewport = document.getElementById('chatViewport');
+        const totalSpacer = document.getElementById('totalSpacer');
+        const contentContainer = document.getElementById('chatContent');
+
+        // Cerrar modal de privacidad inicial
+        document.getElementById('closeIntroModal').addEventListener('click', () => {
+            document.getElementById('introPrivacyModal').style.display = 'none';
+        });
+
+        // Simulación de carga de archivo de texto de WhatsApp
+        document.getElementById('fileInput').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                parseWhatsAppChat(text);
+            };
+            reader.readAsText(file);
+        });
+
+        // Parser básico de líneas de WhatsApp
+        function parseWhatsAppChat(text) {
+            const lines = text.split('\n');
+            allParsedMessages = [];
+            const sendersSet = new Set();
+
+            // Expresión regular estándar para formato WhatsApp: [DD/MM/YY, HH:MM:SS] Nombre: Mensaje
+            const regex = /^\[?(\d{1,2}\/\d{1,2}\/\d{2,4},?\s\d{1,2}:\d{2}(?::\d{2})?)\]?\s([^:]+):\s(.+)$/;
+
+            lines.forEach(line => {
+                const match = line.match(regex);
+                if (match) {
+                    const sender = match[2].trim();
+                    sendersSet.add(sender);
+                    allParsedMessages.push({
+                        time: match[1],
+                        sender: sender,
+                        text: match[3]
+                    });
+                } else if (allParsedMessages.length > 0) {
+                    // Si es un salto de línea dentro del mismo mensaje anterior
+                    allParsedMessages[allParsedMessages.length - 1].text += '\n' + line;
+                }
+            });
+
+            if (allParsedMessages.length === 0) {
+                alert("No se pudieron detectar mensajes válidos. Asegúrate de cargar un formato de chat de WhatsApp válido.");
+                return;
+            }
+
+            // Poblar selector de nombres
+            const select = document.getElementById('userSelectDropdown');
+            select.innerHTML = '<option value="" disabled selected>-- Selecciona tu nombre --</option>';
+            sendersSet.forEach(sender => {
+                const opt = document.createElement('option');
+                opt.value = sender;
+                opt.textContent = sender;
+                select.appendChild(opt);
+            });
+
+            // Mostrar modal analizado
+            document.getElementById('analyzedModal').style.display = 'flex';
+        }
+
+        // Habilitar botón de confirmar al elegir nombre
+        const userSelect = document.getElementById('userSelectDropdown');
+        const confirmBtn = document.getElementById('confirmUserBtn');
+
+        userSelect.addEventListener('change', () => {
+            confirmBtn.disabled = !userSelect.value;
+        });
+
+        // Al confirmar usuario: dispara popup publicitario y arranca el Virtual Scroll
+        confirmBtn.addEventListener('click', () => {
+            windowMyIdentifiedName = userSelect.value;
+
+            // Abrir ventana emergente / anuncio (reemplaza al botón desbloquear anterior)
+            window.open('https://github.com', '_blank'); // Cambia por tu enlace de anuncio/popup deseado
+
+            // Ocultar modales y mostrar visor
+            document.getElementById('analyzedModal').style.display = 'none';
+            document.getElementById('uploadSection').style.display = 'none';
+            viewport.style.display = 'block';
+
+            // Inicializar el espacio virtual con la altura total exacta
+            totalSpacer.style.height = `${allParsedMessages.length * ITEM_HEIGHT}px`;
+            renderVirtualChunk(0);
+        });
+
+        // Motor de Virtual Scrolling para renderizado instantáneo en archivos masivos
+        function renderVirtualChunk(scrollTop) {
+            const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - 5);
+            const endIndex = Math.min(startIndex + VISIBLE_COUNT + 10, allParsedMessages.length);
+            
+            contentContainer.style.transform = `translateY(${startIndex * ITEM_HEIGHT}px)`;
+            
+            const chunk = allParsedMessages.slice(startIndex, endIndex);
+            contentContainer.innerHTML = '';
+
+            const fragment = document.createDocumentFragment();
+            chunk.forEach((msg, idx) => {
+                const absoluteIndex = startIndex + idx;
+                const messageDiv = document.createElement('div');
+                const isMe = msg.sender === windowMyIdentifiedName;
+                messageDiv.className = `chat-message ${isMe ? 'sent' : 'received'}`;
+                
+                messageDiv.innerHTML = `
+                    <div class="message-bubble">
+                        <span class="msg-sender">${escapeHtml(msg.sender)}</span>
+                        <p class="message-text" style="margin: 0; white-space: pre-wrap;">${escapeHtml(msg.text)}</p>
+                        <span class="msg-time">${escapeHtml(msg.time)}</span>
+                    </div>
+                `;
+                fragment.appendChild(messageDiv);
+            });
+
+            contentContainer.appendChild(fragment);
+        }
+
+        viewport.addEventListener('scroll', () => {
+            renderVirtualChunk(viewport.scrollTop);
+        });
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+    </script>
+</body>
+</html>
