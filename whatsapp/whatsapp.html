@@ -1,367 +1,1020 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visor de Chat de WhatsApp Local</title>
-    <style>
-        :root {
-            --whatsapp-green: #00a884;
-            --whatsapp-dark: #111b21;
-            --whatsapp-panel: #202c33;
-            --whatsapp-bg: #efeae2;
-            --bubble-incoming: #202c33;
-            --bubble-outgoing: #005c4b;
-            --text-primary: #e9edef;
-            --text-secondary: #8696a0;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--whatsapp-dark);
-            color: var(--text-primary);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
+<title>Visor de Chats de WhatsApp | Pro</title>
 
-        header {
-            background-color: var(--whatsapp-panel);
-            padding: 15px;
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border-bottom: 1px solid #2a3942;
-        }
+<link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="none"/><path d="M256 96C176 96 112 154 112 230c0 36 14 68 36 92l-12 64 64-12c22 12 44 18 68 18 80 0 144-58 144-134S336 96 256 96z" fill="%2325D366"/><text x="256" y="270" text-anchor="middle" font-size="96" font-weight="700" font-family="Arial" fill="%23FFFFFF">zip</text></svg>'>
 
-        /* Estilos de Modales */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(11, 20, 26, 0.85);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
+<meta property="og:title" content="Visor de Chats de WhatsApp">
+<meta property="og:image" content="https://i.postimg.cc/hjTMg3Jz/IMG-2113.jpg">
+<meta property="og:description" content="Revive tus chats de WhatsApp exportados en ZIP y léelos como si estuvieras en la app original.">
 
-        .modal-card {
-            background: var(--whatsapp-panel);
-            padding: 30px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 450px;
-            text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            border: 1px solid #2a3942;
-        }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
-        .modal-card h2 {
-            margin-top: 0;
-            color: var(--whatsapp-green);
-        }
+<style>
+:root {
+    --wa-header: #008069;
+    --wa-bg: #efeae2;
+    --my-msg: #d9fdd3;
+    --other-msg: #ffffff;
+    --link-color: #027eb5;
+}
 
-        .modal-card p {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
 
-        .form-select {
-            width: 100%;
-            padding: 12px;
-            margin: 20px 0;
-            background: var(--whatsapp-dark);
-            color: var(--text-primary);
-            border: 1px solid #2a3942;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
+body, html {
+    height: 100%;
+    width: 100%;
+    font-family: -apple-system, sans-serif;
+    background-color: #111b21;
+    overflow: hidden;
+}
 
-        .btn-primary {
-            background-color: var(--whatsapp-green);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            transition: background 0.2s;
-        }
+.chat-container {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    background-color: var(--wa-bg);
+    background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    position: relative;
+}
 
-        .btn-primary:disabled {
-            background-color: #2a3942;
-            color: var(--text-secondary);
-            cursor: not-allowed;
-        }
+header {
+    background: var(--wa-header);
+    color: white;
+    padding: 12px 15px;
+    font-weight: bold;
+    flex-shrink: 0;
+    z-index: 100;
+    font-size: 16px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
 
-        .btn-primary:hover:not(:disabled) {
-            background-color: #008f72;
-        }
+#chat-area-wrapper {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
 
-        /* Contenedor de Carga de Archivos */
-        #uploadSection {
-            padding: 20px;
-            text-align: center;
-            background: var(--whatsapp-dark);
-        }
+/* Virtual scrolling */
+#chat-window {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 10px;
+    position: relative;
+    display: block;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: auto;
+}
 
-        /* Vista de Chat con Virtual Scrolling */
-        #chatViewport {
-            flex: 1;
-            overflow-y: auto;
-            position: relative;
-            background-color: var(--whatsapp-bg);
-            display: none;
-        }
+#totalSpacer {
+    width: 100%;
+    position: relative;
+    pointer-events: none;
+}
 
-        #totalSpacer {
-            position: relative;
-            width: 100%;
-        }
+.virtual-row {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    will-change: transform;
+}
 
-        #chatContent {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            box-sizing: border-box;
-            padding: 10px 5%;
-        }
+.message {
+    max-width: 82%;
+    width: fit-content;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 14.5px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    position: relative;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    pointer-events: auto;
+}
 
-        .chat-message {
-            display: flex;
-            margin-bottom: 8px;
-        }
+.message.incoming {
+    align-self: flex-start;
+    background: var(--other-msg);
+    border-top-left-radius: 0;
+}
 
-        .chat-message.sent {
-            justify-content: flex-end;
-        }
+.message.outgoing {
+    align-self: flex-end;
+    background: var(--my-msg);
+    border-top-right-radius: 0;
+}
 
-        .chat-message.received {
-            justify-content: flex-start;
-        }
+.message a {
+    color: var(--link-color);
+    text-decoration: underline;
+    overflow-wrap: anywhere;
+}
 
-        .message-bubble {
-            max-width: 65%;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            word-wrap: break-word;
-            box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
-        }
+.media-content {
+    display: block;
+    max-width: 100%;
+    max-height: 350px;
+    height: auto;
+    border-radius: 6px;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
 
-        .chat-message.sent .message-bubble {
-            background-color: var(--bubble-outgoing);
-            color: #f0f2f5;
-        }
+.file-card {
+    display: flex;
+    flex-direction: column;
+    background: rgba(0,0,0,0.08);
+    padding: 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #111b21;
+    border: 1px solid rgba(0,0,0,0.1);
+    margin-bottom: 5px;
+    overflow-wrap: anywhere;
+}
 
-        .chat-message.received .message-bubble {
-            background-color: var(--bubble-incoming);
-            color: #e9edef;
-        }
+.file-card b { font-size: 13px; }
+.file-card small { color: #54656f; font-size: 11px; }
 
-        .msg-sender {
-            font-size: 0.75rem;
-            font-weight: bold;
-            color: #53bdeb;
-            display: block;
-            margin-bottom: 2px;
-        }
+.date-divider {
+    align-self: center;
+    background: rgba(225, 245, 254, 0.95);
+    color: #54656f;
+    font-size: 11px;
+    padding: 5px 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    font-weight: 600;
+}
 
-        .msg-time {
-            font-size: 0.65rem;
-            color: var(--text-secondary);
-            float: right;
-            margin-left: 10px;
-            margin-top: 4px;
-        }
-    </style>
+.msg-author {
+    font-size: 11px;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.msg-time {
+    font-size: 9px;
+    color: #667781;
+    display: block;
+    text-align: right;
+    margin-top: 4px;
+}
+
+footer {
+    background: #f0f2f5;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+    flex-shrink: 0;
+}
+
+.upload-btn {
+    background: white;
+    border: none;
+    border-radius: 20px;
+    width: 100%;
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #54656f;
+}
+
+/* Modales */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 27, 33, 0.94);
+    z-index: 6000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-box {
+    background: white;
+    width: 100%;
+    max-width: 400px;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 8px 35px rgba(0,0,0,0.35);
+}
+
+.modal-heading {
+    padding: 17px;
+    background: #f0f2f5;
+    font-weight: bold;
+    color: #008069;
+    font-size: 17px;
+}
+
+.modal-content {
+    padding: 20px;
+    color: #303b42;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.modal-actions {
+    padding: 0 20px 20px;
+}
+
+.primary-btn {
+    width: 100%;
+    background: #25D366;
+    color: white;
+    border: none;
+    padding: 14px 20px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.primary-btn:disabled {
+    background: #b7c4be;
+    color: #f4f4f4;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.secondary-btn {
+    width: 100%;
+    background: #e9edef;
+    color: #54656f;
+    border: none;
+    padding: 12px;
+    border-radius: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+#participant-select {
+    display: block;
+    width: 100%;
+    padding: 13px;
+    margin-top: 12px;
+    border: 1px solid #cbd5d9;
+    border-radius: 9px;
+    background: white;
+    color: #111b21;
+    font-size: 15px;
+}
+
+#participant-select:focus {
+    outline: 2px solid #25D366;
+    border-color: transparent;
+}
+
+#processing-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #111b21;
+    z-index: 5000;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #25D366;
+    border-top: 5px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#scroll-date-indicator {
+    position: absolute;
+    right: 20px;
+    top: 10px;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 50;
+    pointer-events: none;
+}
+
+#theater {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: black;
+    z-index: 7000;
+    justify-content: center;
+    align-items: center;
+}
+
+audio.wa-audio {
+    height: 35px;
+    width: min(200px, 100%);
+    border-radius: 20px;
+    margin-bottom: 5px;
+    filter: sepia(20%) saturate(70%) grayscale(1);
+}
+</style>
 </head>
+
 <body>
 
-    <header>Visor de Chat Seguro de WhatsApp</header>
+<!-- MODAL INICIAL DE PRIVACIDAD -->
+<div id="privacy-modal" class="modal-overlay" style="display:flex;">
+    <div class="modal-box">
+        <div class="modal-heading">🔒 Privacidad y uso local</div>
 
-    <!-- 1. Modal de Introducción / Privacidad -->
-    <div id="introPrivacyModal" class="modal-overlay">
-        <div class="modal-card">
-            <h2>🔒 Privacidad Garantizada</h2>
-            <p>Esta aplicación opera <strong>100% en tu dispositivo local</strong>.</p>
-            <p>Tus archivos ZIP o de texto nunca se suben a ningún servidor externo, no se recolectan ni se almacenan temporalmente en la nube. Todo el procesamiento ocurre directamente en la memoria de tu navegador.</p>
-            <button id="closeIntroModal" class="btn-primary">Entendido, continuar</button>
+        <div class="modal-content">
+            <p>
+                Esta aplicación opera 100% en tu dispositivo local.
+                Tus archivos ZIP o de texto nunca se suben a ningún
+                servidor externo ni se almacenan en la nube.
+            </p>
+            <br>
+            <p>
+                Selecciona un archivo exportado de WhatsApp para
+                visualizar tus conversaciones directamente en esta página.
+            </p>
+        </div>
+
+        <div class="modal-actions">
+            <button class="primary-btn" id="privacy-continue">
+                Entendido, continuar
+            </button>
         </div>
     </div>
+</div>
 
-    <!-- Sección de Carga -->
-    <div id="uploadSection">
-        <p style="color: var(--text-secondary);">Selecciona o arrastra tu archivo exportado de WhatsApp (_chat.txt):</p>
-        <input type="file" id="fileInput" accept=".txt" style="color: white; margin-top: 10px;">
-    </div>
+<!-- PROCESAMIENTO -->
+<div id="processing-overlay">
+    <div class="spinner"></div>
+    <h3 id="processing-message">Procesando Chat...</h3>
+    <p style="margin-top:10px;font-size:13px;color:#8696a0;">
+        El procesamiento se realiza localmente.
+    </p>
+</div>
 
-    <!-- 2. Modal de Chat Analizado y Selección de Usuario -->
-    <div id="analyzedModal" class="modal-overlay" style="display: none;">
-        <div class="modal-card">
-            <h2>📊 Chat Analizado</h2>
-            <p>Para configurar correctamente la visualización de los mensajes, por favor indica quién eres en esta conversación:</p>
-            
-            <select id="userSelectDropdown" class="form-select">
-                <option value="" disabled selected>-- Selecciona tu nombre --</option>
+<!-- MODAL DE IDENTIFICACIÓN -->
+<div id="user-modal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-heading">¡Chat Analizado!</div>
+
+        <div class="modal-content">
+            <p>Selecciona tu nombre entre los participantes de esta conversación:</p>
+
+            <select id="participant-select">
+                <option value="">Selecciona tu nombre...</option>
             </select>
-            
-            <button id="confirmUserBtn" class="btn-primary" disabled>Ver Chat</button>
+        </div>
+
+        <div class="modal-actions">
+            <button class="primary-btn" id="confirm-user" disabled>
+                Ver Chat
+            </button>
+
+            <button class="secondary-btn" id="cancel-analysis">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- VISOR MULTIMEDIA -->
+<div id="theater">
+    <div style="width:100%;height:100%;display:flex;justify-content:center;align-items:center;"></div>
+</div>
+
+<!-- INTERFAZ PRINCIPAL -->
+<div class="chat-container">
+
+    <header id="chat-header">Visor de WhatsApp</header>
+
+    <div id="chat-area-wrapper">
+        <div id="scroll-date-indicator">Fecha</div>
+
+        <div id="chat-window">
+            <div id="initial-message" style="text-align:center;margin-top:50px;color:#666;">
+                Carga tu .zip de WhatsApp
+            </div>
         </div>
     </div>
 
-    <!-- 3. Contenedor de Chat con Virtual Scrolling para archivos gigantes -->
-    <div id="chatViewport">
-        <div id="totalSpacer">
-            <div id="chatContent"></div>
-        </div>
-    </div>
+    <footer id="upload-footer">
+        <input type="file" id="file-input" accept=".zip" style="display:none">
 
-    <script>
-        let allParsedMessages = [];
-        let windowMyIdentifiedName = "";
-        const ITEM_HEIGHT = 75; // Altura estimada en píxeles por cada burbuja de mensaje
-        const VISIBLE_COUNT = 25; // Cantidad de elementos renderizados simultáneamente en DOM
+        <button class="upload-btn" id="upload-button">
+            <span>Seleccionar archivo ZIP</span>
+            <span>By JMD</span>
+        </button>
+    </footer>
 
-        const viewport = document.getElementById('chatViewport');
-        const totalSpacer = document.getElementById('totalSpacer');
-        const contentContainer = document.getElementById('chatContent');
+</div>
 
-        // Cerrar modal de privacidad inicial
-        document.getElementById('closeIntroModal').addEventListener('click', () => {
-            document.getElementById('introPrivacyModal').style.display = 'none';
+<script>
+"use strict";
+
+/* CONFIGURACIÓN */
+const MONETAG_LINK = "https://otieu.com/4/10578896";
+
+/*
+ * Altura inicial estimada de cada mensaje.
+ * Las alturas reales se miden y almacenan dinámicamente.
+ */
+const ITEM_HEIGHT = 110;
+const OVERSCAN = 8;
+
+let allFilesMap = {};
+let rawTextGlobal = "";
+let parsedMessages = [];
+let messageHeights = [];
+let prefixOffsets = [];
+let currentUser = "";
+let scrollTimeout = null;
+let resizeObserver = null;
+let renderScheduled = false;
+let chatReady = false;
+
+/* ELEMENTOS */
+const chatWindow = document.getElementById("chat-window");
+const fileInput = document.getElementById("file-input");
+const userModal = document.getElementById("user-modal");
+const participantSelect = document.getElementById("participant-select");
+const confirmButton = document.getElementById("confirm-user");
+const processingOverlay = document.getElementById("processing-overlay");
+const uploadFooter = document.getElementById("upload-footer");
+
+/* PRIVACIDAD */
+document.getElementById("privacy-continue").addEventListener("click", () => {
+    document.getElementById("privacy-modal").style.display = "none";
+});
+
+/* CARGA DE ARCHIVO */
+document.getElementById("upload-button").addEventListener("click", () => {
+    fileInput.click();
+});
+
+fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    processingOverlay.style.display = "flex";
+    document.getElementById("processing-message").textContent = "Procesando Chat...";
+
+    chatReady = false;
+
+    try {
+        const zip = new JSZip();
+        const content = await zip.loadAsync(file);
+
+        /* Liberar URLs de archivos anteriores */
+        Object.values(allFilesMap).forEach(item => {
+            if (item.url) URL.revokeObjectURL(item.url);
         });
 
-        // Simulación de carga de archivo de texto de WhatsApp
-        document.getElementById('fileInput').addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
+        allFilesMap = {};
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                parseWhatsAppChat(text);
+        /*
+         * Extraer los archivos del ZIP.
+         * No se envían los archivos a un servidor.
+         */
+        for (const f in content.files) {
+            if (content.files[f].dir) continue;
+
+            const blob = await content.files[f].async("blob");
+
+            allFilesMap[f.toLowerCase()] = {
+                url: URL.createObjectURL(blob),
+                originalName: f
             };
-            reader.readAsText(file);
+        }
+
+        const txtFile = Object.values(content.files).find(f =>
+            f.name.toLowerCase().endsWith(".txt") &&
+            !f.name.includes("__MACOSX")
+        );
+
+        if (!txtFile) {
+            throw new Error("No se encontró un archivo TXT de conversación.");
+        }
+
+        rawTextGlobal = await txtFile.async("string");
+
+        /*
+         * Analizar mensajes antes de mostrar el modal.
+         */
+        parsedMessages = parseConversation(rawTextGlobal);
+
+        if (parsedMessages.length === 0) {
+            throw new Error("No se detectaron mensajes válidos en el archivo.");
+        }
+
+        showUserSelection();
+
+    } catch (err) {
+        console.error(err);
+        alert(err.message || "Error al abrir el archivo ZIP.");
+    } finally {
+        processingOverlay.style.display = "none";
+        fileInput.value = "";
+    }
+});
+
+/* PARSER DE FECHAS, PARTICIPANTES Y MENSAJES */
+function parseConversation(text) {
+    const messages = [];
+
+    const blocks = text.split(
+        /[\u200e\u200f\u202a-\u202e]*(?=[\(\[]?\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4},?\s*\d{1,2}:\d{2})/g
+    );
+
+    const messageRegex =
+        /^[\u200e\u200f\u202a-\u202e]*[\(\[]?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}),?\s*(\d{1,2}:\d{2}(?::\d{2})?)\s*([apAP]\.?\s*[mM]\.?)?[\)\]]?[\s\-\:]+([^:]+):\s*([\s\S]*)$/;
+
+    for (const block of blocks) {
+        const m = block.match(messageRegex);
+        if (!m) continue;
+
+        const date = m[1];
+        const time = m[2];
+        const ampm = m[3] || "";
+        const author = m[4].trim();
+        const body = m[5].trim();
+
+        if (!author) continue;
+
+        messages.push({
+            date,
+            time,
+            fullTime: (time + (ampm ? " " + ampm : "")).toUpperCase(),
+            author,
+            body
         });
+    }
 
-        // Parser básico de líneas de WhatsApp
-        function parseWhatsAppChat(text) {
-            const lines = text.split('\n');
-            allParsedMessages = [];
-            const sendersSet = new Set();
+    return messages;
+}
 
-            // Expresión regular estándar para formato WhatsApp: [DD/MM/YY, HH:MM:SS] Nombre: Mensaje
-            const regex = /^\[?(\d{1,2}\/\d{1,2}\/\d{2,4},?\s\d{1,2}:\d{2}(?::\d{2})?)\]?\s([^:]+):\s(.+)$/;
+/* MODAL DE SELECCIÓN DE PARTICIPANTE */
+function showUserSelection() {
+    const users = [...new Set(parsedMessages.map(m => m.author))];
 
-            lines.forEach(line => {
-                const match = line.match(regex);
-                if (match) {
-                    const sender = match[2].trim();
-                    sendersSet.add(sender);
-                    allParsedMessages.push({
-                        time: match[1],
-                        sender: sender,
-                        text: match[3]
-                    });
-                } else if (allParsedMessages.length > 0) {
-                    // Si es un salto de línea dentro del mismo mensaje anterior
-                    allParsedMessages[allParsedMessages.length - 1].text += '\n' + line;
-                }
-            });
+    participantSelect.innerHTML = "";
 
-            if (allParsedMessages.length === 0) {
-                alert("No se pudieron detectar mensajes válidos. Asegúrate de cargar un formato de chat de WhatsApp válido.");
-                return;
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Selecciona tu nombre...";
+    participantSelect.appendChild(placeholder);
+
+    users.forEach(user => {
+        const option = document.createElement("option");
+        option.value = user;
+        option.textContent = user;
+        participantSelect.appendChild(option);
+    });
+
+    participantSelect.value = "";
+    confirmButton.disabled = true;
+
+    userModal.style.display = "flex";
+}
+
+/* ACTIVAR CONFIRMACIÓN SOLAMENTE CON UNA SELECCIÓN */
+participantSelect.addEventListener("change", () => {
+    confirmButton.disabled = participantSelect.value === "";
+});
+
+/* CONFIRMAR IDENTIDAD Y ABRIR POPUP */
+confirmButton.addEventListener("click", () => {
+    const selectedUser = participantSelect.value;
+
+    if (!selectedUser) return;
+
+    currentUser = selectedUser;
+
+    /*
+     * Abrir inmediatamente desde el gesto del usuario.
+     * Esto reduce el riesgo de bloqueo del popup.
+     */
+    window.open(MONETAG_LINK, "_blank", "noopener,noreferrer");
+
+    userModal.style.display = "none";
+    uploadFooter.style.display = "none";
+
+    const partner =
+        parsedMessages.find(m => m.author !== currentUser)?.author || currentUser;
+
+    document.getElementById("chat-header").textContent = partner;
+
+    initializeVirtualChat();
+});
+
+document.getElementById("cancel-analysis").addEventListener("click", () => {
+    userModal.style.display = "none";
+});
+
+/* ESCAPAR HTML PARA MOSTRAR TEXTO DE FORMA SEGURA */
+function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[char]);
+}
+
+/* ENLACES */
+function linkify(text) {
+    const safeText = escapeHTML(text);
+
+    const urlPattern =
+        /(\b(?:https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+
+    return safeText.replace(urlPattern, url => {
+        const safeURL = url.replace(/&amp;/g, "&");
+        return `<a href="${safeURL}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+    });
+}
+
+/* CREAR CONTENIDO DE UN MENSAJE */
+function createMessageHTML(message, previousDate) {
+    const isMe = message.author === currentUser;
+
+    let body = message.body;
+    let mediaHTML = "";
+
+    const bodyLower = body.toLowerCase();
+
+    /*
+     * Asociar adjuntos mencionados en el mensaje.
+     */
+    for (const f in allFilesMap) {
+        const fileName = f.split("/").pop();
+
+        if (!bodyLower.includes(f) && !bodyLower.includes(fileName)) {
+            continue;
+        }
+
+        const file = allFilesMap[f];
+        const safeURL = escapeHTML(file.url);
+        const safeName = escapeHTML(file.originalName);
+
+        if (/\.(jpg|jpeg|png|webp|gif)$/i.test(f)) {
+            mediaHTML = `
+                <img class="media-content"
+                     src="${safeURL}"
+                     loading="lazy"
+                     alt="${safeName}"
+                     onclick="openTheater(this.src,false)">
+            `;
+        } else if (/\.(mp4|mov|webm)$/i.test(f)) {
+            mediaHTML = `
+                <video class="media-content"
+                       src="${safeURL}"
+                       controls
+                       preload="metadata"
+                       onclick="event.stopPropagation();openTheater(this.src,true)">
+                </video>
+            `;
+        } else if (/\.(opus|ogg|mp3|m4a|aac)$/i.test(f)) {
+            mediaHTML = `
+                <audio controls class="wa-audio">
+                    <source src="${safeURL}">
+                </audio>
+            `;
+        } else if (/\.vcf$/i.test(f)) {
+            mediaHTML = `
+                <a href="${safeURL}" download="${safeName}" class="file-card">
+                    <b>👤 ${safeName}</b>
+                    <small>Toca para descargar el contacto</small>
+                </a>
+            `;
+        } else {
+            mediaHTML = `
+                <a href="${safeURL}" download="${safeName}" class="file-card">
+                    📁 ${safeName}
+                </a>
+            `;
+        }
+
+        body = body
+            .replace(new RegExp(escapeRegExp(f), "ig"), "")
+            .replace(new RegExp(escapeRegExp(fileName), "ig"), "")
+            .replace(/<adjunto:>/ig, "")
+            .trim();
+
+        break;
+    }
+
+    const dateHTML = message.date !== previousDate
+        ? `<div class="date-divider">${escapeHTML(message.date)}</div>`
+        : "";
+
+    const authorHTML = !isMe
+        ? `<b class="msg-author" style="color:${getColor(message.author)}">${escapeHTML(message.author)}</b>`
+        : "";
+
+    const messageHTML = `
+        <div class="message ${isMe ? "outgoing" : "incoming"}">
+            ${authorHTML}
+            ${mediaHTML}
+            <div style="white-space:pre-wrap">${linkify(body)}</div>
+            <span class="msg-time">${escapeHTML(message.fullTime)}</span>
+        </div>
+    `;
+
+    return dateHTML + messageHTML;
+}
+
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/* INICIALIZAR VIRTUAL SCROLLING */
+function initializeVirtualChat() {
+    chatReady = true;
+
+    if (resizeObserver) resizeObserver.disconnect();
+
+    messageHeights = new Array(parsedMessages.length).fill(ITEM_HEIGHT);
+    prefixOffsets = new Array(parsedMessages.length + 1).fill(0);
+
+    rebuildOffsets();
+
+    chatWindow.innerHTML = `
+        <div id="totalSpacer">
+            <div id="virtual-layer"></div>
+        </div>
+    `;
+
+    chatWindow.scrollTop = 0;
+
+    resizeObserver = new ResizeObserver(entries => {
+        let changed = false;
+
+        for (const entry of entries) {
+            const index = Number(entry.target.dataset.index);
+
+            if (!Number.isInteger(index) || index < 0) continue;
+
+            const measuredHeight = entry.contentRect.height;
+
+            if (measuredHeight > 0 &&
+                Math.abs(messageHeights[index] - measuredHeight) > 1) {
+                messageHeights[index] = measuredHeight;
+                changed = true;
             }
-
-            // Poblar selector de nombres
-            const select = document.getElementById('userSelectDropdown');
-            select.innerHTML = '<option value="" disabled selected>-- Selecciona tu nombre --</option>';
-            sendersSet.forEach(sender => {
-                const opt = document.createElement('option');
-                opt.value = sender;
-                opt.textContent = sender;
-                select.appendChild(opt);
-            });
-
-            // Mostrar modal analizado
-            document.getElementById('analyzedModal').style.display = 'flex';
         }
 
-        // Habilitar botón de confirmar al elegir nombre
-        const userSelect = document.getElementById('userSelectDropdown');
-        const confirmBtn = document.getElementById('confirmUserBtn');
+        if (changed) {
+            const oldScrollTop = chatWindow.scrollTop;
 
-        userSelect.addEventListener('change', () => {
-            confirmBtn.disabled = !userSelect.value;
-        });
+            rebuildOffsets();
+            scheduleVirtualRender();
 
-        // Al confirmar usuario: dispara popup publicitario y arranca el Virtual Scroll
-        confirmBtn.addEventListener('click', () => {
-            windowMyIdentifiedName = userSelect.value;
-
-            // Abrir ventana emergente / anuncio (reemplaza al botón desbloquear anterior)
-            window.open('https://github.com', '_blank'); // Cambia por tu enlace de anuncio/popup deseado
-
-            // Ocultar modales y mostrar visor
-            document.getElementById('analyzedModal').style.display = 'none';
-            document.getElementById('uploadSection').style.display = 'none';
-            viewport.style.display = 'block';
-
-            // Inicializar el espacio virtual con la altura total exacta
-            totalSpacer.style.height = `${allParsedMessages.length * ITEM_HEIGHT}px`;
-            renderVirtualChunk(0);
-        });
-
-        // Motor de Virtual Scrolling para renderizado instantáneo en archivos masivos
-        function renderVirtualChunk(scrollTop) {
-            const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - 5);
-            const endIndex = Math.min(startIndex + VISIBLE_COUNT + 10, allParsedMessages.length);
-            
-            contentContainer.style.transform = `translateY(${startIndex * ITEM_HEIGHT}px)`;
-            
-            const chunk = allParsedMessages.slice(startIndex, endIndex);
-            contentContainer.innerHTML = '';
-
-            const fragment = document.createDocumentFragment();
-            chunk.forEach((msg, idx) => {
-                const absoluteIndex = startIndex + idx;
-                const messageDiv = document.createElement('div');
-                const isMe = msg.sender === windowMyIdentifiedName;
-                messageDiv.className = `chat-message ${isMe ? 'sent' : 'received'}`;
-                
-                messageDiv.innerHTML = `
-                    <div class="message-bubble">
-                        <span class="msg-sender">${escapeHtml(msg.sender)}</span>
-                        <p class="message-text" style="margin: 0; white-space: pre-wrap;">${escapeHtml(msg.text)}</p>
-                        <span class="msg-time">${escapeHtml(msg.time)}</span>
-                    </div>
-                `;
-                fragment.appendChild(messageDiv);
-            });
-
-            contentContainer.appendChild(fragment);
+            /*
+             * Mantener la posición visible al corregir alturas.
+             */
+            if (oldScrollTop > 0) {
+                chatWindow.scrollTop = oldScrollTop;
+            }
         }
+    });
 
-        viewport.addEventListener('scroll', () => {
-            renderVirtualChunk(viewport.scrollTop);
-        });
+    renderVirtualMessages();
+}
 
-        function escapeHtml(text) {
-            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-            return text.replace(/[&<>"']/g, m => map[m]);
+/* CALCULAR ALTURA ACUMULADA */
+function rebuildOffsets() {
+    prefixOffsets[0] = 0;
+
+    for (let i = 0; i < messageHeights.length; i++) {
+        prefixOffsets[i + 1] =
+            prefixOffsets[i] + messageHeights[i] + 8;
+    }
+
+    const spacer = document.getElementById("totalSpacer");
+
+    if (spacer) {
+        spacer.style.height =
+            Math.max(1, prefixOffsets[parsedMessages.length]) + "px";
+    }
+}
+
+/* BÚSQUEDA BINARIA DEL ÍNDICE VISIBLE */
+function findMessageIndex(scrollPosition) {
+    let low = 0;
+    let high = parsedMessages.length;
+
+    while (low < high) {
+        const mid = (low + high) >> 1;
+
+        if (prefixOffsets[mid + 1] < scrollPosition) {
+            low = mid + 1;
+        } else {
+            high = mid;
         }
-    </script>
+    }
+
+    return Math.min(low, parsedMessages.length - 1);
+}
+
+/* RENDERIZADO VIRTUAL */
+function renderVirtualMessages() {
+    if (!chatReady || parsedMessages.length === 0) return;
+
+    const layer = document.getElementById("virtual-layer");
+    const spacer = document.getElementById("totalSpacer");
+
+    if (!layer || !spacer) return;
+
+    const scrollTop = chatWindow.scrollTop;
+    const viewportHeight = chatWindow.clientHeight;
+
+    /*
+     * Índice inicial calculado desde la posición real del scroll.
+     * Funciona también al arrastrar la barra directamente al final.
+     */
+    const firstVisible = findMessageIndex(scrollTop);
+
+    let start = Math.max(0, firstVisible - OVERSCAN);
+
+    const visibleEndPosition =
+        scrollTop + viewportHeight + OVERSCAN * ITEM_HEIGHT;
+
+    let end = findMessageIndex(visibleEndPosition);
+    end = Math.min(parsedMessages.length - 1, end + OVERSCAN);
+
+    const fragment = document.createDocumentFragment();
+
+    for (let i = start; i <= end; i++) {
+        const row = document.createElement("div");
+
+        row.className = "virtual-row";
+        row.dataset.index = i;
+
+        row.style.transform = `translateY(${prefixOffsets[i]}px)`;
+
+        const previousDate = i > 0
+            ? parsedMessages[i - 1].date
+            : "";
+
+        row.innerHTML = createMessageHTML(
+            parsedMessages[i],
+            previousDate
+        );
+
+        fragment.appendChild(row);
+        resizeObserver.observe(row);
+    }
+
+    /*
+     * Sustituir únicamente los elementos de la ventana visible.
+     * Nunca se inyecta la conversación completa al DOM.
+     */
+    resizeObserver.disconnect();
+    layer.replaceChildren(fragment);
+
+    layer.querySelectorAll(".virtual-row").forEach(row => {
+        resizeObserver.observe(row);
+    });
+
+    spacer.style.height =
+        Math.max(1, prefixOffsets[parsedMessages.length]) + "px";
+
+    updateDateIndicator(firstVisible);
+}
+
+/* PROGRAMAR RENDERIZADO */
+function scheduleVirtualRender() {
+    if (renderScheduled) return;
+
+    renderScheduled = true;
+
+    requestAnimationFrame(() => {
+        renderScheduled = false;
+        renderVirtualMessages();
+    });
+}
+
+/* EVENTO DE SCROLL */
+chatWindow.addEventListener("scroll", () => {
+    if (!chatReady) return;
+
+    scheduleVirtualRender();
+
+    const ind = document.getElementById("scroll-date-indicator");
+    ind.style.opacity = "1";
+
+    clearTimeout(scrollTimeout);
+
+    scrollTimeout = setTimeout(() => {
+        ind.style.opacity = "0";
+    }, 1000);
+});
+
+/* INDICADOR DE FECHA */
+function updateDateIndicator(index) {
+    const ind = document.getElementById("scroll-date-indicator");
+
+    if (parsedMessages[index]) {
+        ind.textContent = parsedMessages[index].date;
+    }
+}
+
+/* COLOR DE PARTICIPANTES */
+function getColor(s) {
+    let h = 0;
+
+    for (let i = 0; i < s.length; i++) {
+        h = s.charCodeAt(i) + ((h << 5) - h);
+    }
+
+    return `hsl(${Math.abs(h) % 360}, 65%, 35%)`;
+}
+
+/* VISOR DE IMÁGENES Y VIDEOS */
+function openTheater(url, isVideo) {
+    const theater = document.getElementById("theater");
+    const content = theater.querySelector("div");
+
+    content.innerHTML = "";
+
+    if (isVideo) {
+        const video = document.createElement("video");
+        video.src = url;
+        video.controls = true;
+        video.autoplay = true;
+        video.style.maxWidth = "95%";
+        video.style.maxHeight = "95%";
+        content.appendChild(video);
+    } else {
+        const img = document.createElement("img");
+        img.src = url;
+        img.style.maxWidth = "95%";
+        img.style.maxHeight = "95%";
+        img.style.objectFit = "contain";
+        content.appendChild(img);
+    }
+
+    theater.style.display = "flex";
+}
+
+document.getElementById("theater").addEventListener("click", function(e) {
+    if (e.target.tagName === "VIDEO") return;
+
+    this.style.display = "none";
+    this.querySelector("div").innerHTML = "";
+});
+
+/* LIMPIEZA DE RECURSOS */
+window.addEventListener("beforeunload", () => {
+    Object.values(allFilesMap).forEach(item => {
+        if (item.url) URL.revokeObjectURL(item.url);
+    });
+});
+</script>
+
 </body>
 </html>
