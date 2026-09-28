@@ -6,6 +6,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Tu app launcher privado que no necesita cuenta ni base de datos. Añade tus apps favoritas, organízalas en folders, y compártelo con un link.">
 <link rel="icon" type="image/png" sizes="90x90" href="favicon.png">
+<link rel="apple-touch-icon" href="favicon.png">
+<link rel="canonical" href="https://git.inriris.com/launcher/index.html">
+<meta name="theme-color" content="#fffef7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0c0c0c" media="(prefers-color-scheme: dark)">
 
 <!-- Open Graph -->
 <meta property="og:type" content="website">
@@ -21,11 +25,20 @@
 <meta name="twitter:title" content="SlugLauncher — tu launcher de apps en un link">
 <meta name="twitter:description" content="Sin cuentas. Sin servidores. Todo vive en la URL.">
 <meta name="twitter:image" content="https://git.inriris.com/launcher/og-image-light.png">
-<!-- Animotion: librería de 745+ animaciones CSS3 (https://github.com/animotion-mcp/animotion-mcp.github.io) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/animotion-mcp/animotion-mcp.github.io@main/css/keyframes.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/animotion-mcp/animotion-mcp.github.io@main/css/keyframes-part2.css">
 
 <style>
+/* ---------- Animaciones (inline; antes venían de un CDN externo sin versión fija) ---------- */
+@keyframes animotion-fade-in { from { opacity:0; } to { opacity:1; } }
+@keyframes animotion-fade-in-up { from { opacity:0; transform:translate3d(0,24px,0); } to { opacity:1; transform:none; } }
+@keyframes animotion-slide-in-right { from { opacity:0; transform:translate3d(48px,0,0); } to { opacity:1; transform:none; } }
+@keyframes animotion-bounce-in {
+    0%   { opacity:0; transform:scale3d(.3,.3,.3); }
+    20%  { transform:scale3d(1.1,1.1,1.1); }
+    40%  { transform:scale3d(.9,.9,.9); }
+    60%  { opacity:1; transform:scale3d(1.03,1.03,1.03); }
+    80%  { transform:scale3d(.97,.97,.97); }
+    100% { opacity:1; transform:scale3d(1,1,1); }
+}
 :root {
     --bg-light: #fffEf7;
     --bg-dark: #0C0C0C;
@@ -87,11 +100,18 @@ body.theme-dark #header {
 }
 body.modeActive #header { box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 2px 10px rgba(0,122,255,0.35); }
 body.theme-dark.modeActive #header { box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 2px 14px rgba(10,132,255,0.4); }
-#header h1 { margin:0; font-size:19px; font-weight:700; display:flex; align-items:center; gap:8px; }
-#titleLabel { cursor:pointer; transition:opacity .15s ease, transform .15s ease; border-radius:10px; }
+#header h1 { margin:0; font-size:19px; font-weight:700; display:flex; align-items:center; gap:8px; flex:1 1 auto; min-width:0; overflow:hidden; }
+#titleLabel { cursor:pointer; transition:opacity .15s ease, transform .15s ease; border-radius:10px; min-width:0; max-width:none; white-space:nowrap; }
+#titleLabelText { flex:0 0 auto; white-space:nowrap; }
+#pageTitleSuffix { display:block; flex:1 1 auto; min-width:0; overflow:hidden; white-space:nowrap; }
+#pageTitleSuffixText { display:inline-block; white-space:nowrap; will-change:transform; }
+#pageTitleSuffix:hover #pageTitleSuffixText.scrolling { animation: pageTitleMarquee 9s ease-in-out infinite alternate; }
+@keyframes pageTitleMarquee { from { transform:translateX(0); } to { transform:translateX(var(--scroll-distance, 0px)); } }
+#headerActions { flex:0 0 auto; }
+@media (prefers-reduced-motion: reduce) { #pageTitleSuffixText.scrolling { animation:none; transform:none !important; } }
 #titleLabel:hover { opacity:0.75; }
 #titleLabel:active { transform:scale(.97); }
-.titleIcon { width:22px; height:22px; flex-shrink:0; transform:scale(1.5); transform-origin:center center; }
+.titleIcon { width:18px; height:30px; flex:0 0 18px; display:block; overflow:visible; transform:none; }
 #headerActions { display:flex; align-items:center; gap:4px; }
 #searchBtn, #editBtn, #burgerBtn {
     border:none; background:transparent; color:inherit; font-size:22px; cursor:pointer;
@@ -194,7 +214,10 @@ body.theme-dark #emptyStateHelp { background: var(--card-dark); box-shadow:0 6px
     gap: 24px;
     grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
 }
-#launcherGrid { max-width: 1100px; margin: 0 auto; }
+#launcherGrid { max-width: 1100px; margin: 0 auto; grid-template-columns:repeat(8,minmax(0,1fr)); }
+@media (max-width: 900px) { #launcherGrid { grid-template-columns:repeat(6,minmax(0,1fr)); } }
+@media (max-width: 650px) { #launcherGrid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; } }
+@media (max-width: 380px) { #launcherGrid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; } }
 
 /* ---------- ICONOS (celda cuadrada) ---------- */
 .appIcon {
@@ -237,8 +260,10 @@ body.theme-dark .appIcon:hover {
 }
 .appIcon span {
     font-size:clamp(10px,2.6vw,14px); font-weight:500; color:var(--text-light);
-    max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block;
 }
+.appIcon .appNameLabel { position:relative; }
+.appIcon .appNameLabel:hover { overflow:visible; text-overflow:clip; }
 body.theme-dark .appIcon span { color:var(--text-dark); }
 
 /* Badge: cantidad de shortcuts dentro de un folder (50% más grande, azul del folder) */
@@ -649,13 +674,16 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
 @media (max-width: 768px){
     input, textarea, select, button { font-size: 16px !important; }
 }
+.fieldNote { font-size:12px; opacity:.65; margin:2px 2px 8px; line-height:1.35; }
+.fieldNote.warn { opacity:1; color:#b25e00; background:rgba(255,149,0,.12); border-radius:8px; padding:8px 10px; margin:8px 0; }
+body.theme-dark .fieldNote.warn { color:#ffb454; }
 </style>
 </head>
 <body>
 
 <!-- HEADER (fixed) -->
 <div id="header">
-    <h1 id="titleLabel" onclick="openSlugModal()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSlugModal();}"><svg class="titleIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 263.935 263.935" aria-hidden="true"><path fill="#4A90E2" d="m188.835,93.248c-6.319-10.976-13.982-18.705-18.862-22.973l17.009-40.097c7.051-0.929 12.529-7.305 12.529-15.022-2.84217e-14-8.357-6.415-15.156-14.301-15.156-7.888,0-14.305,6.799-14.305,15.155 0,3.18 0.934,6.13 2.52,8.57l-16.621,39.184-35.194-14.011c-1.115-7.186-7.002-12.691-14.095-12.691-7.888,0-14.305,6.798-14.305,15.153 0,8.355 6.417,15.152 14.305,15.152 3.448,0 6.615-1.3 9.088-3.462l36.296,14.449c-1.008,10.456-3.716,33.415-9.006,46.189-12.34,29.792-29.63,42.078-44.886,52.918-12.398,8.811-24.109,17.132-30.532,32.639-11.676,28.183 3.698,48.68 12.504,53.703 1.148,0.655 2.431,0.985 3.716,0.985 1.093,0 2.187-0.238 3.202-0.718 2.212-1.044 3.776-3.102 4.189-5.513 0.136-0.79 0.257-1.617 0.383-2.479 0.689-4.737 1.402-9.635 6.399-15.682 3.186-3.854 11.276-6.456 20.646-9.469 21.782-7.005 54.699-17.59 72.607-60.826 13.996-33.786 5.939-59.976-3.286-75.998zm-10.571,70.26c-15.252,36.821-41.917,45.396-63.342,52.286-11.61,3.734-21.637,6.958-27.616,14.194-2.808,3.398-4.75,6.664-6.123,9.708-2.275-5.955-3.152-14.324 1.149-24.71 4.771-11.52 13.859-17.977 25.364-26.152 16.067-11.417 36.063-25.627 50.054-59.405 4.72-11.395 7.541-28.744 9.069-41.188 2.947,3.324 6.143,7.499 9.017,12.491 10.972,19.057 11.788,40.177 2.428,62.776z"/></svg><span id="titleLabelText">Launcher</span></h1>
+    <h1 id="titleLabel" onclick="openSlugModal()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSlugModal();}"><svg class="titleIcon" xmlns="http://www.w3.org/2000/svg" viewBox="45 0 160 264" aria-hidden="true"><path fill="#4A90E2" d="m188.835,93.248c-6.319-10.976-13.982-18.705-18.862-22.973l17.009-40.097c7.051-0.929 12.529-7.305 12.529-15.022-2.84217e-14-8.357-6.415-15.156-14.301-15.156-7.888,0-14.305,6.799-14.305,15.155 0,3.18 0.934,6.13 2.52,8.57l-16.621,39.184-35.194-14.011c-1.115-7.186-7.002-12.691-14.095-12.691-7.888,0-14.305,6.798-14.305,15.153 0,8.355 6.417,15.152 14.305,15.152 3.448,0 6.615-1.3 9.088-3.462l36.296,14.449c-1.008,10.456-3.716,33.415-9.006,46.189-12.34,29.792-29.63,42.078-44.886,52.918-12.398,8.811-24.109,17.132-30.532,32.639-11.676,28.183 3.698,48.68 12.504,53.703 1.148,0.655 2.431,0.985 3.716,0.985 1.093,0 2.187-0.238 3.202-0.718 2.212-1.044 3.776-3.102 4.189-5.513 0.136-0.79 0.257-1.617 0.383-2.479 0.689-4.737 1.402-9.635 6.399-15.682 3.186-3.854 11.276-6.456 20.646-9.469 21.782-7.005 54.699-17.59 72.607-60.826 13.996-33.786 5.939-59.976-3.286-75.998zm-10.571,70.26c-15.252,36.821-41.917,45.396-63.342,52.286-11.61,3.734-21.637,6.958-27.616,14.194-2.808,3.398-4.75,6.664-6.123,9.708-2.275-5.955-3.152-14.324 1.149-24.71 4.771-11.52 13.859-17.977 25.364-26.152 16.067-11.417 36.063-25.627 50.054-59.405 4.72-11.395 7.541-28.744 9.069-41.188 2.947,3.324 6.143,7.499 9.017,12.491 10.972,19.057 11.788,40.177 2.428,62.776z"/></svg><span id="titleLabelText">Launcher</span><span id="pageTitleSuffix" aria-label="Nombre de la página"><span id="pageTitleSuffixText"></span></span></h1>
     <div id="headerActions">
         <button id="searchBtn" type="button" aria-label="Buscar">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -723,6 +751,7 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
         <a class="sideMenuLink" id="editIconsLink" onclick="enterEditMode()">Editar iconos</a>
         <a class="sideMenuLink" id="moveIconsLink" onclick="enterMoveMode()">Mover iconos</a>
         <a class="sideMenuLink" id="saveLauncherLink" onclick="saveSlugLauncher()">Salvar tu SlugLauncher</a>
+        <a class="sideMenuLink" id="renamePageLink" onclick="openRenamePageModal()">Cambiar nombre de la página</a>
         <a class="sideMenuLink" id="slugCreateLink" href="https://git.inriris.com/launcher" target="_blank" rel="noopener" onclick="closeSidePanel()">Crear tu propio SlugLauncher</a>
         <a class="sideMenuLink" id="slugShareLink" onclick="shareLauncher()">Compartir tu launcher</a>
 
@@ -759,6 +788,7 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
             <input id="appName" placeholder="Nombre">
             <div class="fieldLabel" id="iconOptionsLabel">Icono</div>
             <div id="appIconOptions" class="iconOptionsRow"></div>
+            <div class="fieldNote" id="iconPrivacyNote"></div>
             <input id="appIcon" placeholder="Icono URL (opcional)">
             <img id="iconPreview">
             <a class="helperLink" id="appSvgApiLink" onclick="openSvgApiSearch('appName')">🔍 Buscar icono SVG en svgapi.com</a>
@@ -822,8 +852,19 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
             <button id="slugCreateBtn" type="button">Crear tu propio SlugLauncher</button>
         </a>
         <button id="slugShareBtn" type="button" onclick="shareLauncher()">Compartir tu launcher</button>
+        <button id="slugRenameBtn" type="button" onclick="openRenamePageModal()">Cambiar nombre de la página</button>
         <button id="slugCancelBtn" type="button" style="background:#aaa;" onclick="closeSlugModal()">Cancelar</button>
     </div>
+</div>
+
+<!-- MODAL CAMBIAR NOMBRE DE PÁGINA -->
+<div id="renamePageModal" style="display:none;position:fixed;inset:0;z-index:2200;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
+  <div class="modalBox" role="dialog" aria-modal="true" aria-labelledby="renamePageTitle" style="width:min(420px,100%);">
+    <h3 id="renamePageTitle" style="margin-top:0;">Cambiar nombre de la página</h3>
+    <input id="renamePageInput" type="text" maxlength="120" placeholder="Nombre de la página" style="width:100%;box-sizing:border-box;">
+    <button id="renamePageSaveBtn" type="button" onclick="savePageName()">Guardar</button>
+    <button id="renamePageCancelBtn" type="button" style="background:#aaa;" onclick="closeRenamePageModal()">Cancelar</button>
+  </div>
 </div>
 
 <!-- MODAL EXPORTAR / IMPORTAR URL -->
@@ -831,6 +872,7 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
     <div class="modalBox" role="dialog" aria-modal="true" aria-labelledby="urlIOTitle">
         <h3 id="urlIOTitle" style="margin-top:0;">Exportar URL</h3>
         <textarea id="urlIOField" rows="3" style="resize:vertical;width:100%;box-sizing:border-box;"></textarea>
+        <div id="urlIOWarn" class="fieldNote warn" role="status" style="display:none;"></div>
         <button id="urlIOPasteBtn" type="button" onclick="pasteUrlIOField()" style="background:#8e8e93;display:none;">Pegar</button>
         <button id="urlIOPrimaryBtn" type="button" onclick="confirmUrlIOModal()">Copiar</button>
         <button id="urlIOCancelBtn" type="button" style="background:#aaa;" onclick="closeUrlIOModal()">Cancelar</button>
@@ -847,6 +889,7 @@ let currentMode = "normal";         // "normal" | "edit" | "move"
 let globalTheme = 1;                // 0 = dark, 1 = light, 2 = system
 let globalLang = "es";
 let globalSaved = 0;                // 0 = no salvado, 1 = salvado (via Exportar / Salvar SlugLauncher)
+let pageTitle = "";
 
 let editingPath = null;             // {array, index} de la app en edición
 let editingFolderPath = null;       // {array, index} del folder en edición
@@ -892,6 +935,9 @@ const i18n = {
         placeholderName:"Name", placeholderURL:"URL", placeholderIcon:"Icon URL (optional)",
         iconOptionsLabel:"Icon",
         searchLabel:"Search", searchPlaceholder:"Search by name...", searchNoResults:"No results",
+        urlTooLong:"This link is {n} characters long. Some apps and browsers may truncate long links; consider removing apps or using shorter icon URLs.", iconPrivacyNote:"Icons are looked up via Google's favicon service and the app's own site.",
+        renamePage:"Change page name", renamePagePlaceholder:"Page name", save:"Save",
+        savedTitle:"SlugLauncher saved", savedUpdateHeading:"If you make changes", savedUpdateBody:"If you make changes to your apps, folders, language or settings, save the SlugLauncher again and replace the old shortcut to use the updated URL.", savedIntroDownloaded:"{file} was downloaded.", savedIntroReady:"Your SlugLauncher is up to date and ready.", savedIntroReadyChromebook:"Your SlugLauncher is up to date and ready to create a shortcut.", stepNext:"Next step", stepQuickAccess:"Quick access", stepAfter:"Then", stepOpenDownloaded:"Open the downloaded file to access your SlugLauncher.", stepWinQuickAccess:"If you'd like it available as an app or shortcut, use your browser's or system's option to create a shortcut or install as an app.", stepMacQuickAccess:"You can also use your browser's or system's option to create a quick shortcut or install this site as an app.", stepLinuxMove:"Move or open the file according to your desktop environment's rules.", stepLinuxQuickAccess:"You can also use your browser's option to create a shortcut or install this site as an app.", stepChromebookNext:"Use your browser's option to create a shortcut or install this site as an app.", stepChromebookAfter:"Place the shortcut wherever you'd like to quickly open your SlugLauncher.", stepAndroidNext:"Use the \"Add to Home screen\" option or your browser's equivalent feature.", stepIosNext:"Use your browser's option to add this site to the Home Screen or create an equivalent shortcut.", stepDefaultNext:"Use the option available in your browser or system to create a shortcut or install this site as an app.", closeBtn:"Close", copiedShort:"Copied", copyManually:"Copy the URL manually",
         moveItem:"Move",
         svgApiLink:"🔍 Find an SVG icon on svgapi.com", folderIconLabel:"Folder icon (optional, shown in black)",
         invalidData:"Invalid data", invalidDomain:"Invalid domain", invalidName:"Invalid name",
@@ -922,6 +968,9 @@ const i18n = {
         placeholderName:"Nombre", placeholderURL:"URL", placeholderIcon:"Icono URL (opcional)",
         iconOptionsLabel:"Icono",
         searchLabel:"Buscar", searchPlaceholder:"Buscar por nombre...", searchNoResults:"Sin resultados",
+        urlTooLong:"Este link tiene {n} caracteres. Algunas apps y navegadores pueden cortar links largos; considera quitar apps o usar URLs de íconos más cortas.", iconPrivacyNote:"Los íconos se buscan mediante el servicio de favicons de Google y el propio sitio de la app.",
+        renamePage:"Cambiar nombre de la página", renamePagePlaceholder:"Nombre de la página", save:"Guardar",
+        savedTitle:"SlugLauncher guardado", savedUpdateHeading:"Si haces cambios", savedUpdateBody:"Si haces cambios en tus apps, folders, idioma o configuración, vuelve a guardar el SlugLauncher y reemplaza el acceso anterior para utilizar la URL actualizada.", savedIntroDownloaded:"Se descargó {file}.", savedIntroReady:"Tu SlugLauncher está actualizado y listo.", savedIntroReadyChromebook:"Tu SlugLauncher está actualizado y listo para crear un acceso rápido.", stepNext:"Siguiente paso", stepQuickAccess:"Acceso rápido", stepAfter:"Después", stepOpenDownloaded:"Abre el archivo descargado para acceder a tu SlugLauncher.", stepWinQuickAccess:"Si deseas tenerlo disponible como aplicación o acceso rápido, utiliza la función de crear acceso directo o instalar como aplicación que ofrezca tu navegador o sistema.", stepMacQuickAccess:"También puedes utilizar la función de tu navegador o sistema para crear un acceso rápido o instalar este sitio como aplicación.", stepLinuxMove:"Mueve o abre el archivo según las reglas de tu entorno de escritorio.", stepLinuxQuickAccess:"También puedes utilizar la función de tu navegador para crear un acceso directo o instalar este sitio como aplicación.", stepChromebookNext:"Utiliza la función de tu navegador para crear un acceso directo o instalar este sitio como aplicación.", stepChromebookAfter:"Coloca el acceso donde prefieras para abrir rápidamente tu SlugLauncher.", stepAndroidNext:"Utiliza la opción Añadir a pantalla de inicio o la función equivalente que ofrezca tu navegador.", stepIosNext:"Utiliza la función de tu navegador para añadir este sitio a la pantalla de inicio o crear un acceso equivalente.", stepDefaultNext:"Utiliza la función disponible en tu navegador o sistema para crear un acceso directo o instalar este sitio como aplicación.", closeBtn:"Cerrar", copiedShort:"Copiada", copyManually:"Copia la URL manualmente",
         moveItem:"Mover",
         svgApiLink:"🔍 Buscar icono SVG en svgapi.com", folderIconLabel:"Icono del folder (opcional, se muestra en negro)",
         invalidData:"Datos inválidos", invalidDomain:"Dominio no válido", invalidName:"Nombre inválido",
@@ -952,6 +1001,9 @@ const i18n = {
         placeholderName:"Nom", placeholderURL:"URL", placeholderIcon:"URL de l'icône (optionnel)",
         iconOptionsLabel:"Icône",
         searchLabel:"Rechercher", searchPlaceholder:"Rechercher par nom...", searchNoResults:"Aucun résultat",
+        urlTooLong:"Ce lien fait {n} caractères. Certaines applis et navigateurs peuvent tronquer les liens longs ; envisagez de retirer des apps ou d'utiliser des URL d'icônes plus courtes.", iconPrivacyNote:"Les icônes sont récupérées via le service de favicons de Google et le site de l'app.",
+        renamePage:"Changer le nom de la page", renamePagePlaceholder:"Nom de la page", save:"Enregistrer",
+        savedTitle:"SlugLauncher enregistré", savedUpdateHeading:"En cas de modification", savedUpdateBody:"Si vous modifiez vos apps, dossiers, langue ou paramètres, enregistrez à nouveau le SlugLauncher et remplacez l'ancien raccourci pour utiliser l'URL mise à jour.", savedIntroDownloaded:"{file} a été téléchargé.", savedIntroReady:"Votre SlugLauncher est à jour et prêt.", savedIntroReadyChromebook:"Votre SlugLauncher est à jour et prêt à créer un raccourci.", stepNext:"Étape suivante", stepQuickAccess:"Accès rapide", stepAfter:"Ensuite", stepOpenDownloaded:"Ouvrez le fichier téléchargé pour accéder à votre SlugLauncher.", stepWinQuickAccess:"Pour le rendre disponible comme application ou raccourci, utilisez la fonction de votre navigateur ou système pour créer un raccourci ou installer comme application.", stepMacQuickAccess:"Vous pouvez aussi utiliser la fonction de votre navigateur ou système pour créer un raccourci rapide ou installer ce site comme application.", stepLinuxMove:"Déplacez ou ouvrez le fichier selon les règles de votre environnement de bureau.", stepLinuxQuickAccess:"Vous pouvez aussi utiliser la fonction de votre navigateur pour créer un raccourci ou installer ce site comme application.", stepChromebookNext:"Utilisez la fonction de votre navigateur pour créer un raccourci ou installer ce site comme application.", stepChromebookAfter:"Placez le raccourci où vous voulez pour ouvrir rapidement votre SlugLauncher.", stepAndroidNext:"Utilisez l'option \"Ajouter à l'écran d'accueil\" ou la fonction équivalente de votre navigateur.", stepIosNext:"Utilisez la fonction de votre navigateur pour ajouter ce site à l'écran d'accueil ou créer un raccourci équivalent.", stepDefaultNext:"Utilisez la fonction disponible dans votre navigateur ou système pour créer un raccourci ou installer ce site comme application.", closeBtn:"Fermer", copiedShort:"Copiée", copyManually:"Copiez l'URL manuellement",
         moveItem:"Déplacer",
         svgApiLink:"🔍 Chercher une icône SVG sur svgapi.com", folderIconLabel:"Icône du dossier (optionnel, affichée en noir)",
         invalidData:"Données invalides", invalidDomain:"Domaine invalide", invalidName:"Nom invalide",
@@ -982,6 +1034,9 @@ const i18n = {
         placeholderName:"Name", placeholderURL:"URL", placeholderIcon:"Symbol-URL (optional)",
         iconOptionsLabel:"Symbol",
         searchLabel:"Suchen", searchPlaceholder:"Nach Namen suchen...", searchNoResults:"Keine Ergebnisse",
+        urlTooLong:"Dieser Link ist {n} Zeichen lang. Manche Apps und Browser kürzen lange Links; entferne ggf. Apps oder nutze kürzere Icon-URLs.", iconPrivacyNote:"Symbole werden über Googles Favicon-Dienst und die Website der App abgerufen.",
+        renamePage:"Seitennamen ändern", renamePagePlaceholder:"Seitenname", save:"Speichern",
+        savedTitle:"SlugLauncher gespeichert", savedUpdateHeading:"Bei Änderungen", savedUpdateBody:"Wenn du Apps, Ordner, Sprache oder Einstellungen änderst, speichere den SlugLauncher erneut und ersetze die alte Verknüpfung, um die aktualisierte URL zu nutzen.", savedIntroDownloaded:"{file} wurde heruntergeladen.", savedIntroReady:"Dein SlugLauncher ist aktuell und einsatzbereit.", savedIntroReadyChromebook:"Dein SlugLauncher ist aktuell und bereit für eine Verknüpfung.", stepNext:"Nächster Schritt", stepQuickAccess:"Schnellzugriff", stepAfter:"Danach", stepOpenDownloaded:"Öffne die heruntergeladene Datei, um auf deinen SlugLauncher zuzugreifen.", stepWinQuickAccess:"Wenn du ihn als App oder Verknüpfung verfügbar haben möchtest, nutze die Funktion deines Browsers oder Systems zum Erstellen einer Verknüpfung oder zur Installation als App.", stepMacQuickAccess:"Du kannst auch die Funktion deines Browsers oder Systems nutzen, um eine Verknüpfung zu erstellen oder diese Seite als App zu installieren.", stepLinuxMove:"Verschiebe oder öffne die Datei gemäß den Regeln deiner Desktop-Umgebung.", stepLinuxQuickAccess:"Du kannst auch die Funktion deines Browsers nutzen, um eine Verknüpfung zu erstellen oder diese Seite als App zu installieren.", stepChromebookNext:"Nutze die Funktion deines Browsers, um eine Verknüpfung zu erstellen oder diese Seite als App zu installieren.", stepChromebookAfter:"Platziere die Verknüpfung dort, wo du deinen SlugLauncher schnell öffnen möchtest.", stepAndroidNext:"Nutze die Option \"Zum Startbildschirm hinzufügen\" oder die entsprechende Funktion deines Browsers.", stepIosNext:"Nutze die Funktion deines Browsers, um diese Seite zum Home-Bildschirm hinzuzufügen oder eine gleichwertige Verknüpfung zu erstellen.", stepDefaultNext:"Nutze die verfügbare Funktion in deinem Browser oder System, um eine Verknüpfung zu erstellen oder diese Seite als App zu installieren.", closeBtn:"Schließen", copiedShort:"Kopiert", copyManually:"Kopiere die URL manuell",
         moveItem:"Verschieben",
         svgApiLink:"🔍 SVG-Symbol auf svgapi.com suchen", folderIconLabel:"Ordner-Symbol (optional, wird schwarz angezeigt)",
         invalidData:"Ungültige Daten", invalidDomain:"Ungültige Domain", invalidName:"Ungültiger Name",
@@ -1012,6 +1067,9 @@ const i18n = {
         placeholderName:"Nome", placeholderURL:"URL", placeholderIcon:"URL do ícone (opcional)",
         iconOptionsLabel:"Ícone",
         searchLabel:"Buscar", searchPlaceholder:"Buscar por nome...", searchNoResults:"Nenhum resultado",
+        urlTooLong:"Este link tem {n} caracteres. Alguns apps e navegadores podem cortar links longos; considere remover apps ou usar URLs de ícones mais curtas.", iconPrivacyNote:"Os ícones são buscados pelo serviço de favicons do Google e pelo site do app.",
+        renamePage:"Alterar nome da página", renamePagePlaceholder:"Nome da página", save:"Salvar",
+        savedTitle:"SlugLauncher salvo", savedUpdateHeading:"Se fizer alterações", savedUpdateBody:"Se você alterar seus apps, pastas, idioma ou configurações, salve o SlugLauncher novamente e substitua o atalho anterior para usar a URL atualizada.", savedIntroDownloaded:"{file} foi baixado.", savedIntroReady:"Seu SlugLauncher está atualizado e pronto.", savedIntroReadyChromebook:"Seu SlugLauncher está atualizado e pronto para criar um atalho.", stepNext:"Próximo passo", stepQuickAccess:"Acesso rápido", stepAfter:"Depois", stepOpenDownloaded:"Abra o arquivo baixado para acessar seu SlugLauncher.", stepWinQuickAccess:"Se quiser tê-lo disponível como app ou atalho, use a função do seu navegador ou sistema para criar um atalho ou instalar como app.", stepMacQuickAccess:"Você também pode usar a função do seu navegador ou sistema para criar um atalho rápido ou instalar este site como app.", stepLinuxMove:"Mova ou abra o arquivo de acordo com as regras do seu ambiente de desktop.", stepLinuxQuickAccess:"Você também pode usar a função do seu navegador para criar um atalho ou instalar este site como app.", stepChromebookNext:"Use a função do seu navegador para criar um atalho ou instalar este site como app.", stepChromebookAfter:"Coloque o atalho onde preferir para abrir rapidamente seu SlugLauncher.", stepAndroidNext:"Use a opção \"Adicionar à tela inicial\" ou a função equivalente do seu navegador.", stepIosNext:"Use a função do seu navegador para adicionar este site à tela inicial ou criar um atalho equivalente.", stepDefaultNext:"Use a função disponível no seu navegador ou sistema para criar um atalho ou instalar este site como app.", closeBtn:"Fechar", copiedShort:"Copiada", copyManually:"Copie a URL manualmente",
         moveItem:"Mover",
         svgApiLink:"🔍 Buscar ícone SVG em svgapi.com", folderIconLabel:"Ícone da pasta (opcional, exibido em preto)",
         invalidData:"Dados inválidos", invalidDomain:"Domínio inválido", invalidName:"Nome inválido",
@@ -1042,6 +1100,9 @@ const i18n = {
         placeholderName:"Nome", placeholderURL:"URL", placeholderIcon:"URL icona (opzionale)",
         iconOptionsLabel:"Icona",
         searchLabel:"Cerca", searchPlaceholder:"Cerca per nome...", searchNoResults:"Nessun risultato",
+        urlTooLong:"Questo link è lungo {n} caratteri. Alcune app e browser possono troncare i link lunghi; valuta di rimuovere app o usare URL di icone più corti.", iconPrivacyNote:"Le icone vengono cercate tramite il servizio favicon di Google e il sito dell'app.",
+        renamePage:"Cambia nome pagina", renamePagePlaceholder:"Nome pagina", save:"Salva",
+        savedTitle:"SlugLauncher salvato", savedUpdateHeading:"Se apporti modifiche", savedUpdateBody:"Se modifichi le tue app, cartelle, lingua o impostazioni, salva di nuovo lo SlugLauncher e sostituisci il collegamento precedente per usare l'URL aggiornato.", savedIntroDownloaded:"{file} è stato scaricato.", savedIntroReady:"Il tuo SlugLauncher è aggiornato e pronto.", savedIntroReadyChromebook:"Il tuo SlugLauncher è aggiornato e pronto per creare un collegamento.", stepNext:"Passo successivo", stepQuickAccess:"Accesso rapido", stepAfter:"Poi", stepOpenDownloaded:"Apri il file scaricato per accedere al tuo SlugLauncher.", stepWinQuickAccess:"Se vuoi averlo disponibile come app o collegamento, usa la funzione del tuo browser o sistema per creare un collegamento o installarlo come app.", stepMacQuickAccess:"Puoi anche usare la funzione del tuo browser o sistema per creare un collegamento rapido o installare questo sito come app.", stepLinuxMove:"Sposta o apri il file secondo le regole del tuo ambiente desktop.", stepLinuxQuickAccess:"Puoi anche usare la funzione del tuo browser per creare un collegamento o installare questo sito come app.", stepChromebookNext:"Usa la funzione del tuo browser per creare un collegamento o installare questo sito come app.", stepChromebookAfter:"Metti il collegamento dove preferisci per aprire rapidamente il tuo SlugLauncher.", stepAndroidNext:"Usa l'opzione \"Aggiungi a schermata Home\" o la funzione equivalente del tuo browser.", stepIosNext:"Usa la funzione del tuo browser per aggiungere questo sito alla schermata Home o creare un collegamento equivalente.", stepDefaultNext:"Usa la funzione disponibile nel tuo browser o sistema per creare un collegamento o installare questo sito come app.", closeBtn:"Chiudi", copiedShort:"Copiato", copyManually:"Copia l'URL manualmente",
         moveItem:"Sposta",
         svgApiLink:"🔍 Cerca un'icona SVG su svgapi.com", folderIconLabel:"Icona della cartella (opzionale, mostrata in nero)",
         invalidData:"Dati non validi", invalidDomain:"Dominio non valido", invalidName:"Nome non valido",
@@ -1072,6 +1133,9 @@ const i18n = {
         placeholderName:"Имя", placeholderURL:"URL", placeholderIcon:"URL значка (необязательно)",
         iconOptionsLabel:"Значок",
         searchLabel:"Поиск", searchPlaceholder:"Поиск по имени...", searchNoResults:"Нет результатов",
+        urlTooLong:"Длина ссылки — {n} символов. Некоторые приложения и браузеры могут обрезать длинные ссылки; удалите часть приложений или используйте более короткие URL значков.", iconPrivacyNote:"Значки загружаются через сервис favicon Google и сайт приложения.",
+        renamePage:"Изменить название страницы", renamePagePlaceholder:"Название страницы", save:"Сохранить",
+        savedTitle:"SlugLauncher сохранён", savedUpdateHeading:"Если вы внесёте изменения", savedUpdateBody:"Если вы измените приложения, папки, язык или настройки, сохраните SlugLauncher снова и замените старый ярлык, чтобы использовать обновлённую ссылку.", savedIntroDownloaded:"Файл {file} загружен.", savedIntroReady:"Ваш SlugLauncher обновлён и готов к работе.", savedIntroReadyChromebook:"Ваш SlugLauncher обновлён и готов к созданию ярлыка.", stepNext:"Следующий шаг", stepQuickAccess:"Быстрый доступ", stepAfter:"Затем", stepOpenDownloaded:"Откройте загруженный файл, чтобы получить доступ к SlugLauncher.", stepWinQuickAccess:"Если хотите, чтобы он был доступен как приложение или ярлык, используйте функцию браузера или системы для создания ярлыка или установки как приложения.", stepMacQuickAccess:"Вы также можете использовать функцию браузера или системы, чтобы создать быстрый ярлык или установить этот сайт как приложение.", stepLinuxMove:"Переместите или откройте файл согласно правилам вашего окружения рабочего стола.", stepLinuxQuickAccess:"Вы также можете использовать функцию браузера, чтобы создать ярлык или установить этот сайт как приложение.", stepChromebookNext:"Используйте функцию браузера, чтобы создать ярлык или установить этот сайт как приложение.", stepChromebookAfter:"Поместите ярлык туда, где вам удобно быстро открывать SlugLauncher.", stepAndroidNext:"Используйте опцию «Добавить на главный экран» или аналогичную функцию браузера.", stepIosNext:"Используйте функцию браузера, чтобы добавить этот сайт на главный экран, или создайте аналогичный ярлык.", stepDefaultNext:"Используйте доступную функцию браузера или системы, чтобы создать ярлык или установить этот сайт как приложение.", closeBtn:"Закрыть", copiedShort:"Скопировано", copyManually:"Скопируйте ссылку вручную",
         moveItem:"Переместить",
         svgApiLink:"🔍 Найти SVG-значок на svgapi.com", folderIconLabel:"Значок папки (необязательно, отображается чёрным)",
         invalidData:"Неверные данные", invalidDomain:"Неверный домен", invalidName:"Неверное имя",
@@ -1102,6 +1166,9 @@ const i18n = {
         placeholderName:"名称", placeholderURL:"URL", placeholderIcon:"图标 URL（可选）",
         iconOptionsLabel:"图标",
         searchLabel:"搜索", searchPlaceholder:"按名称搜索...", searchNoResults:"没有结果",
+        urlTooLong:"此链接长度为 {n} 个字符。部分应用和浏览器可能会截断过长的链接，建议删除部分应用或使用更短的图标网址。", iconPrivacyNote:"图标通过 Google 的 favicon 服务及应用自身网站获取。",
+        renamePage:"更改页面名称", renamePagePlaceholder:"页面名称", save:"保存",
+        savedTitle:"SlugLauncher 已保存", savedUpdateHeading:"如有更改", savedUpdateBody:"如果你更改了应用、文件夹、语言或设置，请重新保存 SlugLauncher，并替换旧的快捷方式以使用更新后的链接。", savedIntroDownloaded:"{file} 已下载。", savedIntroReady:"你的 SlugLauncher 已是最新版本，可以使用了。", savedIntroReadyChromebook:"你的 SlugLauncher 已是最新版本，可以创建快捷方式了。", stepNext:"下一步", stepQuickAccess:"快速访问", stepAfter:"然后", stepOpenDownloaded:"打开已下载的文件以访问你的 SlugLauncher。", stepWinQuickAccess:"如果想将其作为应用或快捷方式使用，请使用浏览器或系统的功能创建快捷方式或安装为应用。", stepMacQuickAccess:"你也可以使用浏览器或系统的功能创建快速快捷方式，或将此网站安装为应用。", stepLinuxMove:"根据你桌面环境的规则移动或打开该文件。", stepLinuxQuickAccess:"你也可以使用浏览器的功能创建快捷方式，或将此网站安装为应用。", stepChromebookNext:"使用浏览器的功能创建快捷方式，或将此网站安装为应用。", stepChromebookAfter:"将快捷方式放在你喜欢的位置，以便快速打开 SlugLauncher。", stepAndroidNext:"使用“添加到主屏幕”选项，或浏览器中的等效功能。", stepIosNext:"使用浏览器的功能将此网站添加到主屏幕，或创建等效的快捷方式。", stepDefaultNext:"使用浏览器或系统中可用的功能创建快捷方式，或将此网站安装为应用。", closeBtn:"关闭", copiedShort:"已复制", copyManually:"请手动复制链接",
         moveItem:"移动",
         svgApiLink:"🔍 在 svgapi.com 上查找 SVG 图标", folderIconLabel:"文件夹图标（可选，以黑色显示）",
         invalidData:"数据无效", invalidDomain:"域名无效", invalidName:"名称无效",
@@ -1132,6 +1199,9 @@ const i18n = {
         placeholderName:"名前", placeholderURL:"URL", placeholderIcon:"アイコンURL（任意）",
         iconOptionsLabel:"アイコン",
         searchLabel:"検索", searchPlaceholder:"名前で検索...", searchNoResults:"該当なし",
+        urlTooLong:"このリンクは {n} 文字です。長いリンクは一部のアプリやブラウザで切り詰められることがあります。アプリを減らすか、短いアイコンURLを使ってください。", iconPrivacyNote:"アイコンは Google のファビコンサービスとアプリのサイトから取得されます。",
+        renamePage:"ページ名を変更", renamePagePlaceholder:"ページ名", save:"保存",
+        savedTitle:"SlugLauncher を保存しました", savedUpdateHeading:"変更した場合", savedUpdateBody:"アプリ、フォルダ、言語、設定を変更した場合は、SlugLauncher を再度保存し、古いショートカットを新しいURLに置き換えてください。", savedIntroDownloaded:"{file} をダウンロードしました。", savedIntroReady:"SlugLauncher は最新の状態で準備できています。", savedIntroReadyChromebook:"SlugLauncher は最新の状態で、ショートカットを作成する準備ができています。", stepNext:"次のステップ", stepQuickAccess:"クイックアクセス", stepAfter:"その後", stepOpenDownloaded:"ダウンロードしたファイルを開いて SlugLauncher にアクセスしてください。", stepWinQuickAccess:"アプリやショートカットとして使いたい場合は、ブラウザまたはシステムの機能でショートカットを作成するか、アプリとしてインストールしてください。", stepMacQuickAccess:"ブラウザやシステムの機能を使ってクイックショートカットを作成したり、このサイトをアプリとしてインストールすることもできます。", stepLinuxMove:"デスクトップ環境のルールに従ってファイルを移動または開いてください。", stepLinuxQuickAccess:"ブラウザの機能を使ってショートカットを作成したり、このサイトをアプリとしてインストールすることもできます。", stepChromebookNext:"ブラウザの機能を使ってショートカットを作成するか、このサイトをアプリとしてインストールしてください。", stepChromebookAfter:"SlugLauncher をすぐに開けるよう、好きな場所にショートカットを置いてください。", stepAndroidNext:"「ホーム画面に追加」オプション、またはブラウザの同等の機能を使ってください。", stepIosNext:"ブラウザの機能を使ってこのサイトをホーム画面に追加するか、同等のショートカットを作成してください。", stepDefaultNext:"ブラウザまたはシステムで利用可能な機能を使ってショートカットを作成するか、このサイトをアプリとしてインストールしてください。", closeBtn:"閉じる", copiedShort:"コピーしました", copyManually:"URLを手動でコピーしてください",
         moveItem:"移動",
         svgApiLink:"🔍 svgapi.comでSVGアイコンを探す", folderIconLabel:"フォルダアイコン（任意、黒色で表示）",
         invalidData:"データが無効です", invalidDomain:"ドメインが無効です", invalidName:"名前が無効です",
@@ -1162,6 +1232,9 @@ const i18n = {
         placeholderName:"नाम", placeholderURL:"URL", placeholderIcon:"आइकन URL (वैकल्पिक)",
         iconOptionsLabel:"आइकन",
         searchLabel:"खोजें", searchPlaceholder:"नाम से खोजें...", searchNoResults:"कोई परिणाम नहीं",
+        urlTooLong:"यह लिंक {n} अक्षरों का है। कुछ ऐप और ब्राउज़र लंबे लिंक काट सकते हैं; ऐप हटाएँ या छोटे आइकन URL इस्तेमाल करें।", iconPrivacyNote:"आइकन Google की फ़ेविकॉन सेवा और ऐप की अपनी साइट से लाए जाते हैं।",
+        renamePage:"पेज का नाम बदलें", renamePagePlaceholder:"पेज का नाम", save:"सहेजें",
+        savedTitle:"SlugLauncher सेव हो गया", savedUpdateHeading:"अगर आप बदलाव करें", savedUpdateBody:"अगर आप अपने ऐप्स, फ़ोल्डर, भाषा या सेटिंग्स में बदलाव करते हैं, तो SlugLauncher को फिर से सेव करें और अपडेट किए गए URL का उपयोग करने के लिए पुराने शॉर्टकट को बदलें।", savedIntroDownloaded:"{file} डाउनलोड हो गई है।", savedIntroReady:"आपका SlugLauncher अपडेट है और तैयार है।", savedIntroReadyChromebook:"आपका SlugLauncher अपडेट है और शॉर्टकट बनाने के लिए तैयार है।", stepNext:"अगला कदम", stepQuickAccess:"त्वरित एक्सेस", stepAfter:"इसके बाद", stepOpenDownloaded:"अपने SlugLauncher तक पहुँचने के लिए डाउनलोड की गई फ़ाइल खोलें।", stepWinQuickAccess:"अगर आप इसे ऐप या शॉर्टकट के रूप में रखना चाहते हैं, तो शॉर्टकट बनाने या ऐप के रूप में इंस्टॉल करने के लिए अपने ब्राउज़र या सिस्टम की सुविधा का उपयोग करें।", stepMacQuickAccess:"आप त्वरित शॉर्टकट बनाने या इस साइट को ऐप के रूप में इंस्टॉल करने के लिए अपने ब्राउज़र या सिस्टम की सुविधा का भी उपयोग कर सकते हैं।", stepLinuxMove:"अपने डेस्कटॉप वातावरण के नियमों के अनुसार फ़ाइल को स्थानांतरित करें या खोलें।", stepLinuxQuickAccess:"आप शॉर्टकट बनाने या इस साइट को ऐप के रूप में इंस्टॉल करने के लिए अपने ब्राउज़र की सुविधा का भी उपयोग कर सकते हैं।", stepChromebookNext:"शॉर्टकट बनाने या इस साइट को ऐप के रूप में इंस्टॉल करने के लिए अपने ब्राउज़र की सुविधा का उपयोग करें।", stepChromebookAfter:"अपने SlugLauncher को जल्दी खोलने के लिए शॉर्टकट को अपनी पसंद की जगह रखें।", stepAndroidNext:"\"होम स्क्रीन पर जोड़ें\" विकल्प, या अपने ब्राउज़र की समान सुविधा का उपयोग करें।", stepIosNext:"इस साइट को होम स्क्रीन पर जोड़ने या समान शॉर्टकट बनाने के लिए अपने ब्राउज़र की सुविधा का उपयोग करें।", stepDefaultNext:"शॉर्टकट बनाने या इस साइट को ऐप के रूप में इंस्टॉल करने के लिए अपने ब्राउज़र या सिस्टम में उपलब्ध सुविधा का उपयोग करें।", closeBtn:"बंद करें", copiedShort:"कॉपी हो गया", copyManually:"URL मैन्युअल रूप से कॉपी करें",
         moveItem:"स्थानांतरित करें",
         svgApiLink:"🔍 svgapi.com पर SVG आइकन खोजें", folderIconLabel:"फ़ोल्डर आइकन (वैकल्पिक, काले रंग में दिखेगा)",
         invalidData:"अमान्य डेटा", invalidDomain:"अमान्य डोमेन", invalidName:"अमान्य नाम",
@@ -1192,6 +1265,9 @@ const i18n = {
         placeholderName:"الاسم", placeholderURL:"URL", placeholderIcon:"رابط الأيقونة (اختياري)",
         iconOptionsLabel:"الأيقونة",
         searchLabel:"بحث", searchPlaceholder:"ابحث بالاسم...", searchNoResults:"لا توجد نتائج",
+        urlTooLong:"طول هذا الرابط {n} حرفًا. قد تقتطع بعض التطبيقات والمتصفحات الروابط الطويلة؛ فكّر في حذف بعض التطبيقات أو استخدام روابط أيقونات أقصر.", iconPrivacyNote:"يتم جلب الأيقونات عبر خدمة favicon من Google وموقع التطبيق نفسه.",
+        renamePage:"تغيير اسم الصفحة", renamePagePlaceholder:"اسم الصفحة", save:"حفظ",
+        savedTitle:"تم حفظ SlugLauncher", savedUpdateHeading:"إذا أجريت تغييرات", savedUpdateBody:"إذا غيّرت تطبيقاتك أو مجلداتك أو اللغة أو الإعدادات، احفظ SlugLauncher مجددًا واستبدل الاختصار القديم لاستخدام الرابط المحدّث.", savedIntroDownloaded:"تم تنزيل {file}.", savedIntroReady:"SlugLauncher الخاص بك محدّث وجاهز.", savedIntroReadyChromebook:"SlugLauncher الخاص بك محدّث وجاهز لإنشاء اختصار.", stepNext:"الخطوة التالية", stepQuickAccess:"وصول سريع", stepAfter:"بعد ذلك", stepOpenDownloaded:"افتح الملف الذي تم تنزيله للوصول إلى SlugLauncher الخاص بك.", stepWinQuickAccess:"إذا أردت إتاحته كتطبيق أو اختصار، استخدم ميزة المتصفح أو النظام لإنشاء اختصار أو التثبيت كتطبيق.", stepMacQuickAccess:"يمكنك أيضًا استخدام ميزة المتصفح أو النظام لإنشاء اختصار سريع أو تثبيت هذا الموقع كتطبيق.", stepLinuxMove:"انقل الملف أو افتحه وفقًا لقواعد بيئة سطح المكتب لديك.", stepLinuxQuickAccess:"يمكنك أيضًا استخدام ميزة المتصفح لإنشاء اختصار أو تثبيت هذا الموقع كتطبيق.", stepChromebookNext:"استخدم ميزة المتصفح لإنشاء اختصار أو تثبيت هذا الموقع كتطبيق.", stepChromebookAfter:"ضع الاختصار حيث تفضل لفتح SlugLauncher بسرعة.", stepAndroidNext:"استخدم خيار \"إضافة إلى الشاشة الرئيسية\" أو الميزة المكافئة في متصفحك.", stepIosNext:"استخدم ميزة المتصفح لإضافة هذا الموقع إلى الشاشة الرئيسية أو إنشاء اختصار مكافئ.", stepDefaultNext:"استخدم الميزة المتاحة في متصفحك أو نظامك لإنشاء اختصار أو تثبيت هذا الموقع كتطبيق.", closeBtn:"إغلاق", copiedShort:"تم النسخ", copyManually:"انسخ الرابط يدويًا",
         moveItem:"نقل",
         svgApiLink:"🔍 ابحث عن أيقونة SVG على svgapi.com", folderIconLabel:"أيقونة المجلد (اختياري، تظهر باللون الأسود)",
         invalidData:"بيانات غير صالحة", invalidDomain:"نطاق غير صالح", invalidName:"اسم غير صالح",
@@ -1264,12 +1340,23 @@ function isValidDomain(domain){ return /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(domain);
 function escapeHtml(str){
     return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+const URL_WARN_LENGTH = 2000;   // por encima de esto, algunos chats/navegadores pueden truncar el link
+function attachIconFallback(img){
+    if (!img) return;
+    img.addEventListener("error", ()=>{
+        if (img.dataset.fallback) return;   // evita bucle si el fallback también falla
+        img.dataset.fallback = "1";
+        img.src = FALLBACK_ICON;
+    });
+}
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
 
 /* =========================================================
    APLICAR I18N
    ========================================================= */
 function applyI18n() {
+    document.documentElement.lang = globalLang;
+    document.documentElement.dir = (globalLang === "ar") ? "rtl" : "ltr";
     document.title = t("title");
     document.getElementById("menuTitleLabel").textContent = t("menu");
 
@@ -1299,6 +1386,8 @@ function applyI18n() {
     setAddType(addType); // refresca título/botón según el idioma sin perder la selección actual
     document.getElementById("cancelAddBtn").textContent = t("cancel");
     document.getElementById("iconOptionsLabel").textContent = t("iconOptionsLabel");
+    const privNote = document.getElementById("iconPrivacyNote");
+    if (privNote) privNote.textContent = t("iconPrivacyNote");
     document.getElementById("appURL").placeholder = t("placeholderURL");
     document.getElementById("appName").placeholder = t("placeholderName");
     document.getElementById("appIcon").placeholder = t("placeholderIcon");
@@ -1323,6 +1412,8 @@ function applyI18n() {
     document.getElementById("slugInfoText").textContent = t("slugQuestion");
     document.getElementById("slugCreateBtn").textContent = t("slugCreate");
     document.getElementById("slugShareBtn").textContent = t("slugShare");
+    document.getElementById("slugRenameBtn").textContent = t("renamePage");
+    document.getElementById("renamePageLink").textContent = t("renamePage");
     document.getElementById("slugCancelBtn").textContent = t("cancel");
 
     document.getElementById("urlIOPasteBtn").textContent = t("pasteAction");
@@ -1361,6 +1452,7 @@ function applyI18n() {
 
     updateHamburgerModeUI();
     updateSavedIndicator();
+    updatePageTitleDisplay();
 }
 
 /* =========================================================
@@ -1404,7 +1496,7 @@ function applyTheme() {
 /* =========================================================
    HASH: GLOBAL (tema/idioma) + ITEMS
    ========================================================= */
-function globalPartString(){ return `SLUG:${globalTheme},${globalLang},${globalSaved}`; }
+function globalPartString(){ return `SLUG:${globalTheme},${globalLang},${globalSaved},${encodeURIComponent(pageTitle || "")}`; }
 
 function parseGlobal() {
     const hash = getDecodedHashString().substring(1);
@@ -1412,7 +1504,10 @@ function parseGlobal() {
     const parts = hash.split("#").filter(Boolean);
     if (parts.length && parts[0].startsWith("SLUG:")) {
         const gl = parts[0].replace("SLUG:","");
-        const [themeStr, langStr, savedStr] = gl.split(",");
+        const glParts = gl.split(",");
+        const [themeStr, langStr, savedStr] = glParts;
+        const encodedTitle = glParts.slice(3).join(",");
+        pageTitle = encodedTitle || "";
         const tnum = parseInt(themeStr,10);
         if (!isNaN(tnum) && tnum>=0 && tnum<=2) globalTheme = tnum;
         if (langStr && langStr.length===2 && i18n[langStr.toLowerCase()]) globalLang = langStr.toLowerCase();
@@ -1675,7 +1770,19 @@ function renderApp(app, parent, path){
     div.className="appIcon";
     div.dataset.itemType="app";
     const iconSrc = app.icon || FALLBACK_ICON;
-    div.innerHTML = `<img draggable="false" src="${escapeHtml(iconSrc)}" onerror="this.onerror=null;this.src='${FALLBACK_ICON}'"><span>${escapeHtml(app.name)}</span>`;
+    div.innerHTML = `<img draggable="false" src="${escapeHtml(iconSrc)}"><span class="appNameLabel" title="${escapeHtml(app.name)}">${escapeHtml(app.name)}</span>`;
+    attachIconFallback(div.querySelector("img"));
+    const label = div.querySelector(".appNameLabel");
+    if (label) {
+        label.addEventListener("mouseenter", ()=>{
+            const overflow = label.scrollWidth - label.clientWidth;
+            if (overflow > 2) {
+                label.style.textOverflow = "clip";
+                label.animate([{transform:"translateX(0)"},{transform:`translateX(-${overflow}px)`}],{duration:Math.max(1800,overflow*45),iterations:1,fill:"forwards",easing:"linear"});
+            }
+        });
+        label.addEventListener("mouseleave", ()=>{ label.getAnimations().forEach(a=>a.cancel()); label.style.transform=""; label.style.textOverflow="ellipsis"; });
+    }
     const img = div.querySelector("img");
     if (img) img.addEventListener("dragstart", e=>e.preventDefault());
     attachItemInteraction(div, app, path, false);
@@ -1696,7 +1803,7 @@ function attachItemInteraction(el, item, path, isFolder){
     if (currentMode === "normal"){
         el.addEventListener("click", ()=>{
             if (isFolder) openFolder(item, path);
-            else window.open(item.url, "_blank");
+            else window.open(item.url, "_blank", "noopener,noreferrer");
         });
     } else if (currentMode === "edit"){
         el.classList.add("editModeItem");
@@ -2213,6 +2320,48 @@ function closeAddModal(){
     addAppTargetFolderIndex = -1;
 }
 
+function updatePageTitleDisplay(){
+    const suffix = document.getElementById("pageTitleSuffix");
+    const suffixText = document.getElementById("pageTitleSuffixText");
+    if (suffix && suffixText) {
+        suffixText.textContent = pageTitle ? " - " + pageTitle : "";
+        suffix.title = pageTitle || "";
+        suffixText.classList.remove("scrolling");
+        suffixText.style.removeProperty("--scroll-distance");
+        requestAnimationFrame(()=>{
+            const overflow = suffixText.scrollWidth - suffix.clientWidth;
+            if (overflow > 2) {
+                suffixText.style.setProperty("--scroll-distance", `${-overflow}px`);
+                suffixText.classList.add("scrolling");
+            }
+        });
+    }
+    document.title = pageTitle || "SlugLauncher";
+}
+function openRenamePageModal(){
+    closeSlugModal(); closeSidePanel();
+    const modal=document.getElementById("renamePageModal");
+    const input=document.getElementById("renamePageInput");
+    document.getElementById("renamePageTitle").textContent=t("renamePage");
+    input.placeholder=t("renamePagePlaceholder");
+    document.getElementById("renamePageSaveBtn").textContent=t("save");
+    document.getElementById("renamePageCancelBtn").textContent=t("cancel");
+    document.getElementById("slugRenameBtn").textContent=t("renamePage");
+    document.getElementById("renamePageLink").textContent=t("renamePage");
+    input.value=pageTitle;
+    modal.style.display="flex";
+    setTimeout(()=>{input.focus();input.select();},30);
+}
+function closeRenamePageModal(){ document.getElementById("renamePageModal").style.display="none"; }
+function savePageName(){
+    pageTitle=document.getElementById("renamePageInput").value.trim();
+    globalSaved=0;
+    updatePageTitleDisplay();
+    updateGlobalInHash();
+    updateSavedIndicator();
+    closeRenamePageModal();
+}
+
 function openSlugModal(){
     closeSidePanel();
     document.getElementById("slugInfoModal").style.display="block";
@@ -2259,8 +2408,7 @@ document.getElementById("appURL").addEventListener("input", () => {
         const {domain} = getAppURLParts(url);
         const nameField = document.getElementById("appName");
         if (!nameField.value.trim()){
-            const base = domain.split(".")[0];
-            nameField.value = base.charAt(0).toUpperCase() + base.slice(1);
+            nameField.value = suggestAppName(url);
         }
         detectIconsFor(domain, addIconCtx);
     } else {
@@ -2358,11 +2506,12 @@ function renderSearchResults(query){
         const row = document.createElement("div");
         row.className = "searchResultItem";
         const iconSrc = item.icon || FALLBACK_ICON;
-        row.innerHTML = `<img src="${escapeHtml(iconSrc)}" onerror="this.onerror=null;this.src='${FALLBACK_ICON}'">` +
+        row.innerHTML = `<img src="${escapeHtml(iconSrc)}">` +
             `<span class="searchResultName">${escapeHtml(item.name)}</span>` +
             (item.folder ? `<span class="searchResultFolder">${escapeHtml(item.folder)}</span>` : "");
+        attachIconFallback(row.querySelector("img"));
         row.addEventListener("click", ()=>{
-            window.open(item.url, "_blank");
+            window.open(item.url, "_blank", "noopener,noreferrer");
             closeSearchModal();
         });
         list.appendChild(row);
@@ -2422,7 +2571,10 @@ function detectIconsFor(domain, ctx, options = {}){
     });
 
     // Mejor esfuerzo: og:image (puede fallar por CORS, se ignora silenciosamente)
-    fetch(`https://${domain}`, {mode:"cors"}).then(r=>r.text()).then(html=>{
+    const ogCtl = new AbortController();
+    const ogTimer = setTimeout(()=>ogCtl.abort(), 5000);   // no colgar la petición si el sitio no responde
+    fetch(`https://${domain}`, {mode:"cors", signal: ogCtl.signal, credentials:"omit", referrerPolicy:"no-referrer"}).then(r=>r.text()).then(html=>{
+        html = html.slice(0, 200000);                       // solo el <head> importa; limitar el tamaño a procesar
         let m = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
              || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
         if (m && m[1]){
@@ -2434,7 +2586,7 @@ function detectIconsFor(domain, ctx, options = {}){
                 renderIconOptionsFor(ctx);
             }
         }
-    }).catch(()=>{});
+    }).catch(()=>{}).finally(()=>clearTimeout(ogTimer));
 }
 
 function renderIconOptionsFor(ctx){
@@ -2612,6 +2764,26 @@ document.getElementById("editAppIcon").addEventListener("input", () => {
 });
 
 
+function suggestAppName(value){
+    try {
+        let raw = (value || "").trim();
+        if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) raw = "https://" + raw;
+        const host = new URL(raw).hostname.toLowerCase().replace(/^\.+|\.+$/g, "");
+        const ignored = new Set(["www","www2","www3","www4","ww1","ww2","m","mobile"]);
+        const labels = host.split(".").filter(Boolean);
+        // El último nivel y el dominio registrable forman la marca base; heurística general para TLDs comunes.
+        const multiTlds = new Set(["co.uk","org.uk","com.au","net.au","co.nz","com.br","com.mx","co.jp","co.in"]);
+        let suffixCount = 1;
+        if (labels.length >= 3 && multiTlds.has(labels.slice(-2).join("."))) suffixCount = 2;
+        const domainIndex = Math.max(0, labels.length - suffixCount - 1);
+        const brand = labels[domainIndex] || labels[0] || host;
+        const subdomains = labels.slice(0, domainIndex).filter(part => !ignored.has(part));
+        const meaningful = subdomains.length ? subdomains[subdomains.length-1] : "";
+        const titleCase = str => str.split(/[-_]+/).filter(Boolean).map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(" ");
+        return [titleCase(brand), meaningful ? titleCase(meaningful) : ""].filter(Boolean).join(" ");
+    } catch(e) { return ""; }
+}
+
 function isValidAppURL(value){
     let raw = (value || "").trim();
     if (!raw) return false;
@@ -2674,12 +2846,10 @@ function openEditFolder(path){
 
     const list = document.getElementById("editFolderAppList");
     list.innerHTML="";
-    folder.apps.forEach(app=>{
-        const url = stripProtocol(app.url);
-        const icon = stripProtocol(app.icon);
+    folder.apps.forEach((app, idx)=>{
         const div=document.createElement("div");
         div.className="appSelectItem";
-        div.innerHTML = `<input type="checkbox" value="${escapeHtml(app.name)},${escapeHtml(url)},${escapeHtml(icon)}" checked><span>${escapeHtml(app.name)}</span>`;
+        div.innerHTML = `<input type="checkbox" data-app-index="${idx}" checked><span>${escapeHtml(app.name)}</span>`;
         list.appendChild(div);
     });
     document.getElementById("editFolderModal").style.display="block";
@@ -2743,10 +2913,11 @@ function saveEditedFolder(){
 
     folder.name = name;
     folder.icon = iconRaw ? normalize(iconRaw) : "";
-    folder.apps = checks.map(c=>{
-        const [n,u,i] = c.value.split(",");
-        return { type:"app", name:n, url:normalize(u), icon:normalize(i) };
-    });
+    // Se reconstruye desde los objetos originales por índice (sin parsear strings con comas).
+    const originalApps = folder.apps.slice();
+    folder.apps = checks
+        .map(c => originalApps[parseInt(c.dataset.appIndex, 10)])
+        .filter(Boolean);
 
     closeEditFolderModal();
     renderLauncher();
@@ -2776,6 +2947,13 @@ function exportConfig(){
     const field = document.getElementById("urlIOField");
     field.value = location.href;
     field.readOnly = true;
+    const warn = document.getElementById("urlIOWarn");
+    if (warn){
+        if (location.href.length > URL_WARN_LENGTH){
+            warn.textContent = t("urlTooLong").replace("{n}", location.href.length);
+            warn.style.display = "block";
+        } else { warn.style.display = "none"; }
+    }
     document.getElementById("urlIOPasteBtn").style.display = "none";
     document.getElementById("urlIOPrimaryBtn").textContent = t("copyUrl");
     closeSidePanel();
@@ -2788,6 +2966,8 @@ function importConfig(){
     const field = document.getElementById("urlIOField");
     field.value = "";
     field.readOnly = false;
+    const warnEl = document.getElementById("urlIOWarn");
+    if (warnEl) warnEl.style.display = "none";
     document.getElementById("urlIOPasteBtn").style.display = (navigator.clipboard && navigator.clipboard.readText) ? "block" : "none";
     document.getElementById("urlIOPrimaryBtn").textContent = t("importAction");
     closeSidePanel();
@@ -2901,73 +3081,74 @@ function getCurrentSlugLauncherURL(){
 
 function getSaveInstructions(platform, filename){
     const commonUpdate = {
-        title: "SlugLauncher guardado",
-        update: "Si haces cambios en tus apps, folders, idioma o configuración, vuelve a guardar el SlugLauncher y reemplaza el acceso anterior para utilizar la URL actualizada."
+        title: t("savedTitle"),
+        update: t("savedUpdateBody")
     };
+    const downloadedIntro = t("savedIntroDownloaded").replace("{file}", filename);
 
     if (platform === "windows") {
         return {
             ...commonUpdate,
-            intro: `Se descargó ${filename}.`,
+            intro: downloadedIntro,
             steps: [
-                ["Siguiente paso", "Abre el archivo descargado para acceder a tu SlugLauncher."],
-                ["Acceso rápido", "Si deseas tenerlo disponible como aplicación o acceso rápido, utiliza la función de crear acceso directo o instalar como aplicación que ofrezca tu navegador o sistema."]
+                [t("stepNext"), t("stepOpenDownloaded")],
+                [t("stepQuickAccess"), t("stepWinQuickAccess")]
             ]
         };
     }
     if (platform === "mac") {
         return {
             ...commonUpdate,
-            intro: `Se descargó ${filename}.`,
+            intro: downloadedIntro,
             steps: [
-                ["Siguiente paso", "Abre el archivo descargado para acceder a tu SlugLauncher."],
-                ["Acceso rápido", "También puedes utilizar la función de tu navegador o sistema para crear un acceso rápido o instalar este sitio como aplicación."]
+                [t("stepNext"), t("stepOpenDownloaded")],
+                [t("stepQuickAccess"), t("stepMacQuickAccess")]
             ]
         };
     }
     if (platform === "linux") {
         return {
             ...commonUpdate,
-            intro: `Se descargó ${filename}.`,
+            intro: downloadedIntro,
             steps: [
-                ["Siguiente paso", "Mueve o abre el archivo según las reglas de tu entorno de escritorio."],
-                ["Acceso rápido", "También puedes utilizar la función de tu navegador para crear un acceso directo o instalar este sitio como aplicación."]
+                [t("stepNext"), t("stepLinuxMove")],
+                [t("stepQuickAccess"), t("stepLinuxQuickAccess")]
             ]
         };
     }
     if (platform === "chromebook") {
         return {
             ...commonUpdate,
-            intro: "Tu SlugLauncher está actualizado y listo para crear un acceso rápido.",
+            intro: t("savedIntroReadyChromebook"),
             steps: [
-                ["Siguiente paso", "Utiliza la función de tu navegador para crear un acceso directo o instalar este sitio como aplicación."],
-                ["Después", "Coloca el acceso donde prefieras para abrir rápidamente tu SlugLauncher."]
+                [t("stepNext"), t("stepChromebookNext")],
+                [t("stepAfter"), t("stepChromebookAfter")]
             ]
         };
     }
     if (platform === "android") {
         return {
             ...commonUpdate,
-            intro: "Tu SlugLauncher está actualizado y listo.",
+            intro: t("savedIntroReady"),
             steps: [
-                ["Siguiente paso", "Utiliza la opción Añadir a pantalla de inicio o la función equivalente que ofrezca tu navegador."]
+                [t("stepNext"), t("stepAndroidNext")]
             ]
         };
     }
     if (platform === "ios") {
         return {
             ...commonUpdate,
-            intro: "Tu SlugLauncher está actualizado y listo.",
+            intro: t("savedIntroReady"),
             steps: [
-                ["Siguiente paso", "Utiliza la función de tu navegador para añadir este sitio a la pantalla de inicio o crear un acceso equivalente."]
+                [t("stepNext"), t("stepIosNext")]
             ]
         };
     }
     return {
         ...commonUpdate,
-        intro: "Tu SlugLauncher está actualizado y listo.",
+        intro: t("savedIntroReady"),
         steps: [
-            ["Siguiente paso", "Utiliza la función disponible en tu navegador o sistema para crear un acceso directo o instalar este sitio como aplicación."]
+            [t("stepNext"), t("stepDefaultNext")]
         ]
     };
 }
@@ -2998,21 +3179,21 @@ function openSaveLauncherModal(instructions, url){
     const update = document.createElement("div");
     update.className = "saveLauncherStep";
     const strong = document.createElement("strong");
-    strong.textContent = "Si haces cambios";
+    strong.textContent = t("savedUpdateHeading");
     const span = document.createElement("span");
     span.textContent = instructions.update;
     update.appendChild(strong);
     update.appendChild(span);
     steps.appendChild(update);
 
-    copyBtn.textContent = "Copiar URL";
-    doneBtn.textContent = "Cerrar";
+    copyBtn.textContent = t("copyUrl");
+    doneBtn.textContent = t("closeBtn");
 
     copyBtn.onclick = async ()=>{
         try{
             await navigator.clipboard.writeText(url);
-            copyBtn.textContent = "URL copiada";
-            setTimeout(()=>{ copyBtn.textContent = "Copiar URL"; }, 1600);
+            copyBtn.textContent = t("copiedShort");
+            setTimeout(()=>{ copyBtn.textContent = t("copyUrl"); }, 1600);
         }catch(e){
             const ta = document.createElement("textarea");
             ta.value = url;
@@ -3020,10 +3201,10 @@ function openSaveLauncherModal(instructions, url){
             ta.style.opacity = "0";
             document.body.appendChild(ta);
             ta.select();
-            try { document.execCommand("copy"); copyBtn.textContent = "URL copiada"; }
-            catch(err) { copyBtn.textContent = "Copia la URL manualmente"; }
+            try { document.execCommand("copy"); copyBtn.textContent = t("copiedShort"); }
+            catch(err) { copyBtn.textContent = t("copyManually"); }
             ta.remove();
-            setTimeout(()=>{ copyBtn.textContent = "Copiar URL"; }, 1800);
+            setTimeout(()=>{ copyBtn.textContent = t("copyUrl"); }, 1800);
         }
     };
 
@@ -3103,12 +3284,13 @@ if (!location.hash || location.hash === "#") {
     history.replaceState(
         null,
         "",
-        location.pathname + "#SLUG:2," + lang + ",0"
+        location.pathname + "#SLUG:2," + lang + ",0,"
     );
 }
 parseGlobal();
 applyTheme();
 applyI18n();
+updatePageTitleDisplay();
 renderLauncher();
 
 window.addEventListener("hashchange", ()=>{
@@ -3124,6 +3306,7 @@ window.addEventListener("hashchange", ()=>{
     parseGlobal();
     applyTheme();
     applyI18n();
+    updatePageTitleDisplay();
     renderLauncher();
 });
 </script>
