@@ -2293,6 +2293,7 @@ function openAddModal(targetFolder = null, initialType = "app"){
     }
     document.getElementById("appURL").value="";
     document.getElementById("appName").value="";
+    appNameAuto = true;
     document.getElementById("appIcon").value="";
     document.getElementById("appIconOptions").innerHTML="";
     document.getElementById("iconPreview").style.display="none";
@@ -2402,14 +2403,33 @@ let _iconCandidates = [];
 const addIconCtx  = { candidates: _iconCandidates, rowId:"appIconOptions",     iconInputId:"appIcon",     previewId:"iconPreview" };
 const editIconCtx = { candidates: [],              rowId:"editAppIconOptions", iconInputId:"editAppIcon", previewId:"editIconPreview" };
 
+// Nombre automático: mientras el usuario no edite el campo Nombre a mano, se
+// recalcula con cada tecla de la URL. Si lo edita, se respeta. Si lo vacía, vuelve a automático.
+let appNameAuto = true;
+
+function fillAutoAppName(){
+    const nameField = document.getElementById("appName");
+    if (!appNameAuto && nameField.value.trim()) return;
+    const url = document.getElementById("appURL").value.trim();
+    if (!url){ if (appNameAuto) nameField.value = ""; return; }
+    if (!isValidAppURL(url)) return;
+    const suggested = suggestAppName(url);
+    if (suggested){ nameField.value = suggested; appNameAuto = true; }
+}
+
+document.getElementById("appName").addEventListener("input", () => {
+    appNameAuto = !document.getElementById("appName").value.trim();
+});
+// Red de seguridad: al pasar el mouse sobre Nombre o Guardar, completa el nombre si sigue automático/vacío.
+["appName","saveAddBtn"].forEach(id => {
+    document.getElementById(id).addEventListener("mouseenter", fillAutoAppName);
+});
+
 document.getElementById("appURL").addEventListener("input", () => {
     const url = document.getElementById("appURL").value.trim();
+    fillAutoAppName();
     if (isValidAppURL(url)){
         const {domain} = getAppURLParts(url);
-        const nameField = document.getElementById("appName");
-        if (!nameField.value.trim()){
-            nameField.value = suggestAppName(url);
-        }
         detectIconsFor(domain, addIconCtx);
     } else {
         addIconCtx.candidates.length = 0;
@@ -3051,11 +3071,17 @@ function downloadTextFile(filename, content, mime){
     setTimeout(()=>URL.revokeObjectURL(objectUrl), 2000);
 }
 
-function weblocXML(url){
-    const safeUrl = String(url).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    return `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict><key>URL</key><string>${safeUrl}</string></dict></plist>`;
+function redirectShortcutHTML(url, title){
+    const escAttr = v => String(v).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const jsUrl = JSON.stringify(String(url)).replace(/</g,"\\u003c");
+    return `<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<title>${escAttr(title)}</title>
+<meta http-equiv="refresh" content="0;url=${escAttr(url)}">
+</head><body>
+<script>location.replace(${jsUrl});<\/script>
+<p><a href="${escAttr(url)}">SlugLauncher</a></p>
+</body></html>`;
 }
 
 function sanitizeShortcutName(value){
@@ -3233,16 +3259,14 @@ function saveSlugLauncher(){
     let filename = "";
 
     try{
-        if (platform === "windows"){
-            filename = `${name}.url`;
-            downloadTextFile(filename, `[InternetShortcut]\r\nURL=${url}\r\n`, "application/x-mswinurl");
-        } else if (platform === "mac"){
-            filename = `${name}.webloc`;
-            downloadTextFile(filename, weblocXML(url), "application/xml");
-        } else if (platform === "linux"){
-            filename = `${name}.desktop`;
-            const desktop = `[Desktop Entry]\nType=Link\nName=${name}\nURL=${url}\nIcon=text-html\n`;
-            downloadTextFile(filename, desktop, "application/x-desktop");
+        if (platform === "windows" || platform === "mac" || platform === "linux"){
+            // Redirección en .html: funciona igual en todos los navegadores y sistemas.
+            // .url/.webloc/.desktop los navegadores los renombran a ".download" al bajarlos desde una web.
+            const title = pageTitle
+                ? sanitizeShortcutName(pageTitle).replace(/\s+/g, "-").replace(/^[.-]+|[.-]+$/g, "")
+                : "";
+            filename = title ? `${title}-SlugLauncher.html` : `${name}.html`;
+            downloadTextFile(filename, redirectShortcutHTML(url, title || name), "text/html;charset=utf-8");
         }
 
         const instructions = getSaveInstructions(platform, filename);
