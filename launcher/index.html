@@ -547,6 +547,22 @@ body.theme-dark .modalBox .segmentedControl button.segmentBtn.active {
 
 .appSelectItem { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
 
+/* ---------- LISTA CON CHECKMARKS (Exportar / Importar URL) ---------- */
+#urlIOList { margin:4px 0 12px; max-height:min(38vh,320px); overflow-y:auto; overscroll-behavior:contain; border-radius:14px; background:var(--folder-bg-light); padding:4px; }
+body.theme-dark #urlIOList { background:var(--folder-bg-dark); }
+.ioRow { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:10px; cursor:pointer; user-select:none; -webkit-user-select:none; }
+.ioRow:hover { background:rgba(127,127,127,.14); }
+.ioRow span { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:15px; }
+.ioRow.ioAll { font-weight:600; border-bottom:1px solid rgba(127,127,127,.2); border-radius:10px 10px 0 0; margin-bottom:2px; }
+.ioRow.ioFolder span { font-weight:600; }
+.ioRow.ioChild { padding-inline-start:32px; }
+.ioRow .ioCount { font-style:normal; font-size:12px; opacity:.6; flex:0 0 auto; }
+.ioRow input[type="checkbox"] { width:20px; height:20px; }
+.ioIcon { width:24px; height:24px; border-radius:6px; flex:0 0 24px; object-fit:cover; background:rgba(127,127,127,.15); }
+.ioFolderIco { display:flex; width:24px; height:24px; flex:0 0 24px; }
+.ioFolderIco svg { width:24px; height:24px; }
+.modalBox button:disabled, .modalBox button:disabled:hover { opacity:.45; cursor:not-allowed; background:var(--accent); }
+
 /* ---------- ICON OPTIONS (deteccion automatica) ---------- */
 .iconOptionsRow { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
 .iconOption {
@@ -890,6 +906,7 @@ body.theme-dark .fieldNote.warn { color:#ffb454; }
         <textarea id="urlIOField" rows="3" style="resize:vertical;width:100%;box-sizing:border-box;"></textarea>
         <div id="urlIOWarn" class="fieldNote warn" role="status" style="display:none;"></div>
         <button id="urlIOPasteBtn" type="button" onclick="pasteUrlIOField()" style="background:#8e8e93;display:none;">Pegar</button>
+        <div id="urlIOSelect" style="display:none;"><div id="urlIOList"></div></div>
         <button id="urlIOPrimaryBtn" type="button" onclick="confirmUrlIOModal()">Copiar</button>
         <button id="urlIOCancelBtn" type="button" style="background:#aaa;" onclick="closeUrlIOModal()">Cancelar</button>
     </div>
@@ -962,7 +979,8 @@ const i18n = {
         saveMobileInstructionsIOS:"Tap the Share icon and choose \"Add to Home Screen\".",
         saveMobileInstructionsAndroid:"Open the browser menu and choose \"Add to Home screen\".",
         saveError:"Could not create the shortcut on this device.",
-        slugQuestion:"What would you like to do?", slugCreate:"Create your own SlugLauncher", slugShare:"Share your launcher", shareText:"Check out my SlugLauncher", copyUrl:"Copy", importAction:"Import", pasteAction:"Paste"
+        slugQuestion:"What would you like to do?", slugCreate:"Create your own SlugLauncher", slugShare:"Share your launcher", shareText:"Check out my SlugLauncher", copyUrl:"Copy", importAction:"Import", pasteAction:"Paste",
+        selectAll:"Select all", selectOne:"Select at least one app", importedFolder:"Imported", importNoApps:"No apps found in this URL", importNoSpace:"Not enough space: this import needs {n} new folder(s) and the launcher allows up to {max} icons. Select fewer apps or free up space.", importDone:"{n} apps imported into: {folder}", shareDownloaded:"File downloaded. Send it to share your launcher.", importPasteHint:"Paste a SlugLauncher URL here"
     },
     es: {
         title:"Slug Launcher", menu:"Menú", exitMode:"Salir del modo",
@@ -995,7 +1013,8 @@ const i18n = {
         saveMobileInstructionsIOS:"Toca el ícono de Compartir y elige \"Añadir a pantalla de inicio\".",
         saveMobileInstructionsAndroid:"Abre el menú del navegador y elige \"Añadir a pantalla de inicio\".",
         saveError:"No se pudo crear el acceso directo en este dispositivo.",
-        slugQuestion:"¿Qué te gustaría hacer?", slugCreate:"Crear tu propio SlugLauncher", slugShare:"Compartir tu launcher", shareText:"Mira mi SlugLauncher", copyUrl:"Copiar", importAction:"Importar", pasteAction:"Pegar"
+        slugQuestion:"¿Qué te gustaría hacer?", slugCreate:"Crear tu propio SlugLauncher", slugShare:"Compartir tu launcher", shareText:"Mira mi SlugLauncher", copyUrl:"Copiar", importAction:"Importar", pasteAction:"Pegar",
+        selectAll:"Seleccionar todo", selectOne:"Selecciona al menos una app", importedFolder:"Importados", importNoApps:"No se encontraron apps en este URL", importNoSpace:"Sin espacio: esta importación necesita {n} folder(s) nuevo(s) y el launcher permite hasta {max} íconos. Selecciona menos apps o libera espacio.", importDone:"{n} apps importadas en: {folder}", shareDownloaded:"Archivo descargado. Envíalo para compartir tu launcher.", importPasteHint:"Pega aquí un URL de SlugLauncher"
     },
     fr: {
         title:"Slug Launcher", menu:"Menu", exitMode:"Quitter le mode",
@@ -1028,7 +1047,8 @@ const i18n = {
         saveMobileInstructionsIOS:"Appuyez sur Partager puis \"Sur l'écran d'accueil\".",
         saveMobileInstructionsAndroid:"Ouvrez le menu du navigateur et choisissez \"Ajouter à l'écran d'accueil\".",
         saveError:"Impossible de créer le raccourci sur cet appareil.",
-        slugQuestion:"Que souhaitez-vous faire ?", slugCreate:"Créer votre propre SlugLauncher", slugShare:"Partager votre launcher", shareText:"Découvre mon SlugLauncher", copyUrl:"Copier", importAction:"Importer", pasteAction:"Coller"
+        slugQuestion:"Que souhaitez-vous faire ?", slugCreate:"Créer votre propre SlugLauncher", slugShare:"Partager votre launcher", shareText:"Découvre mon SlugLauncher", copyUrl:"Copier", importAction:"Importer", pasteAction:"Coller",
+        selectAll:"Tout sélectionner", selectOne:"Sélectionnez au moins une app", importedFolder:"Importés", importNoApps:"Aucune app trouvée dans cette URL", importNoSpace:"Pas assez de place : cet import nécessite {n} nouveau(x) dossier(s) et le launcher accepte jusqu'à {max} icônes. Sélectionnez moins d'apps ou libérez de la place.", importDone:"{n} apps importées dans : {folder}", shareDownloaded:"Fichier téléchargé. Envoyez-le pour partager votre launcher.", importPasteHint:"Collez ici une URL SlugLauncher"
     },
     de: {
         title:"Slug Launcher", menu:"Menü", exitMode:"Modus verlassen",
@@ -1061,7 +1081,8 @@ const i18n = {
         saveMobileInstructionsIOS:"Tippe auf Teilen und wähle \"Zum Home-Bildschirm\".",
         saveMobileInstructionsAndroid:"Öffne das Browsermenü und wähle \"Zum Startbildschirm hinzufügen\".",
         saveError:"Verknüpfung konnte auf diesem Gerät nicht erstellt werden.",
-        slugQuestion:"Was möchtest du tun?", slugCreate:"Erstelle deinen eigenen SlugLauncher", slugShare:"Deinen Launcher teilen", shareText:"Schau dir meinen SlugLauncher an", copyUrl:"Kopieren", importAction:"Importieren", pasteAction:"Einfügen"
+        slugQuestion:"Was möchtest du tun?", slugCreate:"Erstelle deinen eigenen SlugLauncher", slugShare:"Deinen Launcher teilen", shareText:"Schau dir meinen SlugLauncher an", copyUrl:"Kopieren", importAction:"Importieren", pasteAction:"Einfügen",
+        selectAll:"Alle auswählen", selectOne:"Wähle mindestens eine App aus", importedFolder:"Importiert", importNoApps:"In dieser URL wurden keine Apps gefunden", importNoSpace:"Nicht genug Platz: Dieser Import braucht {n} neue(n) Ordner, der Launcher erlaubt bis zu {max} Icons. Wähle weniger Apps oder schaffe Platz.", importDone:"{n} Apps importiert in: {folder}", shareDownloaded:"Datei heruntergeladen. Sende sie, um deinen Launcher zu teilen.", importPasteHint:"SlugLauncher-URL hier einfügen"
     },
     pt: {
         title:"Slug Launcher", menu:"Menu", exitMode:"Sair do modo",
@@ -1094,7 +1115,8 @@ const i18n = {
         saveMobileInstructionsIOS:"Toque em Compartilhar e escolha \"Adicionar à Tela de Início\".",
         saveMobileInstructionsAndroid:"Abra o menu do navegador e escolha \"Adicionar à tela inicial\".",
         saveError:"Não foi possível criar o atalho neste dispositivo.",
-        slugQuestion:"O que você gostaria de fazer?", slugCreate:"Criar seu próprio SlugLauncher", slugShare:"Compartilhar seu launcher", shareText:"Veja meu SlugLauncher", copyUrl:"Copiar", importAction:"Importar", pasteAction:"Colar"
+        slugQuestion:"O que você gostaria de fazer?", slugCreate:"Criar seu próprio SlugLauncher", slugShare:"Compartilhar seu launcher", shareText:"Veja meu SlugLauncher", copyUrl:"Copiar", importAction:"Importar", pasteAction:"Colar",
+        selectAll:"Selecionar tudo", selectOne:"Selecione pelo menos um app", importedFolder:"Importados", importNoApps:"Nenhum app encontrado neste URL", importNoSpace:"Sem espaço: esta importação precisa de {n} pasta(s) nova(s) e o launcher permite até {max} ícones. Selecione menos apps ou libere espaço.", importDone:"{n} apps importados em: {folder}", shareDownloaded:"Arquivo baixado. Envie-o para compartilhar seu launcher.", importPasteHint:"Cole aqui um URL do SlugLauncher"
     },
     it: {
         title:"Slug Launcher", menu:"Menu", exitMode:"Esci dalla modalità",
@@ -1127,7 +1149,8 @@ const i18n = {
         saveMobileInstructionsIOS:"Tocca Condividi e scegli \"Aggiungi a Home\".",
         saveMobileInstructionsAndroid:"Apri il menu del browser e scegli \"Aggiungi a schermata Home\".",
         saveError:"Impossibile creare il collegamento su questo dispositivo.",
-        slugQuestion:"Cosa vorresti fare?", slugCreate:"Crea il tuo SlugLauncher", slugShare:"Condividi il tuo launcher", shareText:"Guarda il mio SlugLauncher", copyUrl:"Copia", importAction:"Importa", pasteAction:"Incolla"
+        slugQuestion:"Cosa vorresti fare?", slugCreate:"Crea il tuo SlugLauncher", slugShare:"Condividi il tuo launcher", shareText:"Guarda il mio SlugLauncher", copyUrl:"Copia", importAction:"Importa", pasteAction:"Incolla",
+        selectAll:"Seleziona tutto", selectOne:"Seleziona almeno un'app", importedFolder:"Importati", importNoApps:"Nessuna app trovata in questo URL", importNoSpace:"Spazio insufficiente: questa importazione richiede {n} nuova/e cartella/e e il launcher consente fino a {max} icone. Seleziona meno app o libera spazio.", importDone:"{n} app importate in: {folder}", shareDownloaded:"File scaricato. Invialo per condividere il tuo launcher.", importPasteHint:"Incolla qui un URL di SlugLauncher"
     },
     ru: {
         title:"Slug Launcher", menu:"Меню", exitMode:"Выйти из режима",
@@ -1160,7 +1183,8 @@ const i18n = {
         saveMobileInstructionsIOS:"Нажмите \"Поделиться\" и выберите \"На экран Домой\".",
         saveMobileInstructionsAndroid:"Откройте меню браузера и выберите \"Добавить на главный экран\".",
         saveError:"Не удалось создать ярлык на этом устройстве.",
-        slugQuestion:"Что вы хотите сделать?", slugCreate:"Создать свой SlugLauncher", slugShare:"Поделиться своим лаунчером", shareText:"Посмотри мой SlugLauncher", copyUrl:"Копировать", importAction:"Импортировать", pasteAction:"Вставить"
+        slugQuestion:"Что вы хотите сделать?", slugCreate:"Создать свой SlugLauncher", slugShare:"Поделиться своим лаунчером", shareText:"Посмотри мой SlugLauncher", copyUrl:"Копировать", importAction:"Импортировать", pasteAction:"Вставить",
+        selectAll:"Выбрать все", selectOne:"Выберите хотя бы одно приложение", importedFolder:"Импортированные", importNoApps:"В этом URL приложений не найдено", importNoSpace:"Недостаточно места: для импорта нужно новых папок: {n}, а лаунчер допускает до {max} значков. Выберите меньше приложений или освободите место.", importDone:"Импортировано приложений: {n}. Папка: {folder}", shareDownloaded:"Файл скачан. Отправьте его, чтобы поделиться лаунчером.", importPasteHint:"Вставьте сюда URL SlugLauncher"
     },
     zh: {
         title:"Slug Launcher", menu:"菜单", exitMode:"退出模式",
@@ -1193,7 +1217,8 @@ const i18n = {
         saveMobileInstructionsIOS:"点击“分享”，然后选择“添加到主屏幕”。",
         saveMobileInstructionsAndroid:"打开浏览器菜单并选择“添加到主屏幕”。",
         saveError:"无法在此设备上创建快捷方式。",
-        slugQuestion:"你想做什么？", slugCreate:"创建你自己的 SlugLauncher", slugShare:"分享你的启动器", shareText:"看看我的 SlugLauncher", copyUrl:"复制", importAction:"导入", pasteAction:"粘贴"
+        slugQuestion:"你想做什么？", slugCreate:"创建你自己的 SlugLauncher", slugShare:"分享你的启动器", shareText:"看看我的 SlugLauncher", copyUrl:"复制", importAction:"导入", pasteAction:"粘贴",
+        selectAll:"全选", selectOne:"请至少选择一个应用", importedFolder:"已导入", importNoApps:"此URL中未找到应用", importNoSpace:"空间不足：此次导入需要 {n} 个新文件夹，而启动器最多允许 {max} 个图标。请少选一些应用或腾出空间。", importDone:"已导入 {n} 个应用到：{folder}", shareDownloaded:"文件已下载。发送该文件即可分享你的启动器。", importPasteHint:"在此粘贴 SlugLauncher URL"
     },
     ja: {
         title:"Slug Launcher", menu:"メニュー", exitMode:"モードを終了",
@@ -1226,7 +1251,8 @@ const i18n = {
         saveMobileInstructionsIOS:"共有アイコンをタップし「ホーム画面に追加」を選択してください。",
         saveMobileInstructionsAndroid:"ブラウザメニューから「ホーム画面に追加」を選択してください。",
         saveError:"このデバイスではショートカットを作成できませんでした。",
-        slugQuestion:"何をしますか？", slugCreate:"自分のSlugLauncherを作成", slugShare:"ランチャーを共有", shareText:"私のSlugLauncherを見てね", copyUrl:"コピー", importAction:"インポート", pasteAction:"貼り付け"
+        slugQuestion:"何をしますか？", slugCreate:"自分のSlugLauncherを作成", slugShare:"ランチャーを共有", shareText:"私のSlugLauncherを見てね", copyUrl:"コピー", importAction:"インポート", pasteAction:"貼り付け",
+        selectAll:"すべて選択", selectOne:"アプリを1つ以上選択してください", importedFolder:"インポート済み", importNoApps:"このURLにアプリが見つかりません", importNoSpace:"空きが足りません：このインポートには新しいフォルダが{n}個必要ですが、ランチャーは最大{max}個のアイコンまでです。選択を減らすか、空きを作ってください。", importDone:"{n}個のアプリを次にインポートしました：{folder}", shareDownloaded:"ファイルをダウンロードしました。送ってランチャーを共有しましょう。", importPasteHint:"ここにSlugLauncherのURLを貼り付け"
     },
     hi: {
         title:"Slug Launcher", menu:"मेनू", exitMode:"मोड से बाहर निकलें",
@@ -1259,7 +1285,8 @@ const i18n = {
         saveMobileInstructionsIOS:"शेयर आइकन टैप करें और \"होम स्क्रीन पर जोड़ें\" चुनें।",
         saveMobileInstructionsAndroid:"ब्राउज़र मेनू खोलें और \"होम स्क्रीन पर जोड़ें\" चुनें।",
         saveError:"इस डिवाइस पर शॉर्टकट नहीं बनाया जा सका।",
-        slugQuestion:"आप क्या करना चाहेंगे?", slugCreate:"अपना खुद का SlugLauncher बनाएं", slugShare:"अपना लॉन्चर शेयर करें", shareText:"मेरा SlugLauncher देखें", copyUrl:"कॉपी करें", importAction:"आयात करें", pasteAction:"पेस्ट करें"
+        slugQuestion:"आप क्या करना चाहेंगे?", slugCreate:"अपना खुद का SlugLauncher बनाएं", slugShare:"अपना लॉन्चर शेयर करें", shareText:"मेरा SlugLauncher देखें", copyUrl:"कॉपी करें", importAction:"आयात करें", pasteAction:"पेस्ट करें",
+        selectAll:"सभी चुनें", selectOne:"कम से कम एक ऐप चुनें", importedFolder:"आयातित", importNoApps:"इस URL में कोई ऐप नहीं मिला", importNoSpace:"जगह नहीं है: इस आयात के लिए {n} नए फ़ोल्डर चाहिए और लॉन्चर में अधिकतम {max} आइकन हो सकते हैं। कम ऐप चुनें या जगह खाली करें।", importDone:"{n} ऐप आयात किए गए: {folder}", shareDownloaded:"फ़ाइल डाउनलोड हो गई। अपना लॉन्चर शेयर करने के लिए इसे भेजें।", importPasteHint:"यहाँ SlugLauncher URL पेस्ट करें"
     },
     ar: {
         title:"Slug Launcher", menu:"القائمة", exitMode:"الخروج من الوضع",
@@ -1292,7 +1319,8 @@ const i18n = {
         saveMobileInstructionsIOS:"اضغط على مشاركة ثم اختر \"إضافة إلى الشاشة الرئيسية\".",
         saveMobileInstructionsAndroid:"افتح قائمة المتصفح واختر \"إضافة إلى الشاشة الرئيسية\".",
         saveError:"تعذر إنشاء الاختصار على هذا الجهاز.",
-        slugQuestion:"ماذا تريد أن تفعل؟", slugCreate:"أنشئ SlugLauncher الخاص بك", slugShare:"شارك اللانشر الخاص بك", shareText:"شاهد SlugLauncher الخاص بي", copyUrl:"نسخ", importAction:"استيراد", pasteAction:"لصق"
+        slugQuestion:"ماذا تريد أن تفعل؟", slugCreate:"أنشئ SlugLauncher الخاص بك", slugShare:"شارك اللانشر الخاص بك", shareText:"شاهد SlugLauncher الخاص بي", copyUrl:"نسخ", importAction:"استيراد", pasteAction:"لصق",
+        selectAll:"تحديد الكل", selectOne:"اختر تطبيقًا واحدًا على الأقل", importedFolder:"المستوردة", importNoApps:"لم يتم العثور على تطبيقات في هذا الرابط", importNoSpace:"لا توجد مساحة كافية: يحتاج هذا الاستيراد إلى {n} مجلد جديد والحد الأقصى في اللانشر {max} أيقونة. اختر تطبيقات أقل أو حرر مساحة.", importDone:"تم استيراد {n} تطبيقات إلى: {folder}", shareDownloaded:"تم تنزيل الملف. أرسله لمشاركة اللانشر الخاص بك.", importPasteHint:"الصق رابط SlugLauncher هنا"
     }
 };
 
@@ -1530,11 +1558,11 @@ function parseGlobal() {
         globalSaved = (savedStr === "1") ? 1 : 0;
     }
 }
-function getDecodedHashString(){
+function getDecodedHashString(h){
     // Compartir URLs puede convertir los separadores del hash:
     // %23 -> #, %7C -> |, etc. Decodificamos TODO el fragmento antes
     // de separar carpetas y parámetros para mantener compatibilidad.
-    const hashOriginal = window.location.hash;
+    const hashOriginal = (h !== undefined) ? h : window.location.hash;
     if (!hashOriginal) return "";
     try {
         return decodeURIComponent(hashOriginal);
@@ -1578,8 +1606,8 @@ function safeDecode(str){
 function safeEncode(str){
     return encodeURIComponent(encodeURIComponent(str||""));
 }
-function parseHash(){
-    const hash = getDecodedHashString().substring(1);
+function parseHash(h){
+    const hash = getDecodedHashString(h).substring(1);
     if (!hash) return [];
     const items = hash.split("#").filter(Boolean).filter(p=>!p.startsWith("SLUG:"));
     const result=[];
@@ -1613,6 +1641,10 @@ function parseHash(){
     return result;
 }
 function serializeHash(state){
+    location.hash = buildHashFromState(state);
+}
+// Construye el hash ("#SLUG:...#app#FOLDER:...") sin tocar la URL actual.
+function buildHashFromState(state){
     const parts=[];
     parts.push(globalPartString());
     state.forEach(item=>{
@@ -1630,7 +1662,7 @@ function serializeHash(state){
             parts.push(`${safeEncode(item.name)},${url},${icon}`);
         }
     });
-    location.hash = "#" + parts.join("#");
+    return "#" + parts.join("#");
 }
 
 /* =========================================================
@@ -2388,27 +2420,29 @@ function closeSlugModal(){
 }
 async function shareLauncher(){
     closeSidePanel();
-    const url = window.location.href; // incluye query params y hash (#...)
-    const shareData = { title: "SlugLauncher", text: t("shareText"), url: url };
+    const url = getCurrentSlugLauncherURL();
+    const {filename, html} = shortcutFileInfo(url);
     try {
-        if (navigator.share) {
+        // Se comparte el archivo HTML de acceso directo (el mismo que genera "Guardar tu SlugLauncher").
+        const file = new File([html], filename, { type:"text/html" });
+        const shareData = { files:[file], title: pageTitle || "SlugLauncher", text: t("shareText") };
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
             await navigator.share(shareData);
-        } else if (navigator.clipboard && navigator.clipboard.writeText) {
-            await navigator.clipboard.writeText(url);
-            alert(t("urlCopied"));
         } else {
-            // Último recurso si tampoco hay Clipboard API disponible
-            window.prompt(t("urlCopied"), url);
+            // Navegadores sin soporte para compartir archivos: se descarga el .html
+            downloadTextFile(filename, html, "text/html;charset=utf-8");
+            alert(t("shareDownloaded"));
         }
     } catch (err) {
-        // El usuario canceló el share sheet, u ocurrió un error: no hacemos nada ruidoso
-        if (err && err.name !== "AbortError") {
+        if (err && err.name === "AbortError") return;   // el usuario canceló el share sheet
+        try {
+            downloadTextFile(filename, html, "text/html;charset=utf-8");
+            alert(t("shareDownloaded"));
+        } catch(_) {
             try {
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    await navigator.clipboard.writeText(url);
-                    alert(t("urlCopied"));
-                }
-            } catch(_) { /* silencioso */ }
+                await navigator.clipboard.writeText(url);
+                alert(t("urlCopied"));
+            } catch(__) { /* silencioso */ }
         }
     } finally {
         closeSlugModal();
@@ -2976,71 +3010,298 @@ function markSavedAndRewriteHash(){
 }
 let urlIOMode = "export"; // "export" | "import"
 
+/* ---------------------------------------------------------
+   Lista con checkmarks compartida por Exportar e Importar URL.
+   ioModel: [{type:"app", app, on} | {type:"folder", name, icon, on, apps:[{app, on}]}]
+   --------------------------------------------------------- */
+let ioModel = [];
+let ioRefs = {};
+
+function ioBuildModel(items){
+    return items.map(it => it.type === "folder"
+        ? { type:"folder", name:it.name, icon:it.icon, on:true,
+            apps:(it.apps || []).map(a => ({ app:a, on:true })) }
+        : { type:"app", app:it, on:true });
+}
+function ioCounts(){
+    let sel = 0, total = 0;
+    ioModel.forEach(m=>{
+        if (m.type === "app"){ total++; if (m.on) sel++; }
+        else m.apps.forEach(x=>{ total++; if (x.on) sel++; });
+    });
+    return {sel, total};
+}
+// Estructura (apps sueltas + folders) con SOLO lo marcado.
+function ioSelectedState(){
+    const out = [];
+    ioModel.forEach(m=>{
+        if (m.type === "app"){ if (m.on) out.push(m.app); return; }
+        const apps = m.apps.filter(x=>x.on).map(x=>x.app);
+        if (apps.length || (!m.apps.length && m.on)) out.push({type:"folder", name:m.name, icon:m.icon, apps});
+    });
+    return out;
+}
+// Solo las apps marcadas, en orden y sin folders (para importar).
+function ioSelectedApps(){
+    const out = [];
+    ioModel.forEach(m=>{
+        if (m.type === "app"){ if (m.on) out.push(m.app); }
+        else m.apps.forEach(x=>{ if (x.on) out.push(x.app); });
+    });
+    return out;
+}
+function ioMakeRow(cls, labelText, iconNode){
+    const row = document.createElement("label");
+    row.className = "ioRow " + cls;
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    row.appendChild(cb);
+    if (iconNode) row.appendChild(iconNode);
+    const span = document.createElement("span");
+    span.textContent = labelText;      // textContent: el contenido de un URL importado no es de confianza
+    row.appendChild(span);
+    return {row, cb};
+}
+function ioAppIcon(app){
+    const img = document.createElement("img");
+    img.className = "ioIcon";
+    img.alt = "";
+    img.referrerPolicy = "no-referrer";
+    attachIconFallback(img);
+    img.src = app.icon || FALLBACK_ICON;
+    return img;
+}
+function ioRender(){
+    const wrap = document.getElementById("urlIOSelect");
+    const list = document.getElementById("urlIOList");
+    list.innerHTML = "";
+    ioRefs = {};
+    const {total} = ioCounts();
+    wrap.style.display = total ? "block" : "none";
+
+    if (total){
+        const all = ioMakeRow("ioAll", t("selectAll"));
+        const count = document.createElement("em");
+        count.className = "ioCount";
+        all.row.appendChild(count);
+        all.cb.onchange = ()=>{
+            ioModel.forEach(m=>{
+                m.on = all.cb.checked;
+                if (m.type === "folder") m.apps.forEach(x=>{ x.on = all.cb.checked; });
+            });
+            ioSync();
+        };
+        ioRefs.all = all.cb;
+        ioRefs.count = count;
+        list.appendChild(all.row);
+
+        ioModel.forEach(m=>{
+            if (m.type === "app"){
+                const r = ioMakeRow("", m.app.name, ioAppIcon(m.app));
+                m.cb = r.cb;
+                r.cb.onchange = ()=>{ m.on = r.cb.checked; ioSync(); };
+                list.appendChild(r.row);
+            } else {
+                const ico = document.createElement("span");
+                ico.className = "ioFolderIco";
+                ico.innerHTML = FOLDER_SVG;          // constante interna, no viene del URL
+                const r = ioMakeRow("ioFolder", m.name, ico);
+                m.cb = r.cb;
+                r.cb.onchange = ()=>{
+                    m.on = r.cb.checked;
+                    m.apps.forEach(x=>{ x.on = r.cb.checked; });
+                    ioSync();
+                };
+                list.appendChild(r.row);
+                m.apps.forEach(x=>{
+                    const c = ioMakeRow("ioChild", x.app.name, ioAppIcon(x.app));
+                    x.cb = c.cb;
+                    c.cb.onchange = ()=>{ x.on = c.cb.checked; ioSync(); };
+                    list.appendChild(c.row);
+                });
+            }
+        });
+    }
+    ioSync();
+}
+// Refleja el modelo en los checkboxes, el contador, los botones y (al exportar) el campo URL.
+function ioSync(){
+    ioModel.forEach(m=>{
+        if (m.type === "app"){ if (m.cb) m.cb.checked = m.on; return; }
+        m.apps.forEach(x=>{ if (x.cb) x.cb.checked = x.on; });
+        if (!m.cb) return;
+        if (m.apps.length){
+            const n = m.apps.filter(x=>x.on).length;
+            m.cb.checked = n === m.apps.length;
+            m.cb.indeterminate = n > 0 && n < m.apps.length;
+        } else {
+            m.cb.checked = m.on;
+        }
+    });
+    const {sel, total} = ioCounts();
+    if (ioRefs.all){
+        ioRefs.all.checked = total > 0 && sel === total;
+        ioRefs.all.indeterminate = sel > 0 && sel < total;
+    }
+    if (ioRefs.count) ioRefs.count.textContent = sel + " / " + total;
+    const btn = document.getElementById("urlIOPrimaryBtn");
+    btn.disabled = (urlIOMode === "export") ? (total > 0 && sel === 0) : (sel === 0);
+    if (urlIOMode === "export") ioRefreshExportField();
+}
+function ioRefreshExportField(){
+    const field = document.getElementById("urlIOField");
+    const warn = document.getElementById("urlIOWarn");
+    const {sel, total} = ioCounts();
+    let url = "";
+    if (total === 0 || sel === total){
+        url = getCurrentSlugLauncherURL();               // todo marcado: el URL actual tal cual
+    } else if (sel > 0){
+        const base = getCurrentSlugLauncherURL().split("#")[0];
+        url = base + buildHashFromState(ioSelectedState());
+    }
+    field.value = url;
+    if (url && url.length > URL_WARN_LENGTH){
+        warn.textContent = t("urlTooLong").replace("{n}", url.length);
+        warn.style.display = "block";
+    } else {
+        warn.style.display = "none";
+    }
+}
+
 function exportConfig(){
+    if (currentMode !== "normal") exitCurrentMode();
     markSavedAndRewriteHash();
     urlIOMode = "export";
+    ioModel = ioBuildModel(parseHash());
     document.getElementById("urlIOTitle").textContent = t("exportUrl");
     const field = document.getElementById("urlIOField");
-    field.value = location.href;
     field.readOnly = true;
-    const warn = document.getElementById("urlIOWarn");
-    if (warn){
-        if (location.href.length > URL_WARN_LENGTH){
-            warn.textContent = t("urlTooLong").replace("{n}", location.href.length);
-            warn.style.display = "block";
-        } else { warn.style.display = "none"; }
-    }
+    field.placeholder = "";
     document.getElementById("urlIOPasteBtn").style.display = "none";
     document.getElementById("urlIOPrimaryBtn").textContent = t("copyUrl");
     closeSidePanel();
+    ioRender();
     document.getElementById("urlIOModal").style.display = "block";
-    setTimeout(()=>{ field.focus(); field.select(); }, 60);
 }
 function importConfig(){
+    if (currentMode !== "normal") exitCurrentMode();
     urlIOMode = "import";
+    ioModel = [];
     document.getElementById("urlIOTitle").textContent = t("importUrl");
     const field = document.getElementById("urlIOField");
     field.value = "";
     field.readOnly = false;
-    const warnEl = document.getElementById("urlIOWarn");
-    if (warnEl) warnEl.style.display = "none";
+    field.placeholder = t("importPasteHint");
+    document.getElementById("urlIOWarn").style.display = "none";
     document.getElementById("urlIOPasteBtn").style.display = (navigator.clipboard && navigator.clipboard.readText) ? "block" : "none";
     document.getElementById("urlIOPrimaryBtn").textContent = t("importAction");
     closeSidePanel();
+    ioRender();
     document.getElementById("urlIOModal").style.display = "block";
     setTimeout(()=>{ field.focus(); }, 60);
+}
+// Lee el URL pegado y muestra las apps que trae, con checkmark.
+function ioParseImportField(){
+    if (urlIOMode !== "import") return;
+    const field = document.getElementById("urlIOField");
+    const warn = document.getElementById("urlIOWarn");
+    const input = field.value.trim();
+    warn.style.display = "none";
+    ioModel = [];
+    if (input){
+        let hash = null;
+        try{
+            if (input.charAt(0) === "#") hash = input;
+            else {
+                try { hash = new URL(input).hash; }
+                catch(e){ hash = new URL("https://" + input).hash; }
+            }
+        }catch(e){ hash = null; }
+        if (hash === null){
+            warn.textContent = t("invalidImportUrl");
+            warn.style.display = "block";
+        } else {
+            // Folders vacíos no aportan nada al importar
+            const items = parseHash(hash).filter(i => i.type !== "folder" || (i.apps || []).length);
+            ioModel = ioBuildModel(items);
+            if (!ioCounts().total){
+                warn.textContent = t("importNoApps");
+                warn.style.display = "block";
+            }
+        }
+    }
+    ioRender();
 }
 async function pasteUrlIOField(){
     try{
         const text = await navigator.clipboard.readText();
-        if (text) document.getElementById("urlIOField").value = text;
+        if (text){
+            document.getElementById("urlIOField").value = text;
+            ioParseImportField();
+        }
     }catch(e){ /* permiso denegado o no soportado: el usuario puede pegar manualmente en el campo */ }
 }
+document.getElementById("urlIOField").addEventListener("input", ioParseImportField);
+
 function closeUrlIOModal(){
     document.getElementById("urlIOModal").style.display = "none";
+    ioModel = [];
+    ioRefs = {};
+    document.getElementById("urlIOList").innerHTML = "";
 }
+
+// Añade las apps marcadas al launcher actual, en folders "Importados N" (máx. FOLDER_MAX
+// por folder). Si "Importados N" ya existe, sube N hasta uno libre. El nombre sigue el
+// idioma del SlugLauncher que recibe.
+function importSelectedApps(){
+    const picked = ioSelectedApps();
+    if (!picked.length){ alert(t("selectOne")); return; }
+
+    if (currentMode !== "normal") exitCurrentMode();
+    const state = parseHash();
+    const foldersNeeded = Math.ceil(picked.length / FOLDER_MAX);
+    if (state.length + foldersNeeded > DESKTOP_MAX){
+        alert(t("importNoSpace").replace("{n}", foldersNeeded).replace("{max}", DESKTOP_MAX));
+        return;
+    }
+
+    const used = new Set(state.filter(i => i.type === "folder").map(i => i.name.trim().toLowerCase()));
+    const base = t("importedFolder");
+    const created = [];
+    let idx = 1;
+    for (let f = 0; f < foldersNeeded; f++){
+        while (used.has((base + " " + idx).toLowerCase())) idx++;
+        const name = base + " " + idx;
+        used.add(name.toLowerCase());
+        created.push(name);
+        state.push({
+            type:"folder", name, icon:"",
+            apps: picked.slice(f * FOLDER_MAX, (f + 1) * FOLDER_MAX)
+                        .map(a => ({type:"app", name:a.name, url:a.url, icon:a.icon}))
+        });
+    }
+
+    globalSaved = 0;            // hay cambios sin guardar (borde rojo)
+    serializeHash(state);
+    renderLauncher();
+    updateSavedIndicator();
+    closeUrlIOModal();
+    alert(t("importDone").replace("{n}", picked.length).replace("{folder}", created.join(", ")));
+}
+
 async function confirmUrlIOModal(){
     const field = document.getElementById("urlIOField");
     if (urlIOMode === "export"){
+        if (!field.value) return;
         try{
             await navigator.clipboard.writeText(field.value);
             alert(t("urlCopied"));
-        }catch(e){
-            field.focus(); field.select(); // fallback: queda seleccionado para copiar manualmente
-        }
-        closeUrlIOModal();
-    } else {
-        const input = field.value.trim();
-        if (!input) return;
-        try{
-            const url = new URL(input);
-            location.hash = url.hash;
-            parseGlobal();   // respeta tema/idioma/guardado tal cual vienen en la URL importada
-            applyTheme();
-            applyI18n();
-            renderLauncher();
             closeUrlIOModal();
-        }catch(e){ alert(t("invalidImportUrl")); }
+        }catch(e){
+            field.focus(); field.select();   // fallback: queda seleccionado para copiar manualmente
+        }
+    } else {
+        importSelectedApps();
     }
 }
 
@@ -3087,16 +3348,37 @@ function downloadTextFile(filename, content, mime){
     setTimeout(()=>URL.revokeObjectURL(objectUrl), 2000);
 }
 
+// Nombre y contenido del archivo de acceso directo (lo usan Guardar y Compartir).
+function shortcutFileInfo(url){
+    const name = sanitizeShortcutName("SlugLauncher");
+    const readable = pageTitle ? sanitizeShortcutName(pageTitle) : "";
+    const slug = readable.replace(/\s+/g, "-").replace(/^[.-]+|[.-]+$/g, "");
+    return {
+        filename: slug ? `${slug}-SlugLauncher.html` : `${name}.html`,
+        html: redirectShortcutHTML(url, readable || name)
+    };
+}
+
 function redirectShortcutHTML(url, title){
     const escAttr = v => String(v).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
     const jsUrl = JSON.stringify(String(url)).replace(/</g,"\\u003c");
+    const lang = escAttr(globalLang || "en");
+    const dir = (globalLang === "ar") ? "rtl" : "ltr";
+    // Si el navegador no redirige, el título ocupa toda la página (flex center) y es el enlace.
     return `<!DOCTYPE html>
-<html><head><meta charset="utf-8">
+<html lang="${lang}" dir="${dir}"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escAttr(title)}</title>
 <meta http-equiv="refresh" content="0;url=${escAttr(url)}">
+<style>
+html,body{height:100%;margin:0}
+body{background:#fffef7;color:#1c1c1e;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+a{display:flex;align-items:center;justify-content:center;width:100%;height:100%;box-sizing:border-box;padding:24px;text-align:center;font-size:clamp(32px,10vw,80px);font-weight:700;line-height:1.15;color:inherit;text-decoration:none;overflow-wrap:anywhere}
+@media (prefers-color-scheme:dark){body{background:#0c0c0c;color:#f2f2f7}}
+</style>
 </head><body>
 <script>location.replace(${jsUrl});<\/script>
-<p><a href="${escAttr(url)}">SlugLauncher</a></p>
+<a href="${escAttr(url)}">${escAttr(title)}</a>
 </body></html>`;
 }
 
@@ -3278,11 +3560,9 @@ function saveSlugLauncher(){
         if (platform === "windows" || platform === "mac" || platform === "linux"){
             // Redirección en .html: funciona igual en todos los navegadores y sistemas.
             // .url/.webloc/.desktop los navegadores los renombran a ".download" al bajarlos desde una web.
-            const title = pageTitle
-                ? sanitizeShortcutName(pageTitle).replace(/\s+/g, "-").replace(/^[.-]+|[.-]+$/g, "")
-                : "";
-            filename = title ? `${title}-SlugLauncher.html` : `${name}.html`;
-            downloadTextFile(filename, redirectShortcutHTML(url, title || name), "text/html;charset=utf-8");
+            const info = shortcutFileInfo(url);
+            filename = info.filename;
+            downloadTextFile(filename, info.html, "text/html;charset=utf-8");
         }
 
         const instructions = getSaveInstructions(platform, filename);
