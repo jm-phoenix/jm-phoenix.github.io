@@ -316,6 +316,94 @@ body.theme-dark .appIcon .folderBadge { box-shadow:0 1px 4px rgba(0,0,0,0.8); bo
 }
 .appIcon.dragActive { animation:none !important; box-shadow:0 14px 30px rgba(0,0,0,0.35); opacity:0.92; z-index:500; }
 .appIcon.dropTargetHighlight { outline:3px solid var(--accent); outline-offset:3px; background:rgba(0,122,255,0.12); }
+
+
+/* ---------- SCROLLBARS con el estilo del launcher ----------
+   Listas y modales: barra fina, redondeada y translúcida que está oculta y solo aparece al
+   pasar el mouse o al hacer scroll (la clase .isScrolling la pone el JS). La página usa una
+   barra fina del mismo color, siempre visible. Chrome/Edge/Firefox usan las propiedades
+   estándar; Safari y Chrome antiguo usan ::-webkit-scrollbar. */
+:root { --sb-thumb:rgba(127,127,127,.45); --sb-thumb-hover:rgba(0,122,255,.65); }
+body.theme-dark { --sb-thumb:rgba(255,255,255,.28); --sb-thumb-hover:rgba(10,132,255,.75); }
+html { scrollbar-width:thin; scrollbar-color:var(--sb-thumb) transparent; }
+.folderContent, .modalBox, #sidePanel, #saveLauncherBox, #urlIOList, .searchResultsList, #folderAppList, #editFolderAppList {
+    scrollbar-width:thin; scrollbar-color:transparent transparent;
+}
+.folderContent:hover, .modalBox:hover, #sidePanel:hover, #saveLauncherBox:hover, #urlIOList:hover, .searchResultsList:hover, #folderAppList:hover, #editFolderAppList:hover,
+.folderContent.isScrolling, .modalBox.isScrolling, #sidePanel.isScrolling, #saveLauncherBox.isScrolling, #urlIOList.isScrolling, .searchResultsList.isScrolling, #folderAppList.isScrolling, #editFolderAppList.isScrolling {
+    scrollbar-color:var(--sb-thumb) transparent;
+}
+::-webkit-scrollbar { width:8px; height:8px; background:transparent; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-corner { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--sb-thumb); border-radius:999px; border:2px solid transparent; background-clip:padding-box; }
+::-webkit-scrollbar-thumb:hover { background:var(--sb-thumb-hover); background-clip:padding-box; }
+.folderContent::-webkit-scrollbar-thumb, .modalBox::-webkit-scrollbar-thumb, #sidePanel::-webkit-scrollbar-thumb, #saveLauncherBox::-webkit-scrollbar-thumb,
+#urlIOList::-webkit-scrollbar-thumb, .searchResultsList::-webkit-scrollbar-thumb, #folderAppList::-webkit-scrollbar-thumb, #editFolderAppList::-webkit-scrollbar-thumb {
+    background:transparent; background-clip:padding-box;
+}
+.folderContent:hover::-webkit-scrollbar-thumb, .modalBox:hover::-webkit-scrollbar-thumb, #sidePanel:hover::-webkit-scrollbar-thumb, #saveLauncherBox:hover::-webkit-scrollbar-thumb,
+#urlIOList:hover::-webkit-scrollbar-thumb, .searchResultsList:hover::-webkit-scrollbar-thumb, #folderAppList:hover::-webkit-scrollbar-thumb, #editFolderAppList:hover::-webkit-scrollbar-thumb,
+.folderContent.isScrolling::-webkit-scrollbar-thumb, .modalBox.isScrolling::-webkit-scrollbar-thumb, #sidePanel.isScrolling::-webkit-scrollbar-thumb, #saveLauncherBox.isScrolling::-webkit-scrollbar-thumb,
+#urlIOList.isScrolling::-webkit-scrollbar-thumb, .searchResultsList.isScrolling::-webkit-scrollbar-thumb, #folderAppList.isScrolling::-webkit-scrollbar-thumb, #editFolderAppList.isScrolling::-webkit-scrollbar-thumb {
+    background:var(--sb-thumb); background-clip:padding-box;
+}
+.folderContent::-webkit-scrollbar-thumb:hover, .modalBox::-webkit-scrollbar-thumb:hover, #sidePanel::-webkit-scrollbar-thumb:hover, #saveLauncherBox::-webkit-scrollbar-thumb:hover,
+#urlIOList::-webkit-scrollbar-thumb:hover, .searchResultsList::-webkit-scrollbar-thumb:hover, #folderAppList::-webkit-scrollbar-thumb:hover, #editFolderAppList::-webkit-scrollbar-thumb:hover {
+    background:var(--sb-thumb-hover); background-clip:padding-box;
+}
+
+/* ---------- ESTILO iOS: la imagen es el tile completo y el nombre va debajo, fuera del icono ----------
+   La "tarjeta" (fondo, borde, sombra, redondeo) pasa de .appIcon a la imagen / al folder.
+   El botón "+ Añadir app" (.addAppTile) conserva su tarjeta cuadrada punteada. */
+.appIcon:not(.addAppTile) {
+    aspect-ratio:auto; padding:0; gap:7px;
+    background:transparent; border:none; border-radius:0; box-shadow:none;
+    justify-content:flex-start; overflow:visible;
+}
+body.theme-dark .appIcon:not(.addAppTile) { background:transparent; border:none; box-shadow:none; }
+.addAppTile { align-self:start; }
+.appIcon:not(.addAppTile) > img,
+.appIcon:not(.addAppTile) > .folderIconWrap {
+    width:100%; height:auto; aspect-ratio:1/1; margin:0; flex:0 0 auto;
+    box-sizing:border-box; border-radius:22.4%;
+    background:var(--card-light);                 /* iconos con fondo transparente se ven como tile blanco */
+    border:1px solid rgba(0,0,0,0.08);
+    box-shadow:0 1px 2px rgba(0,0,0,0.05), 0 10px 22px rgba(0,0,0,0.10);
+    transition:box-shadow .35s ease, outline .1s ease;
+}
+.appIcon:not(.addAppTile) > img { object-fit:contain; }   /* sin recortar: el lado largo se ve completo y el resto se rellena con el color del icono */
+body.theme-dark .appIcon:not(.addAppTile) > img,
+body.theme-dark .appIcon:not(.addAppTile) > .folderIconWrap {
+    background:var(--card-dark); border-color:rgba(255,255,255,0.12);
+    box-shadow:0 1px 2px rgba(0,0,0,0.5), 0 10px 26px rgba(0,0,0,0.75);
+}
+/* Hover / arrastre / destino de soltar: el resplandor y el aro van sobre el tile, no sobre el texto */
+.appIcon:not(.addAppTile):hover, body.theme-dark .appIcon:not(.addAppTile):hover,
+.appIcon.dragActive:not(.addAppTile) { box-shadow:none; }
+.appIcon:not(.addAppTile):hover > img,
+.appIcon:not(.addAppTile):hover > .folderIconWrap {
+    box-shadow:0 2px 4px rgba(0,0,0,0.06), 0 18px 32px rgba(0,0,0,0.16), 0 0 13px 3px rgba(74,144,226,0.4);
+}
+body.theme-dark .appIcon:not(.addAppTile):hover > img,
+body.theme-dark .appIcon:not(.addAppTile):hover > .folderIconWrap {
+    box-shadow:0 2px 4px rgba(0,0,0,0.3), 0 10px 22px rgba(0,0,0,0.5), 0 0 17px 4px rgba(10,132,255,0.55);
+}
+.appIcon.dragActive:not(.addAppTile) > img,
+.appIcon.dragActive:not(.addAppTile) > .folderIconWrap { box-shadow:0 14px 30px rgba(0,0,0,0.35); }
+.appIcon.dropTargetHighlight:not(.addAppTile) { outline:none; background:transparent; }
+.appIcon.dropTargetHighlight:not(.addAppTile) > img,
+.appIcon.dropTargetHighlight:not(.addAppTile) > .folderIconWrap { outline:3px solid var(--accent); outline-offset:3px; }
+/* Tamaño del SVG del folder dentro de su tile (edita SOLO este valor para probar).
+   El dibujo del folder tiene margen propio: ocupa ~83% del ancho de su caja, así que
+   80% de ancho visible = 96% aquí; 100% es el máximo útil. El icono superpuesto escala solo. */
+:root { --folder-svg-size:100%; --folder-overlay-ratio:.46; }
+/* Folder: el wrap pasa a ser el tile completo; el SVG y el icono superpuesto conservan su proporción */
+.appIcon:not(.addAppTile) > .folderIconWrap { display:flex; align-items:center; justify-content:center; position:relative; }
+.appIcon:not(.addAppTile) > .folderIconWrap .folderSvgIcon { width:var(--folder-svg-size); height:var(--folder-svg-size); margin:0; border-radius:0; }
+.appIcon:not(.addAppTile) .folderOverlayIcon { width:calc(var(--folder-svg-size) * var(--folder-overlay-ratio)); height:calc(var(--folder-svg-size) * var(--folder-overlay-ratio)); }
+/* Nombre debajo: el contenedor recorta el texto (el deslizamiento al pasar el mouse ya no lo recorta la tarjeta) */
+.appLabelClip { width:100%; overflow:hidden; text-align:center; line-height:1.3; min-width:0; }
 .addAppTile {
     aspect-ratio: 1 / 1; /* refuerza el cuadrado por si el contenedor externo lo distorsiona */
     border:2px dashed rgba(0,122,255,0.45);
@@ -369,7 +457,7 @@ body.theme-dark .appIcon .folderBadge { box-shadow:0 1px 4px rgba(0,0,0,0.8); bo
 }
 .folderContent {
     background:var(--folder-bg-light); padding:20px; border-radius:28px;
-    width:90%; max-width:600px; max-height:80vh; overflow:auto;
+    width:90%; max-width:600px; max-height:80vh; overflow-x:hidden; overflow-y:auto;
     border:1px solid rgba(0,0,0,0.08);
     box-shadow:0 15px 45px rgba(0,0,0,0.12), 0 0 35px 5px rgba(74,144,226,0.35);
     transform:scale(.82); opacity:0;
@@ -558,7 +646,7 @@ body.theme-dark #urlIOList { background:var(--folder-bg-dark); }
 .ioRow.ioChild { padding-inline-start:32px; }
 .ioRow .ioCount { font-style:normal; font-size:12px; opacity:.6; flex:0 0 auto; }
 .ioRow input[type="checkbox"] { width:20px; height:20px; }
-.ioIcon { width:24px; height:24px; border-radius:6px; flex:0 0 24px; object-fit:cover; background:rgba(127,127,127,.15); }
+.ioIcon { width:24px; height:24px; border-radius:6px; flex:0 0 24px; object-fit:contain; background:rgba(127,127,127,.15); }
 .ioFolderIco { display:flex; width:24px; height:24px; flex:0 0 24px; }
 .ioFolderIco svg { width:24px; height:24px; }
 .modalBox button:disabled, .modalBox button:disabled:hover { opacity:.45; cursor:not-allowed; background:var(--accent); }
@@ -1813,13 +1901,77 @@ function closeSidePanel(e){
 /* =========================================================
    RENDER: ITEMS DEL GRID
    ========================================================= */
+/* ---------------------------------------------------------
+   Iconos rectangulares: se muestran completos (object-fit:contain) y el espacio sobrante
+   se rellena con el color de fondo del propio icono, leído de sus bordes. Si el servidor
+   del icono no permite leerlo (CORS) o el icono es transparente, queda el fondo blanco/oscuro
+   del tema. Solo se intenta en iconos no cuadrados.
+   --------------------------------------------------------- */
+const _iconBgCache = new Map();   // src -> color CSS (o null si no se pudo leer)
+function pickEdgeColor(data, w, h){
+    const buckets = new Map();
+    let opaque = 0, total = 0;
+    const add = (x, y)=>{
+        const i = (y * w + x) * 4;
+        total++;
+        if (data[i+3] < 200) return;          // transparente: no cuenta
+        opaque++;
+        const key = ((data[i] >> 4) << 8) | ((data[i+1] >> 4) << 4) | (data[i+2] >> 4);
+        const b = buckets.get(key) || {n:0, r:0, g:0, b:0};
+        b.n++; b.r += data[i]; b.g += data[i+1]; b.b += data[i+2];
+        buckets.set(key, b);
+    };
+    for (let x = 0; x < w; x++){ add(x, 0); add(x, h - 1); }
+    for (let y = 1; y < h - 1; y++){ add(0, y); add(w - 1, y); }
+    if (!total || opaque / total < 0.5) return null;
+    let best = null;
+    buckets.forEach(b=>{ if (!best || b.n > best.n) best = b; });
+    return best ? `rgb(${Math.round(best.r / best.n)},${Math.round(best.g / best.n)},${Math.round(best.b / best.n)})` : null;
+}
+function loadIconBg(src, done){
+    if (_iconBgCache.has(src)){ done(_iconBgCache.get(src)); return; }
+    let finished = false;
+    const finish = c=>{ if (finished) return; finished = true; _iconBgCache.set(src, c); done(c); };
+    try{
+        const im = new Image();
+        im.crossOrigin = "anonymous";
+        im.onload = ()=>{
+            try{
+                const s = Math.min(1, 48 / Math.max(im.naturalWidth, im.naturalHeight));
+                const w = Math.max(1, Math.round(im.naturalWidth * s));
+                const h = Math.max(1, Math.round(im.naturalHeight * s));
+                const cv = document.createElement("canvas");
+                cv.width = w; cv.height = h;
+                const ctx = cv.getContext("2d", {willReadFrequently:true});
+                ctx.drawImage(im, 0, 0, w, h);
+                finish(pickEdgeColor(ctx.getImageData(0, 0, w, h).data, w, h));
+            }catch(e){ finish(null); }       // canvas "tainted" u otro error
+        };
+        im.onerror = ()=>finish(null);
+        im.src = src;
+    }catch(e){ finish(null); }
+}
+function attachIconFill(img){
+    if (!img) return;
+    const apply = ()=>{
+        const w = img.naturalWidth, h = img.naturalHeight;
+        const src = img.currentSrc || img.src;
+        if (!w || !h || !src || src.indexOf("data:") === 0) return;
+        if (Math.abs(w / h - 1) < 0.02) return;      // cuadrado: ya llena el tile
+        loadIconBg(src, c=>{ if (c) img.style.backgroundColor = c; });
+    };
+    if (img.complete && img.naturalWidth) apply();
+    else img.addEventListener("load", apply, {once:true});
+}
+
 function renderApp(app, parent, path){
     const div=document.createElement("div");
     div.className="appIcon";
     div.dataset.itemType="app";
     const iconSrc = app.icon || FALLBACK_ICON;
-    div.innerHTML = `<img draggable="false" src="${escapeHtml(iconSrc)}"><span class="appNameLabel" title="${escapeHtml(app.name)}">${escapeHtml(app.name)}</span>`;
+    div.innerHTML = `<img draggable="false" src="${escapeHtml(iconSrc)}"><div class="appLabelClip"><span class="appNameLabel" title="${escapeHtml(app.name)}">${escapeHtml(app.name)}</span></div>`;
     attachIconFallback(div.querySelector("img"));
+    attachIconFill(div.querySelector("img"));
     const label = div.querySelector(".appNameLabel");
     if (label) {
         label.addEventListener("mouseenter", ()=>{
@@ -1842,7 +1994,7 @@ function renderFolderIcon(folder,parent,path){
     div.dataset.itemType="folder";
     const count = folder.apps ? folder.apps.length : 0;
     const overlay = folder.icon ? `<img class="folderOverlayIcon" draggable="false" src="${escapeHtml(folder.icon)}" onerror="this.style.display='none';">` : "";
-    div.innerHTML = `<div class="folderIconWrap">${FOLDER_SVG}${overlay}</div><span>${escapeHtml(folder.name)}</span><span class="folderBadge">${count}</span>`;
+    div.innerHTML = `<div class="folderIconWrap">${FOLDER_SVG}${overlay}</div><div class="appLabelClip"><span>${escapeHtml(folder.name)}</span></div><span class="folderBadge">${count}</span>`;
     attachItemInteraction(div, folder, path, true);
     parent.appendChild(div);
 }
@@ -3574,6 +3726,15 @@ function saveSlugLauncher(){
         openSaveLauncherModal(instructions, url);
     }
 }
+
+// Muestra la barra de scroll (oculta por defecto en listas y modales) mientras se hace scroll.
+document.addEventListener("scroll", e=>{
+    const el = e.target;
+    if (!el || !el.classList || el === document.documentElement) return;
+    el.classList.add("isScrolling");
+    clearTimeout(el._scrollHideTimer);
+    el._scrollHideTimer = setTimeout(()=>el.classList.remove("isScrolling"), 900);
+}, true);
 
 document.addEventListener("keydown", e=>{
     if (e.key === "Escape"){
