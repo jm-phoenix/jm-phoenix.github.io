@@ -203,7 +203,8 @@ h1{font-size:clamp(38px,6vw,66px);line-height:1.02;letter-spacing:-.045em;margin
 .mockLogo{width:15px;height:24px;display:block}
 .mockTitle{font-weight:750;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mockButtons{margin-left:auto;display:flex;gap:6px}
-.mockBtn{width:22px;height:22px;border-radius:7px;background:rgba(127,127,127,.10)}
+.mockBtn{width:26px;height:26px;display:grid;place-items:center;color:inherit;opacity:.8}
+.mockBtn svg{width:19px;height:19px}
 .mockGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .mockApp{min-width:0}
 .mockTile{aspect-ratio:1;background:#fff;border:1px solid rgba(0,0,0,.07);border-radius:21%;box-shadow:0 9px 18px rgba(0,0,0,.10);display:flex;align-items:center;justify-content:center;font-size:28px}
@@ -338,7 +339,7 @@ html,body{overflow-x:clip}   /* el brillo decorativo del mockup sobresale unos p
 .iconOption:hover{transform:scale(1.08)}
 .iconOption.selectedIcon{border-color:var(--accent)}
 /* Réplica del modal dentro de la tarjeta "Pruébalo": se ve como el modal, pero abre el modal real al interactuar */
-.tryForm.modalBox{animation:none;box-shadow:none;max-height:none;overflow:visible;margin:0;width:100%;max-width:none;padding:14px;border-radius:20px;background:rgba(127,127,127,.06);border:1px solid rgba(127,127,127,.18);margin-top:auto}
+.tryForm.modalBox{animation:none;box-shadow:none;max-height:none;overflow:visible;margin:0;width:100%;max-width:none;padding:14px;border-radius:20px;background:rgba(127,127,127,.06);border:1px solid rgba(127,127,127,.18)}
 .tryForm,.tryForm *{cursor:pointer}
 .tryForm input{caret-color:transparent}
 .tryForm button:last-child{margin-bottom:0}
@@ -379,13 +380,20 @@ html,body{overflow-x:clip}   /* el brillo decorativo del mockup sobresale unos p
 
 /* Demo de búsqueda — altura FIJA: lo que cambia (texto, filas) ocurre dentro de contenedores de tamaño constante,
    así la sección no cambia de alto ni empuja los bloques de abajo (sin layout shift). Misma estética que #searchModalBox. */
-.searchDemo{display:flex;flex-direction:column;gap:10px;height:168px;overflow:hidden;margin-top:auto;padding:14px;border-radius:20px;background:rgba(127,127,127,.06);border:1px solid rgba(127,127,127,.18);box-sizing:border-box;contain:layout paint}
+.searchDemo{display:flex;flex-direction:column;gap:10px;height:290px;overflow:hidden;padding:14px;border-radius:20px;background:rgba(127,127,127,.06);border:1px solid rgba(127,127,127,.18);box-sizing:border-box;contain:layout paint}
 .searchBox{flex:0 0 44px;display:flex;align-items:center;gap:10px;padding:0 14px;border-radius:16px;background:rgba(127,127,127,.12);font-size:15px;overflow:hidden;white-space:nowrap}
 .searchBox svg{width:18px;height:18px;opacity:.55;flex:0 0 18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .searchTyped{min-width:0;overflow:hidden;text-overflow:clip}
 .searchTyped:empty::before{content:attr(data-ph);opacity:.5}
-.searchCaret{flex:0 0 2px;width:2px;height:18px;margin-left:-8px;background:var(--accent);animation:searchCaretBlink 1s steps(1) infinite}
+.searchBox{box-shadow:0 0 0 0 transparent;transition:box-shadow .2s ease}
+.searchBox.focus{box-shadow:0 0 0 2px var(--accent)}
+.searchCaret{display:none;flex:0 0 2px;width:2px;height:18px;margin-left:-8px;background:var(--accent);animation:searchCaretBlink 1s steps(1) infinite}
 @keyframes searchCaretBlink{50%{opacity:0}}
+.searchBox.focus .searchCaret{display:block}
+.searchChips{display:flex;flex-wrap:wrap;gap:5px;align-content:flex-start;animation:animotion-fade-in .2s ease both}
+.searchChip{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:999px;background:rgba(127,127,127,.12);font-size:13px}
+.searchChip .searchResultIcon{flex:0 0 22px;width:22px;height:22px;border-radius:7px;font-size:11px}
+@media (max-width:400px){.searchDemo{height:300px}.searchChip{font-size:12px;padding:2px 8px 2px 2px;gap:5px}.searchChip .searchResultIcon{flex:0 0 18px;width:18px;height:18px;font-size:10px;border-radius:6px}}
 .searchList{flex:1;display:flex;flex-direction:column;gap:4px;overflow:hidden}
 .searchRow{flex:0 0 48px;display:flex;align-items:center;gap:12px;padding:0 10px;border-radius:14px;animation:animotion-fade-in .16s ease both}
 .searchRow:first-child{background:rgba(0,122,255,.12)}
@@ -544,7 +552,7 @@ html[data-theme="dark"]{color-scheme:dark}
                 <div class="mockHeader">
                     <svg class="mockLogo" xmlns="http://www.w3.org/2000/svg" viewBox="45 0 160 264"><path fill="#4A90E2" d="m188.835,93.248c-6.319-10.976-13.982-18.705-18.862-22.973l17.009-40.097c7.051-.929 12.529-7.305 12.529-15.022 0-8.357-6.415-15.156-14.301-15.156-7.888,0-14.305,6.799-14.305,15.155 0,3.18 .934,6.13 2.52,8.57l-16.621,39.184-35.194-14.011c-1.115-7.186-7.002-12.691-14.095-12.691-7.888,0-14.305,6.798-14.305,15.153 0,8.355 6.417,15.152 14.305,15.152 3.448,0,6.615-1.3,9.088-3.462l36.296,14.449c-1.008,10.456-3.716,33.415-9.006,46.189-12.34,29.792-29.63,42.078-44.886,52.918-12.398,8.811-24.109,17.132-30.532,32.639-11.676,28.183 3.698,48.68 12.504,53.703 1.148.655 2.431.985 3.716.985 1.093,0,2.187-.238 3.202-.718 2.212-1.044 3.776-3.102 4.189-5.513.136-.79.257-1.617.383-2.479.689-4.737 1.402-9.635 6.399-15.682 3.186-3.854 11.276-6.456 20.646-9.469 21.782-7.005 54.699-17.59 72.607-60.826 13.996-33.786 5.939-59.976-3.286-75.998zm-10.571,70.26c-15.252,36.821-41.917,45.396-63.342,52.286-11.61,3.734-21.637,6.958-27.616,14.194-2.808,3.398-4.75,6.664-6.123,9.708-2.275-5.955-3.152-14.324 1.149-24.71 4.771-11.52 13.859-17.977 25.364-26.152 16.067-11.417 36.063-25.627 50.054-59.405 4.72-11.395 7.541-28.744 9.069-41.188 2.947 3.324 6.143 7.499 9.017 12.491 10.972 19.057 11.788 40.177 2.428 62.776z"/></svg>
                     <div class="mockTitle">Launcher — Mis apps</div>
-                    <div class="mockButtons"><span class="mockBtn"></span><span class="mockBtn"></span><span class="mockBtn"></span></div>
+                    <div class="mockButtons"><span class="mockBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span><span class="mockBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></span><span class="mockBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg></span></div>
                 </div>
                 <div class="mockGrid">
                     <div class="mockApp"><div class="mockTile">G</div><div class="mockName">Google</div></div>
@@ -864,7 +872,8 @@ const I18N = {
         limitDesktop: "Escritorio (máx. {max}): se eliminó \"{name}\"{extra}.",
         limitFolder: "Folder \"{folder}\" (máx. {max}): se eliminó \"{name}\"{extra}.",
         limitExtra: " y {n} más",
-        tryDemoFolder: "Trabajo"
+        tryDemoFolder: "Trabajo",
+        demoMyApp: "Mi Aplicación"
     }
 };
 function t(key, vars){
@@ -1297,58 +1306,84 @@ function saveFolder(){
    Sin layout shift: la caja y la lista tienen altura fija en CSS; aquí solo cambia su contenido.
    ========================================================= */
 const SEARCH_DEMO_APPS = [
-    {name:"WhatsApp",     glyph:"W", color:"#25D366"},
-    {name:"Gmail",        glyph:"✉", color:"#EA4335"},
-    {name:"Google Drive", glyph:"▲", color:"#1FA463"},
-    {name:"YouTube",      glyph:"▶", color:"#FF0000"},
-    {name:"Canva",        glyph:"C", color:"#00C4CC"}
+    {i18n:"demoMyApp", glyph:"★",  color:"#8e8e93"},
+    {name:"MSN",           glyph:"M",  color:"#2b2b30"},
+    {name:"Yahoo",         glyph:"Y!", color:"#6001D2"},
+    {name:"Youtube",       glyph:"▶",  color:"#FF0000"},
+    {name:"Amazon",        glyph:"a",  color:"#FF9900"},
+    {name:"Airbnb",        glyph:"A",  color:"#FF5A5F"},
+    {name:"ChatGPT",       glyph:"G",  color:"#10A37F"},
+    {name:"Claude",        glyph:"✻",  color:"#D97757"},
+    {name:"Coub",          glyph:"C",  color:"#0F8BFF"},
+    {name:"Copilot",       glyph:"✦",  color:"#0078D4"},
+    {name:"Google Maps",   glyph:"◎",  color:"#34A853"},
+    {name:"Google Photos", glyph:"✿",  color:"#F4A100"},
+    {name:"Google Drive",  glyph:"▲",  color:"#1FA463"}
 ];
-const SEARCH_DEMO_MAX_ROWS = 2;   // lo que cabe en la lista de altura fija
+const SEARCH_DEMO_MAX_ROWS = 3;                                // lo que cabe en la lista de altura fija
+const SEARCH_DEMO_QUERIES = ["go", "yo", "ms", "cl"];          // lo que "escribe" la demo, en orden (iguales en todos los idiomas)
+const SEARCH_DEMO_TIMING = {letter:800, view:3500, focus:600, hold:1600, erase:60, gap:400};   // ms
+function searchDemoLabel(a){ return a.i18n ? t(a.i18n) : a.name; }
+function searchDemoIcon(a, cls){ return '<div class="' + cls + '" style="background:' + a.color + '">' + escapeHtml(a.glyph) + '</div>'; }
+// Consulta vacía → todas las apps como chips (para que se vea qué hay); con texto → filas filtradas (includes, como index.html)
 function renderSearchDemo(query){
-    const textEl = document.getElementById("searchDemoText");
     const listEl = document.getElementById("searchDemoList");
-    textEl.textContent = query;
+    document.getElementById("searchDemoText").textContent = query;
     const q = query.trim().toLowerCase();
-    const found = q ? SEARCH_DEMO_APPS.filter(a => a.name.toLowerCase().includes(q)).slice(0, SEARCH_DEMO_MAX_ROWS) : [];
+    if (!q) {
+        listEl.innerHTML = '<div class="searchChips">' + SEARCH_DEMO_APPS.map(function (a) {
+            return '<div class="searchChip">' + searchDemoIcon(a, "searchResultIcon") + escapeHtml(searchDemoLabel(a)) + '</div>';
+        }).join("") + '</div>';
+        return;
+    }
     listEl.innerHTML = "";
-    found.forEach(function (a) {
-        const row = document.createElement("div");
-        row.className = "searchRow";
-        row.innerHTML = '<div class="searchResultIcon" style="background:' + a.color + '">' + escapeHtml(a.glyph) + '</div>' +
-                        '<div class="searchResultName">' + escapeHtml(a.name) + '</div>';
-        listEl.appendChild(row);
-    });
+    SEARCH_DEMO_APPS.filter(function (a) { return searchDemoLabel(a).toLowerCase().includes(q); })
+        .slice(0, SEARCH_DEMO_MAX_ROWS).forEach(function (a) {
+            const row = document.createElement("div");
+            row.className = "searchRow";
+            row.innerHTML = searchDemoIcon(a, "searchResultIcon") + '<div class="searchResultName">' + escapeHtml(searchDemoLabel(a)) + '</div>';
+            listEl.appendChild(row);
+        });
 }
 (function initSearchDemo(){
     const box = document.getElementById("searchDemo");
     if (!box) return;
+    const bar = box.querySelector(".searchBox");
+    const setFocus = function (on) { bar.classList.toggle("focus", on); };
     document.getElementById("searchDemoText").setAttribute("data-ph", t("searchPlaceholder"));
     const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) { renderSearchDemo(SEARCH_DEMO_APPS[0].name); return; }   // estático, sin movimiento
+    if (reduce) { setFocus(true); renderSearchDemo(SEARCH_DEMO_QUERIES[0]); return; }   // estático, sin movimiento
 
-    let idx = 0, pos = 0, phase = "type", timer = null, inView = true;
-    function tick(){
-        const name = SEARCH_DEMO_APPS[idx].name;
-        let delay;
-        if (phase === "type") {
-            pos++; renderSearchDemo(name.slice(0, pos));
-            if (pos >= name.length) { phase = "hold"; delay = 1500; } else { delay = 85 + Math.floor(Math.random() * 60); }
-        } else if (phase === "hold") {
-            phase = "erase"; delay = 0;
-        } else {
-            pos--; renderSearchDemo(name.slice(0, Math.max(pos, 0)));
-            if (pos <= 0) { idx = (idx + 1) % SEARCH_DEMO_APPS.length; phase = "type"; delay = 380; } else { delay = 32; }
+    const T = SEARCH_DEMO_TIMING;
+    const sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+    let run = 0, inView = true;
+    // 1) se ve la lista completa → 2) selecciona el campo → 3) escribe cada consulta letra a letra → repite
+    async function loop(my){
+        const live = function () { return my === run; };
+        while (live()) {
+            setFocus(false); renderSearchDemo("");
+            await sleep(T.view); if (!live()) return;
+            setFocus(true);
+            await sleep(T.focus); if (!live()) return;
+            for (const w of SEARCH_DEMO_QUERIES) {
+                for (let i = 1; i <= w.length; i++) { renderSearchDemo(w.slice(0, i)); await sleep(T.letter); if (!live()) return; }
+                await sleep(T.hold); if (!live()) return;
+                for (let i = w.length - 1; i >= 0; i--) { renderSearchDemo(w.slice(0, i)); await sleep(T.erase); if (!live()) return; }
+                await sleep(T.gap); if (!live()) return;
+            }
         }
-        timer = setTimeout(tick, delay);
     }
-    function start(){ if (timer === null && inView && !document.hidden) timer = setTimeout(tick, 250); }
-    function stop(){ if (timer !== null) { clearTimeout(timer); timer = null; } }
+    function start(){ if (inView && !document.hidden) { run++; loop(run); } }
+    function stop(){ run++; }
     if ("IntersectionObserver" in window) {
         new IntersectionObserver(function (entries) {
+            const was = inView;
             inView = entries[entries.length - 1].isIntersecting;
-            inView ? start() : stop();
+            if (inView && !was) start(); else if (!inView) stop();
         }, {threshold: 0.1}).observe(box);
-    } else { start(); }
+    }
+    renderSearchDemo("");
+    start();
     document.addEventListener("visibilitychange", function () { document.hidden ? stop() : start(); });
 })();
 
