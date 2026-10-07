@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adilo Family Uploader</title>
+<!-- Librería para leer metadatos de MP4 (fecha de creación) -->
+<script src="https://cdn.jsdelivr.net/npm/mp4-metadata@1.0.2/dist/mp4-metadata.min.js"></script>
+<style>
+  :root { --brand: #2563eb; }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; max-width: 640px;
+         margin: 0 auto; padding: 1rem; background: #f8fafc; color: #0f172a; }
+  h1 { font-size: 1.4rem; margin: 0 0 1rem; }
+  label { display: block; margin: 10px 0 4px; font-weight: 600; font-size: 14px; }
+  input, select, button { width: 100%; padding: 12px; font-size: 16px;
+                          border-radius: 8px; border: 1px solid #cbd5e1;
+                          background: white; color: #0f172a; }
+  button { background: var(--brand); color: white; border: none;
+           cursor: pointer; font-weight: 600; margin-top: 8px; }
+  button:disabled { background: #94a3b8; cursor: not-allowed; }
+  button.secondary { background: #e2e8f0; color: #0f172a; }
+  .log { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8px;
+         font-family: ui-monospace, monospace; font-size: 12px; white-space: pre-wrap;
+         max-height: 300px; overflow-y: auto; margin-top: 12px; }
+  .gps { background: #fef3c7; padding: 10px; border-radius: 8px; margin: 8px 0;
+         font-size: 14px; border-left: 4px solid #f59e0b; }
+  .hidden { display: none !important; }
+  .badge { display: inline-block; background: #dbeafe; color: #1e40af;
+           padding: 2px 8px; border-radius: 999px; font-size: 12px;
+           font-weight: 600; margin-right: 4px; }
+  .header-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+                margin-bottom: 12px; }
+  .logout-link { margin-left: auto; font-size: 13px; color: #dc2626;
+                 text-decoration: underline; cursor: pointer;
+                 background: none; border: none; padding: 4px 8px; width: auto; }
+  .logout-link:hover { color: #991b1b; }
+  .bottom-user { margin-top: 24px; padding-top: 16px; border-top: 1px dashed #cbd5e1; }
+  .bottom-user label { font-size: 13px; color: #475569; }
+  #loginOverlay { position: fixed; inset: 0; background: rgba(15,23,42,.75);
+                  display: flex; align-items: center; justify-content: center;
+                  z-index: 1000; padding: 1rem; }
+  #loginBox { background: white; border-radius: 12px; padding: 24px;
+              width: 100%; max-width: 420px; box-shadow: 0 20px 50px rgba(0,0,0,.3);
+              max-height: 90vh; overflow-y: auto; }
+  #loginBox h2 { margin: 0 0 4px; font-size: 1.2rem; }
+  #loginBox p.sub { margin: 0 0 16px; color: #64748b; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- ============================ LOGIN MODAL ============================ -->
+<div id="loginOverlay">
+  <div id="loginBox">
+    <h2>🔐 Adilo Family Uploader</h2>
+    <p class="sub">Elige tu nombre, luego ingresa las claves de Adilo una vez.
+       El navegador ofrecerá guardarlas.</p>
+
+    <form id="loginForm" autocomplete="on">
+      <label for="loginUserSelect">¿Quién eres?</label>
+      <select id="loginUserSelect" required>
+        <option value="">— Selecciona tu nombre —</option>
+      </select>
+
+      <label for="pubKey">Public Key (usuario)</label>
+      <input id="pubKey" name="username" type="text"
+             autocomplete="username" autocapitalize="none" autocorrect="off"
+             spellcheck="false" required>
+
+      <label for="secKey">Secret Key (contraseña)</label>
+      <input id="secKey" name="password" type="password"
+             autocomplete="current-password" required>
+
+      <div id="loginError" class="gps hidden"
+           style="background:#fee2e2;border-left-color:#ef4444;color:#991b1b;"></div>
+
+      <button type="submit" id="loginBtn">Entrar</button>
+      <button type="button" class="secondary" onclick="forgetKeys()">
+        Olvidar claves guardadas
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ============================ MAIN APP ============================ -->
+<main id="app" class="hidden">
+  <div class="header-bar">
+    <span class="badge">Usuario: <span id="showUser"></span></span>
+    <span class="badge">Proyecto: <span id="showProj"></span></span>
+    <span class="badge">Carpeta: <span id="showFolder"></span></span>
+    <button class="logout-link" onclick="logout()">Cerrar sesión</button>
+  </div>
+
+  <label>Selecciona video desde el teléfono</label>
+  <input type="file" id="fileInput" accept="video/*">
+
+  <div id="gpsBox" class="gps hidden"></div>
+  <button id="uploadBtn" disabled>Subir a mi carpeta INBOX</button>
+  <div class="log" id="log">Listo.</div>
+
+  <!-- Selector de usuario en la parte inferior -->
+  <div class="bottom-user">
+    <label for="appUserSelect">Cambiar usuario (sin volver a entrar)</label>
+    <select id="appUserSelect"></select>
+  </div>
+</main>
+
+<script>
+// =====================================================================
+//  CONFIGURACIÓN FIJA — EDITAR SOLO ESTE BLOQUE
+// =====================================================================
+const PROJECT_ID = "REPLACE_WITH_YOUR_PROJECT_ID";   // ej. "CdADtEMZ"
+
+// Cada miembro de la familia tiene su propia carpeta en Adilo.
+// Deja el valor en "" si quieres que el video vaya a la raíz del proyecto.
+const FAMILY = [
+  { name: "Papá",       folder: "FILL_PAPA_FOLDER_ID"       },
+  { name: "Mamá",       folder: "FILL_MAMA_FOLDER_ID"       },
+  { name: "Rosa",       folder: "FILL_ROSA_FOLDER_ID"       },
+  { name: "Jorge",      folder: "FILL_JORGE_FOLDER_ID"      },
+  { name: "María",      folder: "FILL_MARIA_FOLDER_ID"      },
+  { name: "Sara",       folder: "FILL_SARA_FOLDER_ID"       },
+  { name: "Gabriela",   folder: "FILL_GABRIELA_FOLDER_ID"   },
+  { name: "Alexandra",  folder: "FILL_ALEXANDRA_FOLDER_ID"  },
+  { name: "René",       folder: "FILL_RENE_FOLDER_ID"       },
+  { name: "Enrique",    folder: "FILL_ENRIQUE_FOLDER_ID"    },
+];
+// =====================================================================
+
+const API = 'https://adilo-api.bigcommand.com/v1';
+const PART_SIZE = 5 * 1024 * 1024;
+const LS_KEY  = 'adilo_keys_v1';
+const LS_USER = 'adilo_last_user_v1';
+
+// ---------- Estado ----------
+let creds = null;
+let currentUser = null;
+
+// ---------- Poblar dropdowns ----------
+(function populateDropdowns() {
+  const loginSel = document.getElementById('loginUserSelect');
+  const appSel   = document.getElementById('appUserSelect');
+  for (const u of FAMILY) {
+    for (const sel of [loginSel, appSel]) {
+      const opt = document.createElement('option');
+      opt.value = u.name;
+      opt.textContent = u.name;
+      sel.appendChild(opt);
+    }
+  }
+  const last = localStorage.getItem(LS_USER);
+  if (last && FAMILY.some(u => u.name === last)) {
+    loginSel.value = last;
+    appSel.value   = last;
+  }
+})();
+
+// ---------- Almacenamiento de credenciales ----------
+function loadStoredCreds() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return null;
+    const o = JSON.parse(raw);
+    if (o.pub && o.sec) return o;
+  } catch {}
+  return null;
+}
+function saveCreds(pub, sec) {
+  creds = { pub, sec };
+  localStorage.setItem(LS_KEY, JSON.stringify(creds));
+}
+function forgetKeys() {
+  localStorage.removeItem(LS_KEY);
+  creds = null;
+  document.getElementById('pubKey').value = '';
+  document.getElementById('secKey').value = '';
+  showLogin();
+}
+
+// ---------- Login / logout ----------
+function showLogin() {
+  document.getElementById('loginOverlay').classList.remove('hidden');
+  document.getElementById('app').classList.add('hidden');
+}
+function showApp() {
+  document.getElementById('loginOverlay').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('showUser').textContent   = currentUser.name;
+  document.getElementById('showProj').textContent   = PROJECT_ID;
+  document.getElementById('showFolder').textContent =
+      currentUser.folder || '(raíz)';
+  document.getElementById('appUserSelect').value = currentUser.name;
+}
+
+function login(user, pub, sec) {
+  currentUser = user;
+  localStorage.setItem(LS_USER, user.name);
+  saveCreds(pub, sec);
+  showApp();
+  initApp();
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = document.getElementById('loginUserSelect').value;
+  const pub  = document.getElementById('pubKey').value.trim();
+  const sec  = document.getElementById('secKey').value.trim();
+  const errBox = document.getElementById('loginError');
+  errBox.classList.add('hidden');
+
+  const user = FAMILY.find(u => u.name === name);
+  if (!user) {
+    errBox.textContent = '❌ Por favor selecciona tu nombre.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  try {
+    const r = await fetch(`${API}/projects?from=1&to=1`, {
+      headers: {
+        'X-Public-Key': pub,
+        'X-Secret-Key': sec,
+        'Content-Type': 'application/json',
+      },
+    });
+    if (r.status === 401 || r.status === 403) {
+      throw new Error('Clave pública o secreta inválida.');
+    }
+    if (!r.ok) throw new Error('Adilo devolvió HTTP ' + r.status);
+
+    document.getElementById('secKey').value = '';
+    login(user, pub, sec);
+  } catch (err) {
+    errBox.textContent = '❌ ' + err.message;
+    errBox.classList.remove('hidden');
+  }
+});
+
+function logout() {
+  creds = null;
+  currentUser = null;
+  showLogin();
+}
+
+// ---------- Cambio rápido de usuario ----------
+document.getElementById('appUserSelect').addEventListener('change', (e) => {
+  const user = FAMILY.find(u => u.name === e.target.value);
+  if (!user || !creds) return;
+  currentUser = user;
+  localStorage.setItem(LS_USER, user.name);
+  showApp();
+  log(`🔄 Cambiado a ${user.name} → carpeta ${user.folder || '(raíz)'}`);
+});
+
+// ---------- Helpers ----------
+function headers() {
+  return {
+    'X-Public-Key': creds.pub,
+    'X-Secret-Key': creds.sec,
+    'Content-Type': 'application/json',
+  };
+}
+function log(msg) {
+  const el = document.getElementById('log');
+  el.textContent += '\n' + msg;
+  el.scrollTop = el.scrollHeight;
+}
+
+// ---------- Obtener fecha de grabación del video ----------
+async function getVideoCreationTime(file) {
+  try {
+    // Usar la librería mp4-metadata para leer la fecha de creación
+    const creationTime = await mp4Metadata.getCreationTime(file);
+    if (creationTime) {
+      return new Date(creationTime);
+    }
+  } catch (e) {
+    console.warn('No se pudo leer la hora de grabación:', e);
+  }
+  // Si falla, usamos la hora actual como último recurso
+  return new Date();
+}
+
+// ---------- Generar nombre con fecha de grabación ----------
+async function generateVideoName(file) {
+  const ext = (file.name.split('.').pop() || 'mp4').toLowerCase();
+  const d = await getVideoCreationTime(file);
+  
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())}.`
+       + `${p(d.getHours())}.${p(d.getMinutes())}.${p(d.getSeconds())}.${ext}`;
+}
+
+function getDuration(file) {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const v = document.createElement('video');
+    v.preload = 'metadata';
+    v.onloadedmetadata = () => { URL.revokeObjectURL(url); resolve(v.duration || 0); };
+    v.onerror = () => { URL.revokeObjectURL(url); resolve(0); };
+    v.src = url;
+  });
+}
+function fmtDuration(sec) {
+  const p = n => String(n).padStart(2,'0');
+  return `${p(Math.floor(sec/3600))}:${p(Math.floor(sec%3600/60))}:${p(Math.floor(sec%60))}`;
+}
+async function extractGPS(file) {
+  try {
+    const buf = await file.slice(0, 4*1024*1024).arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    const idx = findSequence(bytes, [0xA9, 0x78, 0x79, 0x7A]);
+    if (idx < 0) return null;
+    const text = new TextDecoder('utf-8').decode(bytes.slice(idx+8, idx+40));
+    const m = text.match(/([+-]\d+\.\d+)([+-]\d+\.\d+)/);
+    if (!m) return null;
+    return { lat: parseFloat(m[1]), lon: parseFloat(m[2]) };
+  } catch { return null; }
+}
+function findSequence(arr, seq) {
+  outer: for (let i = 0; i < arr.length - seq.length; i++) {
+    for (let j = 0; j < seq.length; j++) if (arr[i+j] !== seq[j]) continue outer;
+    return i;
+  }
+  return -1;
+}
+
+// ---------- Subida ----------
+let selectedFile = null;
+
+function initApp() {
+  selectedFile = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('uploadBtn').disabled = true;
+  document.getElementById('gpsBox').classList.add('hidden');
+  document.getElementById('log').textContent =
+    `Listo. Subiendo como ${currentUser.name} → carpeta ${currentUser.folder || '(raíz)'}`;
+}
+
+document.getElementById('fileInput').addEventListener('change', async (e) => {
+  selectedFile = e.target.files[0];
+  if (!selectedFile) return;
+  document.getElementById('uploadBtn').disabled = false;
+  log(`📁 Seleccionado: ${selectedFile.name} (${(selectedFile.size/1e6).toFixed(1)} MB)`);
+
+  const gps = await extractGPS(selectedFile);
+  const gpsBox = document.getElementById('gpsBox');
+  if (gps) {
+    gpsBox.classList.remove('hidden');
+    gpsBox.textContent = `📍 GPS encontrado: ${gps.lat.toFixed(6)}, ${gps.lon.toFixed(6)}`
+      + ` — se mostrará para la descripción.`;
+    gpsBox.dataset.lat = gps.lat;
+    gpsBox.dataset.lon = gps.lon;
+  } else {
+    gpsBox.classList.add('hidden');
+    gpsBox.dataset.lat = '';
+    gpsBox.dataset.lon = '';
+  }
+});
+
+document.getElementById('uploadBtn').addEventListener('click', async () => {
+  if (!selectedFile || !creds || !currentUser) return;
+  const btn = document.getElementById('uploadBtn');
+  btn.disabled = true;
+  log('🚀 Iniciando subida...');
+
+  try {
+    // Generar nombre usando la fecha de grabación real del video
+    const filename = await generateVideoName(selectedFile);
+    const duration = await getDuration(selectedFile);
+    const mime = selectedFile.type || 'video/mp4';
+    log(`   nombre: ${filename}`);
+    log(`   duración: ${fmtDuration(duration)} (${duration.toFixed(2)}s)`);
+    log(`   carpeta destino: ${currentUser.folder || '(raíz)'}`);
+
+    // PASO 1 — iniciar
+    const initBody = {
+      filename,
+      filesize: selectedFile.size,
+      duration_seconds: Math.round(duration),
+      duration_string: fmtDuration(duration),
+      mime_type: mime,
+      project_id: PROJECT_ID,
+      drm_protection: false,
+    };
+    if (currentUser.folder) initBody.folder_id = currentUser.folder;
+
+    let r = await fetch(`${API}/files/upload/start`, {
+      method: 'POST', headers: headers(), body: JSON.stringify(initBody),
+    });
+    const initData = await r.json();
+    if (!r.ok) throw new Error('init falló: ' + JSON.stringify(initData));
+    const { uploadId, key } = initData.payload;
+    log(`   uploadId: ${uploadId}`);
+
+    // PASO 2 — partes
+    const totalParts = Math.ceil(selectedFile.size / PART_SIZE);
+    const uploadedParts = [];
+    for (let i = 1; i <= totalParts; i++) {
+      const start = (i-1) * PART_SIZE;
+      const end = Math.min(start + PART_SIZE, selectedFile.size);
+      const chunk = selectedFile.slice(start, end);
+      log(`   parte ${i}/${totalParts} (${((end-start)/1e6).toFixed(1)} MB)…`);
+
+      const ur = await fetch(
+        `${API}/files/upload/get-signedurl/${uploadId}/${i}?key=${encodeURIComponent(key)}`,
+        { headers: headers() }
+      );
+      const uData = await ur.json();
+      if (!ur.ok) throw new Error('signed url falló: ' + JSON.stringify(uData));
+
+      const put = await fetch(uData.payload.url, {
+        method: 'PUT', body: chunk, headers: { 'Content-Type': mime },
+      });
+      if (!put.ok) throw new Error('PUT de parte falló: ' + put.status);
+      const etag = put.headers.get('ETag') || put.headers.get('etag');
+      uploadedParts.push({ PartNumber: i, ETag: etag });
+    }
+
+    // PASO 3 — completar
+    log('   completando…');
+    r = await fetch(`${API}/files/upload/complete`, {
+      method: 'POST', headers: headers(),
+      body: JSON.stringify({ key, uploadId, parts: uploadedParts }),
+    });
+    const doneData = await r.json();
+    if (!r.ok) throw new Error('complete falló: ' + JSON.stringify(doneData));
+    log(`✅ ¡Subido! File ID: ${doneData.payload?.id || '(ver detalles)'}`);
+
+    const lat = document.getElementById('gpsBox').dataset.lat;
+    const lon = document.getElementById('gpsBox').dataset.lon;
+    if (lat && lon) {
+      log(`\n📝 Pega en la descripción de Adilo:\n   GPS: ${lat}, ${lon}`);
+    }
+  } catch (err) {
+    log('❌ ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// ---------- Inicio ----------
+(function boot() {
+  const stored = loadStoredCreds();
+  const lastUser = localStorage.getItem(LS_USER);
+  const user = FAMILY.find(u => u.name === lastUser);
+
+  if (stored && user) {
+    document.getElementById('loginUserSelect').value = user.name;
+    document.getElementById('pubKey').value = stored.pub;
+    document.getElementById('secKey').value = stored.sec;
+    currentUser = user;
+    creds = stored;
+    showApp();
+    initApp();
+  } else {
+    showLogin();
+  }
+})();
+</script>
+</body>
+</html>
