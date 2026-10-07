@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<title>SlugLauncher — 私密的网页应用启动器</title>
+<meta name="description" content="SlugLauncher 是一款可自定义的网页应用启动器，把你常用的应用和网站集中在一个地方。无需账号，也无需数据库，一个链接即可分享你的启动器。">
+<link rel="canonical" href="https://git.inriris.com/launcher/zh/">
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+<link rel="apple-touch-icon" href="../apple-icon-180x180.png">
+<meta name="theme-color" content="#fffef7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0c0c0c" media="(prefers-color-scheme: dark)">
+
+<!-- Idiomas SEO -->
+<link rel="alternate" hreflang="en" href="https://git.inriris.com/launcher/">
+<link rel="alternate" hreflang="es" href="https://git.inriris.com/launcher/es/">
+<link rel="alternate" hreflang="fr" href="https://git.inriris.com/launcher/fr/">
+<link rel="alternate" hreflang="de" href="https://git.inriris.com/launcher/de/">
+<link rel="alternate" hreflang="pt" href="https://git.inriris.com/launcher/pt/">
+<link rel="alternate" hreflang="it" href="https://git.inriris.com/launcher/it/">
+<link rel="alternate" hreflang="ru" href="https://git.inriris.com/launcher/ru/">
+<link rel="alternate" hreflang="zh" href="https://git.inriris.com/launcher/zh/">
+<link rel="alternate" hreflang="ja" href="https://git.inriris.com/launcher/ja/">
+<link rel="alternate" hreflang="hi" href="https://git.inriris.com/launcher/hi/">
+<link rel="alternate" hreflang="ar" href="https://git.inriris.com/launcher/ar/">
+<link rel="alternate" hreflang="x-default" href="https://git.inriris.com/launcher/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://git.inriris.com/launcher/zh/">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="SlugLauncher">
+<meta property="og:title" content="SlugLauncher — 私密的网页应用启动器">
+<meta property="og:description" content="在可自定义的启动器中整理你喜爱的应用和网站。无需账号、无需数据库，一个链接即可分享。">
+<meta property="og:image" content="https://git.inriris.com/launcher/zh/og-image-light.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="私密的网页应用启动器 SlugLauncher：可自定义的启动器，整理你喜爱的应用和网站">
+
+<!-- X / Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SlugLauncher — 私密的网页应用启动器">
+<meta name="twitter:description" content="在可自定义的启动器中整理你喜爱的应用和网站，并通过一个链接分享。">
+<meta name="twitter:image" content="https://git.inriris.com/launcher/zh/og-image-light.png">
+<meta name="twitter:image:alt" content="私密的网页应用启动器 SlugLauncher：可自定义的启动器，整理你喜爱的应用和网站">
+
+<!-- Redirección de Slugs compartidos: el fragmento #SLUG nunca llega al servidor,
+     pero sí está disponible para JavaScript en el navegador. Solo se redirige cuando el
+     hash empieza por #SLUG; las anclas internas (#faq, #como-funciona...) NO redirigen,
+     y /launcher/zh/ sin hash permanece como landing SEO indexable. -->
+<script>
+(function () {
+    var hash = window.location.hash;
+    if (hash && /^#SLUG/i.test(hash)) {
+        window.location.replace("/launcher/" + hash);
+    }
+})();
+</script>
+
+<!-- Structured data: describe la aplicación y la landing en términos legibles por buscadores y sistemas de IA. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://git.inriris.com/launcher/zh/#website",
+      "url": "https://git.inriris.com/launcher/zh/",
+      "name": "SlugLauncher",
+      "inLanguage": "zh-CN",
+      "description": "可自定义的网页应用启动器，把常用应用和网站集中在一个地方。"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://git.inriris.com/launcher/zh/#software",
+      "name": "SlugLauncher",
+      "url": "https://git.inriris.com/launcher/",
+      "description": "私密且可自定义的网页应用启动器，用于整理常用应用和网站，并通过链接分享启动器。",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web",
+      "inLanguage": "zh-CN"
+    }
+  ]
+}
+</script>
+
+<!-- Tema: sin elección guardada sigue al sistema; si la persona eligió, se respeta (localStorage "slTheme"). -->
+<script>
+(function () {
+    var t = null;
+    try { t = localStorage.getItem("slTheme"); } catch (e) {}
+    if (t !== "light" && t !== "dark") {
+        t = (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+    }
+    document.documentElement.setAttribute("data-theme", t);
+})();
+</script>
+
+<style>
+:root{
+    --bg-light:#fffef7;
+    --bg-dark:#0c0c0c;
+    --card-light:#ffffff;
+    --card-dark:#1e1e20;
+    --text-light:#1c1c1e;
+    --text-dark:#f2f2f7;
+    --muted-light:#5e5e66;
+    --muted-dark:#b9b9c2;
+    --accent:#007aff;
+    --accent-dark:#0a84ff;
+    --line-light:rgba(0,0,0,.08);
+    --line-dark:rgba(255,255,255,.10);
+    --shadow-light:0 18px 50px rgba(0,0,0,.10);
+    --shadow-dark:0 18px 50px rgba(0,0,0,.42);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Inter,system-ui,sans-serif;
+    background:var(--bg-light);
+    color:var(--text-light);
+    line-height:1.55;
+}
+body:before{
+    content:"";
+    position:fixed; inset:0; pointer-events:none; z-index:-1;
+    background:
+      radial-gradient(circle at 15% -10%,rgba(0,122,255,.08),transparent 42%),
+      radial-gradient(circle at 100% 0%,rgba(74,144,226,.07),transparent 38%),
+      radial-gradient(circle at 50% 100%,rgba(0,122,255,.05),transparent 46%);
+}
+a{color:inherit}
+button,.langSelect{font:inherit}
+.container{width:min(1120px,calc(100% - 36px));margin:0 auto}
+
+/* Header — intentionally follows the glassmorphism language of the app */
+.header{
+    position:sticky;top:0;z-index:1000;
+    border-bottom:1px solid var(--line-light);
+    background:rgba(255,254,247,.74);
+    backdrop-filter:blur(22px) saturate(180%);
+    -webkit-backdrop-filter:blur(22px) saturate(180%);
+}
+.headerInner{
+    min-height:64px;display:flex;align-items:center;gap:18px;
+}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;min-width:0}
+.titleIcon{width:18px;height:30px;display:block;overflow:visible;flex:0 0 18px}
+.brandText{font-size:19px;font-weight:750;letter-spacing:-.02em;white-space:nowrap}
+.headerSpacer{flex:1}
+.langSelect{
+    appearance:none;-webkit-appearance:none;
+    border:1px solid rgba(127,127,127,.28);
+    border-radius:12px;background:rgba(127,127,127,.08);
+    color:inherit;padding:8px 32px 8px 11px;cursor:pointer;font-size:13px;
+    background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+    background-position:calc(100% - 14px) 52%,calc(100% - 10px) 52%;
+    background-size:4px 4px,4px 4px;background-repeat:no-repeat;
+}
+/* Toggle de tema — píldora segmentada con el mismo borde/fondo/radio que .langSelect */
+.themeToggle{display:inline-flex;align-items:center;gap:2px;height:34px;padding:3px;border:1px solid rgba(127,127,127,.28);border-radius:12px;background:rgba(127,127,127,.08)}
+.themeOpt{display:grid;place-items:center;width:28px;height:26px;padding:0;border:0;border-radius:9px;background:transparent;color:inherit;opacity:.62;cursor:pointer;transition:background .15s ease,opacity .15s ease,color .15s ease}
+.themeOpt svg{width:16px;height:16px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.themeOpt:hover{opacity:1}
+.themeOpt[aria-checked="true"]{opacity:1;background:rgba(0,122,255,.14);color:var(--accent)}
+.themeOpt:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.headerCta{padding:9px 14px;border-radius:12px;background:var(--accent);color:#fff;text-decoration:none;font-size:13.5px;font-weight:700;transition:transform .15s ease,box-shadow .2s ease,background .15s ease}
+.headerCta:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,122,255,.25);background:var(--accent-dark)}
+
+/* Hero */
+.hero{padding:82px 0 52px}
+.heroGrid{display:grid;grid-template-columns:1.12fr .88fr;gap:56px;align-items:center}
+.eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:15px;
+}
+.eyebrowDot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 6px rgba(0,122,255,.10)}
+h1{font-size:clamp(38px,6vw,66px);line-height:1.02;letter-spacing:-.045em;margin:0 0 22px;max-width:800px}
+.heroLead{font-size:clamp(18px,2.3vw,22px);line-height:1.5;color:var(--muted-light);max-width:720px;margin:0 0 28px}
+.heroActions{display:flex;flex-wrap:wrap;gap:11px;align-items:center}
+.primaryCta,.secondaryCta{
+    display:inline-flex;align-items:center;justify-content:center;gap:9px;
+    padding:13px 18px;border-radius:15px;text-decoration:none;font-size:14.5px;font-weight:750;
+    transition:transform .18s ease,box-shadow .2s ease,background .15s ease,border-color .15s ease;
+}
+.primaryCta{background:var(--accent);color:#fff;box-shadow:0 12px 30px rgba(0,122,255,.20)}
+.primaryCta:hover{transform:translateY(-2px);box-shadow:0 16px 35px rgba(0,122,255,.28);background:var(--accent-dark)}
+.secondaryCta{border:1px solid rgba(127,127,127,.24);background:rgba(255,255,255,.55)}
+.secondaryCta:hover{transform:translateY(-1px);background:rgba(127,127,127,.10)}
+.heroNote{font-size:12.5px;color:var(--muted-light);margin-top:13px}
+
+/* Visual mockup */
+.mockupWrap{position:relative}
+.mockupGlow{position:absolute;inset:7% -4% -5%;background:radial-gradient(circle,rgba(0,122,255,.20),transparent 68%);filter:blur(18px);z-index:-1}
+.mockup{
+    background:rgba(255,255,255,.72);border:1px solid rgba(0,0,0,.10);
+    border-radius:30px;padding:17px;box-shadow:var(--shadow-light);
+    transform:rotate(1.2deg);
+}
+.mockHeader{height:38px;display:flex;align-items:center;gap:9px;padding:0 8px;margin-bottom:16px;border-bottom:1px solid rgba(0,0,0,.06)}
+.mockLogo{width:15px;height:24px;display:block}
+.mockTitle{font-weight:750;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mockButtons{margin-left:auto;display:flex;gap:6px}
+.mockBtn{width:26px;height:26px;display:grid;place-items:center;color:inherit;opacity:.8}
+.mockBtn svg{width:19px;height:19px}
+.mockGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.mockApp{min-width:0}
+.mockTile{aspect-ratio:1;background:#fff;border:1px solid rgba(0,0,0,.07);border-radius:21%;box-shadow:0 9px 18px rgba(0,0,0,.10);display:flex;align-items:center;justify-content:center;font-size:28px}
+.mockName{font-size:10px;text-align:center;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mockApp:nth-child(1) .mockTile{background:linear-gradient(135deg,#fff,#eef5ff)}
+.mockApp:nth-child(2) .mockTile{background:linear-gradient(135deg,#fff,#f4f4f4)}
+.mockApp:nth-child(3) .mockTile{background:linear-gradient(135deg,#fff,#f6f1ff)}
+.mockApp:nth-child(4) .mockTile{background:linear-gradient(135deg,#fff,#fff2f0)}
+
+/* Trust strip */
+.trustStrip{display:flex;flex-wrap:wrap;gap:9px;margin-top:32px}
+.trustPill{border:1px solid rgba(127,127,127,.18);background:rgba(127,127,127,.06);padding:8px 11px;border-radius:999px;font-size:12px;font-weight:650}
+
+/* Sections */
+.section{padding:70px 0}
+.sectionAlt{border-top:1px solid rgba(127,127,127,.10);border-bottom:1px solid rgba(127,127,127,.10);background:rgba(127,127,127,.025)}
+.sectionHeader{max-width:760px;margin-bottom:32px}
+.sectionHeader h2{font-size:clamp(27px,3.8vw,42px);line-height:1.1;letter-spacing:-.035em;margin:0 0 12px}
+.sectionHeader p{margin:0;color:var(--muted-light);font-size:16px}
+.featureGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.featureCard{
+    background:rgba(255,255,255,.78);border:1px solid rgba(0,0,0,.08);
+    border-radius:23px;padding:23px;box-shadow:0 9px 26px rgba(0,0,0,.055);
+}
+.featureIcon{width:42px;height:42px;border-radius:13px;background:rgba(0,122,255,.10);color:var(--accent);display:grid;place-items:center;font-size:19px;margin-bottom:14px}
+.featureCard h3{margin:0 0 7px;font-size:18px;letter-spacing:-.015em}
+.featureCard p{margin:0;color:var(--muted-light);font-size:14px;line-height:1.6}
+
+.workflow{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.step{position:relative;background:var(--card-light);border:1px solid rgba(0,0,0,.08);border-radius:24px;padding:25px}
+.stepNum{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:11px}
+.step h3{margin:0 0 8px;font-size:19px}
+.step p{margin:0;color:var(--muted-light);font-size:14px}
+.step code{display:inline-block;margin-top:13px;padding:8px 10px;border-radius:10px;background:rgba(127,127,127,.09);font-size:11px;word-break:break-all}
+
+/* App preview card */
+.previewCard{
+    display:grid;grid-template-columns:.88fr 1.12fr;gap:28px;align-items:center;
+    background:var(--card-light);border:1px solid rgba(0,0,0,.08);border-radius:28px;padding:28px;box-shadow:var(--shadow-light)
+}
+html,body{overflow-x:clip}   /* el brillo decorativo del mockup sobresale unos px en móvil */
+.heroGrid>*,.previewCard>*{min-width:0}   /* evita desbordamiento horizontal en móvil (columna 1fr con contenido ancho) */
+.previewText h2{margin:0 0 10px;font-size:28px;letter-spacing:-.03em}
+.previewText p{margin:0 0 17px;color:var(--muted-light);font-size:15px}
+.checkList{display:grid;gap:9px;padding:0;margin:0;list-style:none}
+.checkList li{font-size:13.5px;display:flex;gap:9px;align-items:flex-start}
+.checkList span{color:var(--accent);font-weight:900}
+.urlCard{padding:18px;border-radius:22px;background:linear-gradient(145deg,rgba(0,122,255,.08),rgba(127,127,127,.05));border:1px solid rgba(0,122,255,.15)}
+.urlBar{background:rgba(255,255,255,.90);border:1px solid rgba(0,0,0,.08);padding:11px 12px;border-radius:13px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.urlCaption{font-size:11px;color:var(--muted-light);margin-top:11px;line-height:1.5}
+
+/* Pruébalo — sección interactiva (Paso 1: estructura; la lógica llega en pasos siguientes) */
+.srOnly{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.tryGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.tryCard{
+    display:flex;flex-direction:column;gap:12px;
+    background:rgba(255,255,255,.78);border:1px solid rgba(0,0,0,.08);
+    border-radius:23px;padding:23px;box-shadow:0 9px 26px rgba(0,0,0,.055);
+}
+.tryCard h3{margin:0;font-size:18px;letter-spacing:-.015em}
+.tryCard p{margin:0;color:var(--muted-light);font-size:14px;line-height:1.6}
+.tryBtn{
+    margin-top:auto;align-self:flex-start;cursor:pointer;
+    padding:11px 16px;border-radius:13px;border:1px solid rgba(0,122,255,.25);
+    background:rgba(0,122,255,.10);color:var(--accent);font-size:14px;font-weight:750;
+    transition:transform .15s ease,background .15s ease;
+}
+.tryBtn:hover{transform:translateY(-1px);background:rgba(0,122,255,.16)}
+/* Altura FIJA para la demo de búsqueda: el resultado cambia dentro, la sección nunca cambia de alto */
+
+/* Modal Añadir — estilos copiados de index.html (#addModal, .modalBox, .segmentedControl, .iconOption...) */
+@keyframes animotion-fade-in { from { opacity:0; } to { opacity:1; } }
+@keyframes animotion-bounce-in {
+    0%   { opacity:0; transform:scale3d(.3,.3,.3); }
+    20%  { transform:scale3d(1.1,1.1,1.1); }
+    40%  { transform:scale3d(.9,.9,.9); }
+    60%  { opacity:1; transform:scale3d(1.03,1.03,1.03); }
+    80%  { transform:scale3d(.97,.97,.97); }
+    100% { opacity:1; transform:scale3d(1,1,1); }
+}
+#addModal,#urlIOModal{
+    display:none;position:fixed;inset:0;z-index:1001;overflow:auto;
+    background:rgba(0,0,0,.38);
+    backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);
+    animation:animotion-fade-in .22s ease both;
+}
+.modalBox{
+    background:var(--card-light);color:var(--text-light);padding:24px;border-radius:30px;
+    width:90%;max-width:350px;margin:60px auto;
+    animation:animotion-bounce-in .5s both;
+    max-height:80vh;overflow:auto;
+    border:1px solid rgba(0,0,0,.08);
+    box-shadow:0 20px 60px rgba(0,0,0,.25),0 0 30px 4px rgba(74,144,226,.22);
+}
+.modalBox h3{margin-top:0}
+.modalBox input:not([type="checkbox"]):not([type="radio"]){
+    width:100%;padding:11px 12px;margin-bottom:12px;border-radius:14px;
+    border:1px solid rgba(127,127,127,.35);box-sizing:border-box;
+    font-size:16px; /* evita el zoom automático de iOS */
+    background:var(--card-light);color:var(--text-light);
+    transition:background .2s ease,color .2s ease,border-color .15s ease,box-shadow .15s ease;
+}
+.modalBox input::placeholder{color:inherit;opacity:.45}
+.modalBox input:not([type="checkbox"]):not([type="radio"]):focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,122,255,.18)}
+.modalBox input[type="checkbox"]{width:auto;margin:0;accent-color:var(--accent);flex-shrink:0}
+.modalBox button{
+    width:100%;padding:11px;border:none;border-radius:16px;
+    background:var(--accent);color:#fff;font-size:15px;cursor:pointer;margin-bottom:8px;
+    transition:background .15s ease,transform .1s ease;
+}
+.modalBox button:hover{background:var(--accent-dark)}
+.modalBox button:active{transform:scale(.98)}
+.modalBox button:disabled,.modalBox button:disabled:hover{opacity:.45;cursor:not-allowed;background:var(--accent)}
+.modalBox .fieldLabel{font-size:13px;font-weight:600;margin-bottom:6px;opacity:.75}
+.modalBox .fieldNote{font-size:12px;opacity:.65;margin:2px 2px 8px;line-height:1.35}
+.modalBox .helperLink{display:inline-block;font-size:13px;color:var(--accent);text-decoration:none;margin:-4px 0 12px;cursor:pointer}
+#iconPreview,#folderIconPreview{width:64px;height:64px;border-radius:16px;display:none;margin-bottom:10px}
+.segmentedControl{display:flex;background:rgba(127,127,127,.15);border-radius:13px;padding:3px;margin-bottom:14px}
+.modalBox .segmentedControl button.segmentBtn{
+    flex:1;width:auto;border:none;background:transparent;color:inherit;
+    padding:8px 6px;border-radius:10px;font-size:14px;font-weight:600;
+    cursor:pointer;opacity:.6;margin-bottom:0;
+    transition:background .15s ease,opacity .15s ease;
+}
+.modalBox .segmentedControl button.segmentBtn.active{background:var(--card-light);opacity:1;box-shadow:0 1px 5px rgba(0,0,0,.16)}
+.iconOptionsRow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.iconOption{
+    width:44px;height:44px;border-radius:12px;object-fit:contain;
+    background:#eee;padding:4px;box-sizing:border-box;cursor:pointer;
+    border:2px solid transparent;transition:border .15s ease,transform .15s ease;
+}
+.iconOption:hover{transform:scale(1.08)}
+.iconOption.selectedIcon{border-color:var(--accent)}
+/* Réplica del modal dentro de la tarjeta "Pruébalo": se ve como el modal, pero abre el modal real al interactuar */
+.tryForm.modalBox{animation:none;box-shadow:none;max-height:none;overflow:visible;margin:0;width:100%;max-width:none;padding:14px;border-radius:20px;background:rgba(127,127,127,.06);border:1px solid rgba(127,127,127,.18)}
+.tryForm,.tryForm *{cursor:pointer}
+.tryForm input{caret-color:transparent}
+.tryForm button:last-child{margin-bottom:0}
+.tryIconTile{width:44px;height:44px;border-radius:12px;background:#eee;border:2px solid transparent;box-sizing:border-box;display:grid;place-items:center;font-weight:800;color:#555}
+.tryIconTile.selected{border-color:var(--accent)}
+/* Modal Importar — estilos copiados de index.html (#urlIOList, .ioRow, .ioAll, .ioFolder, .ioChild, .ioCount, .ioIcon, .ioFolderIco) */
+.modalBox textarea{
+    width:100%;padding:11px 12px;margin-bottom:12px;border-radius:14px;
+    border:1px solid rgba(127,127,127,.35);box-sizing:border-box;resize:vertical;font:inherit;
+    font-size:16px; /* evita el zoom automático de iOS */
+    background:var(--card-light);color:var(--text-light);
+    transition:background .2s ease,color .2s ease,border-color .15s ease,box-shadow .15s ease;
+}
+.modalBox textarea::placeholder{color:inherit;opacity:.45}
+.modalBox textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,122,255,.18)}
+.modalBox button.ioPasteBtn{background:#8e8e93}
+.modalBox button.ioCancelBtn{background:#aaa}
+.ioListBox,#urlIOList{margin:4px 0 12px;border-radius:14px;background:#f2f2f5;padding:4px}
+#urlIOList{max-height:min(38vh,320px);overflow-y:auto;overscroll-behavior:contain}
+.ioRow{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;user-select:none;-webkit-user-select:none}
+.ioRow:hover{background:rgba(127,127,127,.14)}
+.ioRow span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px}
+.ioRow.ioAll{font-weight:600;border-bottom:1px solid rgba(127,127,127,.2);border-radius:10px 10px 0 0;margin-bottom:2px}
+.ioRow.ioFolder span{font-weight:600}
+.ioRow.ioChild{padding-inline-start:32px}
+.ioRow .ioCount{font-style:normal;font-size:12px;opacity:.6;flex:0 0 auto}
+.ioRow input[type="checkbox"]{width:20px;height:20px}
+.ioIcon{width:24px;height:24px;border-radius:6px;flex:0 0 24px;object-fit:contain;background:rgba(127,127,127,.15)}
+.ioFolderIco{display:flex;width:24px;height:24px;flex:0 0 24px}
+.ioFolderIco svg{width:24px;height:24px}
+.ioRow span.ioFolderIco,.ioRow span.ioIcon{flex:0 0 24px}
+.ioRow span.tryCheck{flex:0 0 20px}   /* sin esto, ".ioRow span{flex:1}" estiraba el icono del folder y descentraba el nombre */
+/* Réplica del importador dentro de la tarjeta (casillas decorativas: no son inputs, así el clic siempre llega a la tarjeta) */
+.tryForm textarea{caret-color:transparent;resize:none}
+.tryCheck{width:20px;height:20px;flex:0 0 20px;border-radius:6px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800;line-height:1}
+.tryIo{display:grid;place-items:center;color:#fff;font-size:13px;font-weight:800;line-height:1}
+@media (prefers-reduced-motion:reduce){#addModal,#urlIOModal,.modalBox{animation:none}}
+
+/* Demo de búsqueda — altura FIJA: lo que cambia (texto, filas) ocurre dentro de contenedores de tamaño constante,
+   así la sección no cambia de alto ni empuja los bloques de abajo (sin layout shift). Misma estética que #searchModalBox. */
+.searchDemo{display:flex;flex-direction:column;gap:10px;height:290px;overflow:hidden;padding:14px;border-radius:20px;background:rgba(127,127,127,.06);border:1px solid rgba(127,127,127,.18);box-sizing:border-box;contain:layout paint}
+.searchBox{flex:0 0 44px;display:flex;align-items:center;gap:10px;padding:0 14px;border-radius:16px;background:rgba(127,127,127,.12);font-size:15px;overflow:hidden;white-space:nowrap}
+.searchBox svg{width:18px;height:18px;opacity:.55;flex:0 0 18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.searchTyped{min-width:0;overflow:hidden;text-overflow:clip}
+.searchTyped:empty::before{content:attr(data-ph);opacity:.5}
+.searchBox{box-shadow:0 0 0 0 transparent;transition:box-shadow .2s ease}
+.searchBox.focus{box-shadow:0 0 0 2px var(--accent)}
+.searchCaret{display:none;flex:0 0 2px;width:2px;height:18px;margin-left:-8px;background:var(--accent);animation:searchCaretBlink 1s steps(1) infinite}
+@keyframes searchCaretBlink{50%{opacity:0}}
+.searchBox.focus .searchCaret{display:block}
+.searchChips{display:flex;flex-wrap:wrap;gap:5px;align-content:flex-start;animation:animotion-fade-in .2s ease both}
+.searchChip{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;border-radius:999px;background:rgba(127,127,127,.12);font-size:13px}
+.searchChip .searchResultIcon{flex:0 0 22px;width:22px;height:22px;border-radius:7px;font-size:11px}
+@media (max-width:400px){.searchDemo{height:300px}.searchChip{font-size:12px;padding:2px 8px 2px 2px;gap:5px}.searchChip .searchResultIcon{flex:0 0 18px;width:18px;height:18px;font-size:10px;border-radius:6px}}
+@media (max-width:360px){.brandText{display:none}}   /* cabecera: a 320-360 px el nombre se montaba sobre el selector de tema; queda el logo (el enlace conserva aria-label) */
+.searchList{flex:1;display:flex;flex-direction:column;gap:4px;overflow:hidden}
+.searchRow{flex:0 0 48px;display:flex;align-items:center;gap:12px;padding:0 10px;border-radius:14px;animation:animotion-fade-in .16s ease both}
+.searchRow:first-child{background:rgba(0,122,255,.12)}
+.searchResultIcon{flex:0 0 34px;width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-weight:800;font-size:15px;color:#fff}
+.searchResultName{font-size:14.5px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.searchCaret,.searchRow{animation:none}}
+
+/* FAQ */
+.faq{display:grid;gap:10px;max-width:860px}
+details{background:var(--card-light);border:1px solid rgba(0,0,0,.08);border-radius:18px;padding:0 18px}
+summary{cursor:pointer;list-style:none;padding:17px 0;font-weight:700;font-size:15px}
+summary::-webkit-details-marker{display:none}
+summary:after{content:"+";float:right;color:var(--accent);font-size:20px;line-height:1}
+details[open] summary:after{content:"–"}
+details p{margin:0 0 17px;color:var(--muted-light);font-size:14px;line-height:1.65}
+
+/* CTA */
+.ctaSection{padding:82px 0 88px}
+.ctaBox{
+    position:relative;overflow:hidden;text-align:center;
+    background:linear-gradient(145deg,#f9fbff,#ffffff);
+    border:1px solid rgba(0,122,255,.12);border-radius:32px;padding:48px 28px;box-shadow:var(--shadow-light)
+}
+.ctaBox:before{content:"";position:absolute;width:340px;height:340px;border-radius:50%;background:rgba(0,122,255,.08);filter:blur(14px);top:-230px;right:-110px}
+.ctaBox h2{position:relative;margin:0 0 10px;font-size:clamp(28px,4vw,44px);letter-spacing:-.035em}
+.ctaBox p{position:relative;max-width:660px;margin:0 auto 23px;color:var(--muted-light);font-size:15.5px}
+.ctaFine{position:relative;font-size:11.5px;color:var(--muted-light);margin-top:12px}
+
+/* Footer */
+.footer{padding:22px 0 28px;font-size:12px;color:var(--muted-light);text-align:center;border-top:1px solid rgba(127,127,127,.10)}
+.footer a{color:var(--accent);text-decoration:none}
+
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.primaryCta,.secondaryCta,.headerCta,.themeOpt{transition:none}.mockup{transform:none}}
+html[data-theme="dark"]{color-scheme:dark}
+:where(html[data-theme="dark"]) body{background:var(--bg-dark);color:var(--text-dark)}
+:where(html[data-theme="dark"]) body:before{background:radial-gradient(circle at 12% -10%,rgba(10,132,255,.11),transparent 42%),radial-gradient(circle at 100% 0%,rgba(74,50,180,.09),transparent 45%)}
+:where(html[data-theme="dark"]) .header{background:rgba(0,0,0,.55);border-bottom-color:var(--line-dark)}
+:where(html[data-theme="dark"]) .themeToggle{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14)}
+:where(html[data-theme="dark"]) .themeOpt[aria-checked="true"]{background:rgba(10,132,255,.20);color:var(--accent-dark)}
+:where(html[data-theme="dark"]) .modalBox{background:var(--card-dark);color:var(--text-dark);border-color:rgba(255,255,255,.12);box-shadow:0 20px 60px rgba(0,0,0,.7),0 0 40px 6px rgba(10,132,255,.3)}
+:where(html[data-theme="dark"]) .modalBox input:not([type="checkbox"]):not([type="radio"]){background:rgba(255,255,255,.06);color:var(--text-dark);border-color:rgba(255,255,255,.14);color-scheme:dark}
+:where(html[data-theme="dark"]) .modalBox input:not([type="checkbox"]):not([type="radio"]):focus{border-color:var(--accent-dark);box-shadow:0 0 0 3px rgba(10,132,255,.22)}
+:where(html[data-theme="dark"]) .modalBox input[type="checkbox"]{accent-color:var(--accent-dark)}
+:where(html[data-theme="dark"]) .modalBox .helperLink{color:var(--accent-dark)}
+:where(html[data-theme="dark"]) .modalBox .segmentedControl button.segmentBtn.active{background:var(--card-dark);box-shadow:0 1px 5px rgba(0,0,0,.55)}
+:where(html[data-theme="dark"]) .iconOption{background:rgba(255,255,255,.08)}
+:where(html[data-theme="dark"]) .iconOption.selectedIcon{border-color:var(--accent-dark)}
+:where(html[data-theme="dark"]) .tryForm.modalBox{border-color:rgba(255,255,255,.12)}
+:where(html[data-theme="dark"]) .tryIconTile{background:rgba(255,255,255,.08);color:#ddd}
+:where(html[data-theme="dark"]) .tryIconTile.selected{border-color:var(--accent-dark)}
+:where(html[data-theme="dark"]) .searchDemo{border-color:rgba(255,255,255,.12)}
+:where(html[data-theme="dark"]) .searchBox{background:rgba(255,255,255,.08)}
+:where(html[data-theme="dark"]) .searchCaret{background:var(--accent-dark)}
+:where(html[data-theme="dark"]) .searchRow:first-child{background:rgba(10,132,255,.18)}
+:where(html[data-theme="dark"]) .langSelect{background-color:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14)}
+:where(html[data-theme="dark"]) .secondaryCta{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.13)}
+:where(html[data-theme="dark"]) .heroLead,:where(html[data-theme="dark"]) .sectionHeader p,:where(html[data-theme="dark"]) .featureCard p,:where(html[data-theme="dark"]) .step p,:where(html[data-theme="dark"]) .previewText p,:where(html[data-theme="dark"]) .urlCaption,:where(html[data-theme="dark"]) details p,:where(html[data-theme="dark"]) .ctaBox p,:where(html[data-theme="dark"]) .footer,:where(html[data-theme="dark"]) .heroNote{color:var(--muted-dark)}
+:where(html[data-theme="dark"]) .trustPill{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.10)}
+:where(html[data-theme="dark"]) .featureCard,:where(html[data-theme="dark"]) .step,:where(html[data-theme="dark"]) .previewCard,:where(html[data-theme="dark"]) details,:where(html[data-theme="dark"]) .ctaBox{background:var(--card-dark);border-color:rgba(255,255,255,.10)}
+:where(html[data-theme="dark"]) .featureIcon{background:rgba(10,132,255,.13);color:var(--accent-dark)}
+:where(html[data-theme="dark"]) .tryCard{background:var(--card-dark);border-color:rgba(255,255,255,.10)}
+:where(html[data-theme="dark"]) .tryCard p{color:var(--muted-dark)}
+:where(html[data-theme="dark"]) .ioListBox,:where(html[data-theme="dark"]) #urlIOList{background:#2c2c2e}
+:where(html[data-theme="dark"]) .modalBox textarea{background:rgba(255,255,255,.06);color:var(--text-dark);border-color:rgba(255,255,255,.14);color-scheme:dark}
+:where(html[data-theme="dark"]) .modalBox textarea:focus{border-color:var(--accent-dark);box-shadow:0 0 0 3px rgba(10,132,255,.22)}
+:where(html[data-theme="dark"]) .tryCheck{background:var(--accent-dark)}
+:where(html[data-theme="dark"]) .tryBtn{color:var(--accent-dark);background:rgba(10,132,255,.13);border-color:rgba(10,132,255,.28)}
+:where(html[data-theme="dark"]) .mockup{background:rgba(30,30,32,.82);border-color:rgba(255,255,255,.12);box-shadow:var(--shadow-dark)}
+:where(html[data-theme="dark"]) .mockHeader{border-bottom-color:rgba(255,255,255,.07)}
+:where(html[data-theme="dark"]) .mockTile{background:#1e1e20;border-color:rgba(255,255,255,.10);box-shadow:0 10px 22px rgba(0,0,0,.50)}
+:where(html[data-theme="dark"]) .mockApp:nth-child(1) .mockTile{background:linear-gradient(135deg,#1e1e20,#182536)}
+:where(html[data-theme="dark"]) .mockApp:nth-child(2) .mockTile{background:linear-gradient(135deg,#1e1e20,#232323)}
+:where(html[data-theme="dark"]) .mockApp:nth-child(3) .mockTile{background:linear-gradient(135deg,#1e1e20,#251f32)}
+:where(html[data-theme="dark"]) .mockApp:nth-child(4) .mockTile{background:linear-gradient(135deg,#1e1e20,#30211f)}
+:where(html[data-theme="dark"]) .urlCard{background:linear-gradient(145deg,rgba(10,132,255,.12),rgba(255,255,255,.03));border-color:rgba(10,132,255,.20)}
+:where(html[data-theme="dark"]) .urlBar{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.10)}
+:where(html[data-theme="dark"]) .ctaBox{background:linear-gradient(145deg,#151a20,#1e1e20);border-color:rgba(10,132,255,.17)}
+@media (max-width:860px){
+    .heroGrid,.previewCard{grid-template-columns:1fr;gap:28px}
+    .mockupWrap{max-width:620px;margin:0 auto;width:100%}
+    .featureGrid,.workflow,.tryGrid{grid-template-columns:1fr}
+    .hero{padding-top:58px}
+}
+@media (max-width:620px){
+    .container{width:min(100% - 24px,1120px)}
+    .headerInner{min-height:58px;gap:9px}
+    .brandText{font-size:17px}
+    .headerCta{display:none}
+    .langSelect{max-width:118px}
+    .hero{padding:46px 0 34px}
+    h1{font-size:clamp(37px,12vw,52px)}
+    .heroLead{font-size:17px}
+    .heroActions{display:grid;grid-template-columns:1fr}
+    .primaryCta,.secondaryCta{width:100%}
+    .section{padding:56px 0}
+    .mockGrid{gap:10px}
+    .mockTile{font-size:24px}
+    .featureCard,.step,.previewCard{padding:20px}
+    .ctaSection{padding:62px 0 70px}
+}
+</style>
+</head>
+<body>
+<header class="header">
+    <div class="container headerInner">
+        <a class="brand" href="/launcher/zh/" aria-label="SlugLauncher">
+            <svg class="titleIcon" xmlns="http://www.w3.org/2000/svg" viewBox="45 0 160 264" aria-hidden="true"><path fill="#4A90E2" d="m188.835,93.248c-6.319-10.976-13.982-18.705-18.862-22.973l17.009-40.097c7.051-0.929 12.529-7.305 12.529-15.022-2.84217e-14-8.357-6.415-15.156-14.301-15.156-7.888,0-14.305,6.799-14.305,15.155 0,3.18 0.934,6.13 2.52,8.57l-16.621,39.184-35.194-14.011c-1.115-7.186-7.002-12.691-14.095-12.691-7.888,0-14.305,6.798-14.305,15.153 0,8.355 6.417,15.152 14.305,15.152 3.448,0 6.615-1.3 9.088-3.462l36.296,14.449c-1.008,10.456-3.716,33.415-9.006,46.189-12.34,29.792-29.63,42.078-44.886,52.918-12.398,8.811-24.109,17.132-30.532,32.639-11.676,28.183 3.698,48.68 12.504,53.703 1.148,0.655 2.431,0.985 3.716,0.985 1.093,0 2.187-0.238 3.202-0.718 2.212-1.044 3.776-3.102 4.189-5.513 0.136-0.79 0.257-1.617 0.383-2.479 0.689-4.737 1.402-9.635 6.399-15.682 3.186-3.854 11.276-6.456 20.646-9.469 21.782-7.005 54.699-17.59 72.607-60.826 13.996-33.786 5.939-59.976-3.286-75.998zm-10.571,70.26c-15.252,36.821-41.917,45.396-63.342,52.286-11.61,3.734-21.637,6.958-27.616,14.194-2.808,3.398-4.75,6.664-6.123,9.708-2.275-5.955-3.152-14.324 1.149-24.71 4.771-11.52 13.859-17.977 25.364-26.152 16.067-11.417 36.063-25.627 50.054-59.405 4.72-11.395 7.541-28.744 9.069-41.188 2.947,3.324 6.143,7.499 9.017,12.491 10.972,19.057 11.788,40.177 2.428,62.776z"/></svg>
+            <span class="brandText">SlugLauncher</span>
+        </a>
+        <div class="headerSpacer"></div>
+        <div class="themeToggle" id="themeToggle" role="radiogroup" aria-label="主题">
+            <button type="button" class="themeOpt" role="radio" aria-checked="false" data-theme-opt="light" aria-label="浅色主题" title="浅色"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button>
+            <button type="button" class="themeOpt" role="radio" aria-checked="false" data-theme-opt="dark" aria-label="深色主题" title="深色"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+        </div>
+        <label class="srOnly" for="languageSelect">语言</label>
+        <select id="languageSelect" class="langSelect" aria-label="语言" onchange="changeLanguage(this.value)">
+            <option value="/launcher/">English</option>
+            <option value="/launcher/es/">Español</option>
+            <option value="/launcher/fr/">Français</option>
+            <option value="/launcher/de/">Deutsch</option>
+            <option value="/launcher/pt/">Português</option>
+            <option value="/launcher/it/">Italiano</option>
+            <option value="/launcher/ru/">Русский</option>
+            <option value="/launcher/zh/" selected>中文</option>
+            <option value="/launcher/ja/">日本語</option>
+            <option value="/launcher/hi/">हिन्दी</option>
+            <option value="/launcher/ar/">العربية</option>
+        </select>
+        <a class="headerCta" href="/launcher/#SLUG:2,zh,0," aria-label="创建你的 SlugLauncher">创建我的启动器</a>
+    </div>
+</header>
+
+<main>
+<section class="hero">
+    <div class="container heroGrid">
+        <div>
+            <div class="eyebrow"><span class="eyebrowDot"></span> 网页应用启动器</div>
+            <h1>你的网页应用启动器。<br>集中在一处。<br>一个链接搞定。</h1>
+            <p class="heroLead">SlugLauncher 是一款可自定义的<strong>应用启动器</strong>，让你在简洁、快速、私密的主页上整理常用应用和网站。</p>
+            <div class="heroActions">
+                <a class="primaryCta" href="/launcher/#SLUG:2,zh,0,">创建我的 SlugLauncher <span aria-hidden="true">→</span></a>
+                <a class="secondaryCta" href="#como-funciona">使用方法</a>
+            </div>
+            <div class="heroNote">无需账号 · 设置无需数据库 · 用链接分享你的启动器</div>
+            <div class="trustStrip" aria-label="主要特点">
+                <span class="trustPill">应用和网站</span>
+                <span class="trustPill">文件夹</span>
+                <span class="trustPill">浅色和深色主题</span>
+                <span class="trustPill">可分享</span>
+            </div>
+        </div>
+
+        <div class="mockupWrap" aria-hidden="true">
+            <div class="mockupGlow"></div>
+            <div class="mockup">
+                <div class="mockHeader">
+                    <svg class="mockLogo" xmlns="http://www.w3.org/2000/svg" viewBox="45 0 160 264"><path fill="#4A90E2" d="m188.835,93.248c-6.319-10.976-13.982-18.705-18.862-22.973l17.009-40.097c7.051-.929 12.529-7.305 12.529-15.022 0-8.357-6.415-15.156-14.301-15.156-7.888,0-14.305,6.799-14.305,15.155 0,3.18 .934,6.13 2.52,8.57l-16.621,39.184-35.194-14.011c-1.115-7.186-7.002-12.691-14.095-12.691-7.888,0-14.305,6.798-14.305,15.153 0,8.355 6.417,15.152 14.305,15.152 3.448,0,6.615-1.3,9.088-3.462l36.296,14.449c-1.008,10.456-3.716,33.415-9.006,46.189-12.34,29.792-29.63,42.078-44.886,52.918-12.398,8.811-24.109,17.132-30.532,32.639-11.676,28.183 3.698,48.68 12.504,53.703 1.148.655 2.431.985 3.716.985 1.093,0,2.187-.238 3.202-.718 2.212-1.044 3.776-3.102 4.189-5.513.136-.79.257-1.617.383-2.479.689-4.737 1.402-9.635 6.399-15.682 3.186-3.854 11.276-6.456 20.646-9.469 21.782-7.005 54.699-17.59 72.607-60.826 13.996-33.786 5.939-59.976-3.286-75.998zm-10.571,70.26c-15.252,36.821-41.917,45.396-63.342,52.286-11.61,3.734-21.637,6.958-27.616,14.194-2.808,3.398-4.75,6.664-6.123,9.708-2.275-5.955-3.152-14.324 1.149-24.71 4.771-11.52 13.859-17.977 25.364-26.152 16.067-11.417 36.063-25.627 50.054-59.405 4.72-11.395 7.541-28.744 9.069-41.188 2.947 3.324 6.143 7.499 9.017 12.491 10.972 19.057 11.788 40.177 2.428 62.776z"/></svg>
+                    <div class="mockTitle">Launcher — 我的应用</div>
+                    <div class="mockButtons"><span class="mockBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span><span class="mockBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></span><span class="mockBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg></span></div>
+                </div>
+                <div class="mockGrid">
+                    <div class="mockApp"><div class="mockTile">G</div><div class="mockName">Google</div></div>
+                    <div class="mockApp"><div class="mockTile">▶</div><div class="mockName">YouTube</div></div>
+                    <div class="mockApp"><div class="mockTile">✉</div><div class="mockName">Gmail</div></div>
+                    <div class="mockApp"><div class="mockTile">◎</div><div class="mockName">Maps</div></div>
+                    <div class="mockApp"><div class="mockTile">▣</div><div class="mockName">Drive</div></div>
+                    <div class="mockApp"><div class="mockTile">W</div><div class="mockName">WhatsApp</div></div>
+                    <div class="mockApp"><div class="mockTile">♫</div><div class="mockName">Spotify</div></div>
+                    <div class="mockApp"><div class="mockTile">＋</div><div class="mockName">添加应用</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section sectionAlt" id="que-es">
+    <div class="container">
+        <div class="sectionHeader">
+            <h2>什么是 SlugLauncher？</h2>
+            <p>一款<strong>应用启动器</strong>，把你的浏览器变成可自定义的主页。不必再在标签页、收藏夹和书签里翻找应用，它们都整理在同一个地方。</p>
+        </div>
+        <div class="featureGrid">
+            <article class="featureCard">
+                <div class="featureIcon" aria-hidden="true">⌘</div>
+                <h3>整理你的应用</h3>
+                <p>添加指向网页应用、常用网站和工具的快捷方式。用文件夹分组，一眼就能找到所需内容。</p>
+            </article>
+            <article class="featureCard">
+                <div class="featureIcon" aria-hidden="true">↗</div>
+                <h3>用链接分享</h3>
+                <p>你的设置可以直接保存在 SlugLauncher 链接中。分享一个地址，对方就能打开你的启动器。</p>
+            </article>
+            <article class="featureCard">
+                <div class="featureIcon" aria-hidden="true">◉</div>
+                <h3>设置无需账号和服务器</h3>
+                <p>SlugLauncher 的设计让你无需账号或数据库，就能保存启动器的结构。</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="section" id="como-funciona">
+    <div class="container">
+        <div class="sectionHeader">
+            <h2>使用方法</h2>
+            <p>用 SlugLauncher 创建网页应用启动器，简单直接。</p>
+        </div>
+        <div class="workflow">
+            <article class="step">
+                <div class="stepNum">步骤 01</div>
+                <h3>添加你的应用</h3>
+                <p>输入你喜爱的网站和网页应用的名称与 URL。你还可以用文件夹让一切井井有条。</p>
+            </article>
+            <article class="step">
+                <div class="stepNum">步骤 02</div>
+                <h3>自定义你的启动器</h3>
+                <p>选择语言和主题，编辑名称和图标，拖动快捷方式，打造属于你的主页。</p>
+            </article>
+            <article class="step">
+                <div class="stepNum">步骤 03</div>
+                <h3>保存或分享</h3>
+                <p>你的设置体现在启动器的 URL 中。你可以复制它、保存为快捷方式，并分享给其他人。</p>
+                <code>/launcher/#SLUG:2,zh,1,...</code>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="section" id="pruebalo">
+    <div class="container">
+        <div class="sectionHeader">
+            <h2>立即试用</h2>
+            <p>添加你的第一个应用，看看搜索如何运作，或导入你已有的 SlugLauncher。完成后将直接进入你的启动器。</p>
+        </div>
+        <div class="tryGrid">
+            <article class="tryCard">
+                <div class="featureIcon" aria-hidden="true">＋</div>
+                <h3>添加应用或文件夹</h3>
+                <p>输入你喜爱网站的 URL：SlugLauncher 会为你建议名称和图标。</p>
+                <!-- Réplica del modal Añadir: cualquier interacción con sus campos abre el modal real -->
+                <div class="modalBox tryForm" id="tryAddForm">
+                    <div class="segmentedControl">
+                        <button type="button" class="segmentBtn active" data-try-type="app" data-i18n="typeApp">应用</button>
+                        <button type="button" class="segmentBtn" data-try-type="folder" data-i18n="typeFolder">文件夹</button>
+                    </div>
+                    <input type="text" readonly data-try-focus="appURL" placeholder="URL" data-i18n-ph="placeholderURL">
+                    <input type="text" readonly data-try-focus="appName" placeholder="名称" data-i18n-ph="placeholderName">
+                    <div class="fieldLabel" data-i18n="iconOptionsLabel">图标</div>
+                    <div class="iconOptionsRow" aria-hidden="true">
+                        <span class="tryIconTile selected">G</span><span class="tryIconTile">▣</span><span class="tryIconTile">★</span>
+                    </div>
+                    <button type="button" data-i18n="saveApp">保存</button>
+                </div>
+            </article>
+            <article class="tryCard">
+                <div class="featureIcon" aria-hidden="true">⌕</div>
+                <h3>即时搜索</h3>
+                <p>只需输入几个字母，就能找到你的任何应用。</p>
+                <div class="searchDemo" id="searchDemo" aria-hidden="true">
+                    <div class="searchBox">
+                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <span class="searchTyped" id="searchDemoText"></span><span class="searchCaret"></span>
+                    </div>
+                    <div class="searchList" id="searchDemoList"></div>
+                </div>
+            </article>
+            <article class="tryCard">
+                <div class="featureIcon" aria-hidden="true">↓</div>
+                <h3>导入 SlugLauncher</h3>
+                <p>粘贴启动器链接，选择想要的应用和文件夹，并保留它们的结构。</p>
+                <!-- Réplica del modal Importar: cualquier interacción abre el modal real. Casillas decorativas (no inputs). -->
+                <div class="modalBox tryForm" id="tryImportForm">
+                    <textarea rows="2" readonly data-try-focus="urlIOField" placeholder="在此粘贴 SlugLauncher 的 URL" data-i18n-ph="importPasteHint"></textarea>
+                    <button type="button" class="ioPasteBtn" data-i18n="pasteAction">粘贴</button>
+                    <div class="ioListBox" aria-hidden="true">
+                        <div class="ioRow ioAll"><span class="tryCheck">✓</span><span data-i18n="selectAll">全选</span><em class="ioCount">4 / 4</em></div>
+                        <div class="ioRow"><span class="tryCheck">✓</span><span class="ioIcon tryIo" style="background:#EA4335">✉</span><span>Gmail</span></div>
+                        <div class="ioRow ioFolder"><span class="tryCheck">✓</span><span class="ioFolderIco"></span><span data-i18n="tryDemoFolder">工作</span></div>
+                        <div class="ioRow ioChild"><span class="tryCheck">✓</span><span class="ioIcon tryIo" style="background:#1FA463">▲</span><span>Drive</span></div>
+                        <div class="ioRow ioChild"><span class="tryCheck">✓</span><span class="ioIcon tryIo" style="background:#00C4CC">C</span><span>Canva</span></div>
+                    </div>
+                    <button type="button" data-i18n="importAction">导入</button>
+                </div>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="section sectionAlt" id="privacidad">
+    <div class="container">
+        <div class="previewCard">
+            <div class="previewText">
+                <h2>为你的链接而生的启动器。</h2>
+                <p>SlugLauncher 并不想取代你的操作系统。它是一个快速、可自定义的层，让你从一个页面访问网页应用和常用网站。</p>
+                <ul class="checkList">
+                    <li><span>✓</span> 在一个地方整理应用和网站。</li>
+                    <li><span>✓</span> 用文件夹区分工作、生活、学习或任何其他类别。</li>
+                    <li><span>✓</span> 通过链接分享启动器。</li>
+                    <li><span>✓</span> 在浅色、深色和跟随系统的主题之间切换。</li>
+                </ul>
+            </div>
+            <div class="urlCard" aria-label="SlugLauncher 链接示例">
+                <div class="urlBar">https://git.inriris.com/launcher/#SLUG:2,zh,1,...</div>
+                <div class="urlCaption"><strong>#SLUG</strong> 片段保存着启动器的状态。打开分享链接时，应用会解析它并在浏览器中重建设置。</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section" id="faq">
+    <div class="container">
+        <div class="sectionHeader">
+            <h2>常见问题</h2>
+            <p>快速了解这款网页应用启动器。</p>
+        </div>
+        <div class="faq">
+            <details open>
+                <summary>什么是网页应用启动器？</summary>
+                <p>它是一个汇集你常用应用和网站快捷方式的页面。SlugLauncher 增加了整理、文件夹、自定义，以及通过链接分享启动器的能力。</p>
+            </details>
+            <details>
+                <summary>我需要创建账号吗？</summary>
+                <p>创建和使用基础启动器不需要。SlugLauncher 的设计是把设置直接保存在 URL 中，因此这些信息无需账号。</p>
+            </details>
+            <details>
+                <summary>我可以用文件夹整理应用吗？</summary>
+                <p>可以。你可以创建文件夹，把想放在一起的应用和网站归入其中。</p>
+            </details>
+            <details>
+                <summary>我可以把启动器分享给别人吗？</summary>
+                <p>可以。你可以分享启动器的 URL。别人打开分享链接时，SlugLauncher 会用 URL 片段重建设置。</p>
+            </details>
+            <details>
+                <summary>SlugLauncher 是需要安装的应用吗？</summary>
+                <p>SlugLauncher 以网页应用的形式在浏览器中运行，也可以使用浏览器或操作系统提供的快捷方式或安装功能。</p>
+            </details>
+        </div>
+    </div>
+</section>
+
+<section class="ctaSection">
+    <div class="container">
+        <div class="ctaBox">
+            <h2>创建你自己的 SlugLauncher</h2>
+            <p>从一个空白启动器开始，添加你喜爱的网页应用，把它变成属于你的可自定义主页。</p>
+            <a class="primaryCta" href="/launcher/#SLUG:2,zh,0,">创建我的 SlugLauncher <span aria-hidden="true">→</span></a>
+            <div class="ctaFine">你分享的启动器可以通过 SlugLauncher 的 URL 打开。</div>
+        </div>
+    </div>
+</section>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <div>SlugLauncher · 由 Inriris 用心制作</div>
+        <div style="margin-top:7px"><a href="/launcher/zh/#como-funciona">使用方法</a> · <a href="/launcher/zh/#privacidad">隐私</a> · <a href="/launcher/zh/#faq">常见问题</a></div>
+    </div>
+</footer>
+
+<!-- MODAL AÑADIR (adaptado de #addModal de index.html). Al guardar NO renderiza nada: genera el #SLUG y entra a /launcher/ -->
+<div id="addModal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
+    <div class="modalBox">
+        <h3 id="addModalTitle">添加应用</h3>
+
+        <div id="addTypeToggle" class="segmentedControl">
+            <button type="button" class="segmentBtn" id="addTypeAppBtn">应用</button>
+            <button type="button" class="segmentBtn" id="addTypeFolderBtn">文件夹</button>
+        </div>
+
+        <div id="addAppSection">
+            <input id="appURL" placeholder="URL" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false">
+            <input id="appName" placeholder="名称" autocomplete="off">
+            <div class="fieldLabel" id="iconOptionsLabel">图标</div>
+            <div id="appIconOptions" class="iconOptionsRow"></div>
+            <div class="fieldNote" id="iconPrivacyNote"></div>
+            <input id="appIcon" placeholder="图标 URL（可选）" autocomplete="off" autocapitalize="off" spellcheck="false">
+            <img id="iconPreview" alt="">
+            <a class="helperLink" id="appSvgApiLink">🔍 在 svgapi.com 上查找 SVG 图标</a>
+        </div>
+
+        <div id="addFolderSection" style="display:none;">
+            <input id="folderName" placeholder="文件夹名称" autocomplete="off">
+            <div class="fieldLabel" id="folderIconLabel">文件夹图标（可选，以黑色显示）</div>
+            <input id="folderIcon" placeholder="图标 URL（可选）" autocomplete="off" autocapitalize="off" spellcheck="false">
+            <img id="folderIconPreview" alt="">
+            <a class="helperLink" id="folderSvgApiLink">🔍 在 svgapi.com 上查找 SVG 图标</a>
+        </div>
+
+        <button type="button" id="saveAddBtn">保存</button>
+        <button type="button" style="background:#aaa;" id="cancelAddBtn">取消</button>
+    </div>
+</div>
+
+<!-- MODAL IMPORTAR (adaptado de #urlIOModal de index.html, solo modo importar). Al importar NO renderiza nada: genera el #SLUG con la estructura marcada y entra a /launcher/ -->
+<div id="urlIOModal">
+    <div class="modalBox" role="dialog" aria-modal="true" aria-labelledby="urlIOTitle">
+        <h3 id="urlIOTitle" data-i18n="importUrl" style="margin-top:0;">导入 URL</h3>
+        <textarea id="urlIOField" rows="3" data-i18n-ph="importPasteHint" placeholder="在此粘贴 SlugLauncher 的 URL" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+        <div id="urlIOWarn" class="fieldNote warn" role="status" style="display:none;"></div>
+        <button id="urlIOPasteBtn" class="ioPasteBtn" type="button" data-i18n="pasteAction" style="display:none;">粘贴</button>
+        <div id="urlIOSelect" style="display:none;"><div id="urlIOList"></div></div>
+        <button id="urlIOPrimaryBtn" type="button" data-i18n="importAction">导入</button>
+        <button id="urlIOCancelBtn" class="ioCancelBtn" type="button" data-i18n="cancel">取消</button>
+    </div>
+</div>
+
+<script>
+/* Configuración de idioma de ESTA landing. En /launcher/fr/ etc. solo cambian PAGE_LANG
+   y el diccionario (se añade en el Paso 3). El idioma viaja dentro del #SLUG generado. */
+const PAGE_LANG = "zh";
+/* Toggle de tema: aplica al instante, recuerda la elección y, mientras no haya elección,
+   sigue los cambios del sistema. */
+const THEME_KEY = "slTheme";
+function currentTheme(){ return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light"; }
+function getStoredTheme(){ try { const t = localStorage.getItem(THEME_KEY); return (t === "light" || t === "dark") ? t : null; } catch (e) { return null; } }
+function paintTheme(t){
+    document.documentElement.setAttribute("data-theme", t);
+    document.querySelectorAll("[data-theme-opt]").forEach(function (b) {
+        b.setAttribute("aria-checked", b.getAttribute("data-theme-opt") === t ? "true" : "false");
+    });
+}
+(function initThemeToggle(){
+    paintTheme(currentTheme());
+    document.querySelectorAll("[data-theme-opt]").forEach(function (b) {
+        b.addEventListener("click", function () {
+            const t = b.getAttribute("data-theme-opt");
+            try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
+            paintTheme(t);
+        });
+    });
+    if (window.matchMedia) {
+        const mq = matchMedia("(prefers-color-scheme: dark)");
+        const onSys = function (e) { if (!getStoredTheme()) paintTheme(e.matches ? "dark" : "light"); };
+        if (mq.addEventListener) mq.addEventListener("change", onSys); else if (mq.addListener) mq.addListener(onSys);
+    }
+})();
+/* =========================================================
+   DICCIONARIO i18n — ÚNICO bloque (junto a PAGE_LANG) que cambia en cada /launcher/<lang>/.
+   Cadenas tomadas del diccionario "es" de index.html (misma clave = mismo texto).
+   ========================================================= */
+const I18N = {
+    zh: {
+        addApp: "添加应用",
+        addFolder: "添加文件夹",
+        addAppTitle: "添加应用",
+        addFolderTitle: "创建文件夹",
+        saveApp: "保存",
+        saveFolder: "创建文件夹",
+        cancel: "取消",
+        placeholderName: "名称",
+        placeholderURL: "URL",
+        placeholderIcon: "图标 URL（可选）",
+        iconOptionsLabel: "图标",
+        svgApiLink: "🔍 在 svgapi.com 上查找 SVG 图标",
+        folderIconLabel: "文件夹图标（可选，以黑色显示）",
+        iconPrivacyNote: "图标通过 Google 的 favicon 服务及应用自身网站获取。",
+        invalidData: "数据无效",
+        invalidDomain: "域名无效",
+        invalidName: "名称无效",
+        invalidImportUrl: "URL 无效",
+        selectApps: "请选择应用",
+        selectAll: "全选",
+        selectOne: "请至少选择一个应用",
+        importAction: "导入",
+        pasteAction: "粘贴",
+        importNoApps: "此URL中未找到应用",
+        importPasteHint: "在此粘贴 SlugLauncher 的 URL",
+        searchLabel: "搜索",
+        searchPlaceholder: "按名称搜索...",
+        searchNoResults: "没有结果",
+        importUrl: "导入URL",
+        typeApp: "应用",
+        typeFolder: "文件夹",
+        placeholderFolderName: "文件夹名称",
+        placeholderFolderIcon: "图标 URL（可选）",
+        limitDesktop: "桌面（最多 {max} 个）：已移除“{name}”{extra}。",
+        limitFolder: "文件夹“{folder}”（最多 {max} 个）：已移除“{name}”{extra}。",
+        limitExtra: "以及另外 {n} 项",
+        tryDemoFolder: "工作",
+        demoMyApp: "我的应用"
+    }
+};
+function t(key, vars){
+    const dict = I18N[PAGE_LANG] || {};
+    let str = (dict[key] !== undefined) ? dict[key] : key;
+    if (vars) Object.keys(vars).forEach(function (k) { str = str.split("{" + k + "}").join(vars[k]); });
+    return str;
+}
+
+/* =========================================================
+   NÚCLEO SLUG — copiado de index.html (fuente de verdad). NO modificar el formato.
+   Diferencias respecto al original: (1) las variables globales son locales de la landing,
+   (2) enforceIconLimits usa t() en lugar de textos fijos. Todo lo demás es idéntico.
+   ========================================================= */
+const DESKTOP_MAX = 64;             // máx. items (apps+folders) en el escritorio raíz
+const FOLDER_MAX = 35;              // máx. apps dentro de un folder
+let globalTheme = 2;                // 0 = dark, 1 = light, 2 = system
+const globalLang = PAGE_LANG;
+let globalSaved = 0;                // la landing nunca genera un launcher "guardado"
+let pageTitle = "";
+
+function normalize(str) {
+    if (!str) return "";
+    str = str.trim();
+    return /^https?:\/\//i.test(str) ? str : "https://" + str;
+}
+function stripProtocol(str){ return (str||"").replace(/^https:\/\//i,''); }
+function isValidDomain(domain){ return /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(domain); }
+function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function safeDecode(str){
+    if (!str) return str;
+    try { return decodeURIComponent(str); } catch(e){ return str; }
+}
+// Doble encode (ver comentario largo en index.html): el launcher decodifica TODO el hash una vez
+// antes de separar campos; con doble encode, #, "," y "|" dentro de nombres/URLs/iconos sobreviven.
+function safeEncode(str){
+    return encodeURIComponent(encodeURIComponent(str||""));
+}
+function globalPartString(){ return `SLUG:${globalTheme},${globalLang},${globalSaved},${encodeURIComponent(pageTitle || "")}`; }
+function getDecodedHashString(h){
+    const hashOriginal = (h !== undefined) ? h : window.location.hash;
+    if (!hashOriginal) return "";
+    try {
+        return decodeURIComponent(hashOriginal);
+    } catch(e) {
+        return hashOriginal;
+    }
+}
+function parseHash(h){
+    const hash = getDecodedHashString(h).substring(1);
+    if (!hash) return [];
+    const items = hash.split("#").filter(Boolean).filter(p=>!p.startsWith("SLUG:"));
+    const result=[];
+    items.forEach(item=>{
+        if (item.startsWith("FOLDER:")){
+            const parts = item.split("|");
+            let header = parts[0].replace("FOLDER:","");
+            let folderIcon = "";
+            const headerSplit = header.split("::");
+            if (headerSplit.length > 1){
+                folderIcon = safeDecode(headerSplit.pop());
+                header = headerSplit.join("::");
+            }
+            const folderName = safeDecode(header);
+            const apps = parts.slice(1).filter(Boolean).map(slug=>{
+                const fields = slug.split(",");
+                const name = fields.shift() || "";
+                const url = fields.shift() || "";
+                const icon = fields.join(",");
+                return {type:"app", name:safeDecode(name), url:normalize(safeDecode(url)), icon:normalize(safeDecode(icon)) };
+            });
+            result.push({type:"folder", name:folderName, icon: folderIcon ? normalize(folderIcon) : "", apps});
+        }else{
+            const fields = item.split(",");
+            const name = fields.shift() || "";
+            const url = fields.shift() || "";
+            const icon = fields.join(",");
+            result.push({type:"app", name:safeDecode(name), url:normalize(safeDecode(url)), icon:normalize(safeDecode(icon)) });
+        }
+    });
+    return result;
+}
+// Construye el hash ("#SLUG:...#app#FOLDER:...") sin tocar la URL actual.
+function buildHashFromState(state){
+    const parts=[];
+    parts.push(globalPartString());
+    state.forEach(item=>{
+        if (item.type==="folder"){
+            const appsSlugs = (item.apps || []).map(a=>{
+                const url = safeEncode(stripProtocol(a.url));
+                const icon = safeEncode(stripProtocol(a.icon));
+                return `${safeEncode(a.name)},${url},${icon}`;
+            }).join("|");
+            const iconPart = item.icon ? `::${safeEncode(stripProtocol(item.icon))}` : "";
+            parts.push(`FOLDER:${safeEncode(item.name)}${iconPart}${appsSlugs ? "|" + appsSlugs : ""}`);
+        }else{
+            const url = safeEncode(stripProtocol(item.url));
+            const icon = safeEncode(stripProtocol(item.icon));
+            parts.push(`${safeEncode(item.name)},${url},${icon}`);
+        }
+    });
+    return "#" + parts.join("#");
+}
+function enforceIconLimits(state){
+    const messages = [];
+    let changed = false;
+    if (state.length > DESKTOP_MAX){
+        const removedCount = state.length - DESKTOP_MAX;
+        const firstRemoved = state[DESKTOP_MAX];
+        const extra = removedCount > 1 ? t("limitExtra", {n: removedCount-1}) : "";
+        messages.push(t("limitDesktop", {max: DESKTOP_MAX, name: firstRemoved.name, extra: extra}));
+        state = state.slice(0, DESKTOP_MAX);
+        changed = true;
+    }
+    state.forEach(item=>{
+        if (item.type==="folder" && (item.apps||[]).length > FOLDER_MAX){
+            const removedCount = item.apps.length - FOLDER_MAX;
+            const firstRemoved = item.apps[FOLDER_MAX];
+            const extra = removedCount > 1 ? t("limitExtra", {n: removedCount-1}) : "";
+            messages.push(t("limitFolder", {folder: item.name, max: FOLDER_MAX, name: firstRemoved.name, extra: extra}));
+            item.apps = item.apps.slice(0, FOLDER_MAX);
+            changed = true;
+        }
+    });
+    return {state, messages, changed};
+}
+
+/* Tema para el Slug: elección explícita del toggle (dark=0, light=1); sin elección = sistema (2). */
+function resolveSlugTheme(){
+    const stored = getStoredTheme();
+    return stored === "dark" ? 0 : (stored === "light" ? 1 : 2);
+}
+/* Punto de salida único: genera el #SLUG y entra al launcher REAL. La landing no renderiza el launcher. */
+function goToLauncher(state){
+    globalTheme = resolveSlugTheme();
+    const limited = enforceIconLimits(state);
+    window.location.assign("/launcher/" + buildHashFromState(limited.state));
+}
+
+/* =========================================================
+   MODAL AÑADIR — lógica copiada de index.html (setAddType, saveApp, saveFolder, detectIconsFor,
+   renderIconOptionsFor, selectIconOptionFor, suggestAppName, isValidAppURL, getAppURLParts,
+   openSvgApiSearch, bindIconPreview). Diferencias: no hay estado previo (el modal solo crea el
+   PRIMER elemento), así que se omite la lista de apps del folder; y al guardar en vez de
+   renderizar el launcher se llama a goToLauncher([item]).
+   ========================================================= */
+let addType = "app"; // "app" | "folder"
+
+function setAddType(type){
+    addType = type;
+    document.getElementById("addTypeAppBtn").classList.toggle("active", type==="app");
+    document.getElementById("addTypeFolderBtn").classList.toggle("active", type==="folder");
+    document.getElementById("addAppSection").style.display = type==="app" ? "block" : "none";
+    document.getElementById("addFolderSection").style.display = type==="folder" ? "block" : "none";
+    document.getElementById("addModalTitle").textContent = type==="app" ? t("addAppTitle") : t("addFolderTitle");
+    document.getElementById("saveAddBtn").textContent = type==="app" ? t("saveApp") : t("saveFolder");
+}
+function handleAddSave(){
+    if (addType === "folder") saveFolder();
+    else saveApp();
+}
+
+function applyAddModalI18n(){
+    const set = function (id, key, attr) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (attr) el.setAttribute(attr, t(key)); else el.textContent = t(key);
+    };
+    set("addTypeAppBtn","typeApp"); set("addTypeFolderBtn","typeFolder");
+    set("appURL","placeholderURL","placeholder"); set("appName","placeholderName","placeholder");
+    set("appIcon","placeholderIcon","placeholder");
+    set("iconOptionsLabel","iconOptionsLabel"); set("iconPrivacyNote","iconPrivacyNote");
+    set("appSvgApiLink","svgApiLink"); set("folderSvgApiLink","svgApiLink");
+    set("folderName","placeholderFolderName","placeholder"); set("folderIconLabel","folderIconLabel");
+    set("folderIcon","placeholderFolderIcon","placeholder");
+    set("cancelAddBtn","cancel");
+    // Réplica dentro de la tarjeta "Pruébalo": mismos textos del diccionario
+    document.querySelectorAll("[data-i18n]").forEach(function (el) { el.textContent = t(el.getAttribute("data-i18n")); });
+    document.querySelectorAll("[data-i18n-ph]").forEach(function (el) {
+        const txt = t(el.getAttribute("data-i18n-ph"));
+        el.setAttribute("placeholder", txt); el.setAttribute("aria-label", txt);
+    });
+    setAddType(addType);
+}
+
+function openAddModal(initialType = "app", focusId){
+    document.getElementById("appURL").value="";
+    document.getElementById("appName").value="";
+    appNameAuto = true;
+    document.getElementById("appIcon").value="";
+    document.getElementById("appIconOptions").innerHTML="";
+    addIconCtx.candidates.length = 0;
+    document.getElementById("iconPreview").style.display="none";
+    document.getElementById("folderName").value="";
+    document.getElementById("folderIcon").value="";
+    document.getElementById("folderIconPreview").style.display="none";
+    setAddType(initialType);
+    document.getElementById("addModal").style.display="block";
+    document.body.style.overflow="hidden";
+    setTimeout(function(){ document.getElementById(focusId && addType==="app" ? focusId : (addType==="folder" ? "folderName" : "appURL")).focus(); }, 30);
+}
+function closeAddModal(){
+    document.getElementById("addModal").style.display="none";
+    document.body.style.overflow="";
+}
+
+const addIconCtx = { candidates: [], rowId:"appIconOptions", iconInputId:"appIcon", previewId:"iconPreview" };
+
+// Nombre automático: mientras el usuario no edite el campo Nombre a mano, se recalcula con cada
+// tecla de la URL. Si lo edita, se respeta. Si lo vacía, vuelve a automático.
+let appNameAuto = true;
+function fillAutoAppName(){
+    const nameField = document.getElementById("appName");
+    if (!appNameAuto && nameField.value.trim()) return;
+    const url = document.getElementById("appURL").value.trim();
+    if (!url){ if (appNameAuto) nameField.value = ""; return; }
+    if (!isValidAppURL(url)) return;
+    const suggested = suggestAppName(url);
+    if (suggested){ nameField.value = suggested; appNameAuto = true; }
+}
+
+function detectIconsFor(domain, ctx, options = {}){
+    const preserveCurrent = !!options.preserveCurrent;
+    if (!preserveCurrent){
+        ctx.candidates.length = 0;
+    }
+    const s2 = `https://www.google.com/s2/favicons?sz=128&domain=${encodeURIComponent(domain)}`;
+    if (!ctx.candidates.find(c=>c.url===s2)){
+        ctx.candidates.push({url:s2, label:"S2"});
+    }
+    if (!preserveCurrent){
+        selectIconOptionFor(s2, ctx);
+    }
+    renderIconOptionsFor(ctx);
+    const guesses = [ `https://${domain}/favicon.ico`, `https://${domain}/apple-touch-icon.png` ];
+    guesses.forEach(u=>{
+        const img = new Image();
+        img.onload = () => {
+            if (img.naturalWidth > 0 && !ctx.candidates.find(c=>c.url===u)){
+                ctx.candidates.push({url:u, label:"favicon"});
+                renderIconOptionsFor(ctx);
+            }
+        };
+        img.onerror = () => {};
+        img.src = u;
+    });
+    // Mejor esfuerzo: og:image (puede fallar por CORS, se ignora silenciosamente)
+    const ogCtl = new AbortController();
+    const ogTimer = setTimeout(()=>ogCtl.abort(), 5000);
+    fetch(`https://${domain}`, {mode:"cors", signal: ogCtl.signal, credentials:"omit", referrerPolicy:"no-referrer"}).then(r=>r.text()).then(html=>{
+        html = html.slice(0, 200000);
+        let m = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+             || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+        if (m && m[1]){
+            let og = m[1];
+            if (og.startsWith("//")) og = "https:"+og;
+            else if (og.startsWith("/")) og = `https://${domain}${og}`;
+            if (!ctx.candidates.find(c=>c.url===og)){
+                ctx.candidates.push({url:og, label:"OG"});
+                renderIconOptionsFor(ctx);
+            }
+        }
+    }).catch(()=>{}).finally(()=>clearTimeout(ogTimer));
+}
+function renderIconOptionsFor(ctx){
+    const row = document.getElementById(ctx.rowId);
+    if (!row) return;
+    row.innerHTML="";
+    const current = stripProtocol(document.getElementById(ctx.iconInputId).value.trim());
+    ctx.candidates.forEach(c=>{
+        const img=document.createElement("img");
+        img.src=c.url;
+        img.title=c.label;
+        img.alt="";
+        img.className="iconOption" + (stripProtocol(c.url)===current ? " selectedIcon":"");
+        img.onclick=()=>selectIconOptionFor(c.url, ctx);
+        row.appendChild(img);
+    });
+}
+function selectIconOptionFor(url, ctx){
+    document.getElementById(ctx.iconInputId).value = stripProtocol(url);
+    const preview = document.getElementById(ctx.previewId);
+    preview.src = normalize(url);
+    preview.style.display="block";
+    document.querySelectorAll(`#${ctx.rowId} .iconOption`).forEach(el=>{
+        el.classList.toggle("selectedIcon", stripProtocol(el.src)===stripProtocol(url));
+    });
+}
+function bindIconPreview(inputId, previewId){
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+    if (!input || !preview) return;
+    input.addEventListener("input", () => {
+        const icon = input.value.trim();
+        if (!icon){ preview.style.display="none"; return; }
+        preview.src = normalize(icon);
+        preview.style.display = "block";
+    });
+}
+function openSvgApiSearch(nameFieldId){
+    const field = document.getElementById(nameFieldId);
+    const query = field ? field.value.trim() : "";
+    const url = query ? `https://svgapi.com/?q=${encodeURIComponent(query)}` : "https://svgapi.com/";
+    window.open(url, "_blank", "noopener");
+}
+
+function suggestAppName(value){
+    try {
+        let raw = (value || "").trim();
+        if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) raw = "https://" + raw;
+        const host = new URL(raw).hostname.toLowerCase().replace(/^\.+|\.+$/g, "");
+        const ignored = new Set(["www","www2","www3","www4","ww1","ww2","m","mobile"]);
+        const labels = host.split(".").filter(Boolean);
+        // El último nivel y el dominio registrable forman la marca base; heurística general para TLDs comunes.
+        const multiTlds = new Set(["co.uk","org.uk","com.au","net.au","co.nz","com.br","com.mx","co.jp","co.in"]);
+        let suffixCount = 1;
+        if (labels.length >= 3 && multiTlds.has(labels.slice(-2).join("."))) suffixCount = 2;
+        const domainIndex = Math.max(0, labels.length - suffixCount - 1);
+        const brand = labels[domainIndex] || labels[0] || host;
+        const subdomains = labels.slice(0, domainIndex).filter(part => !ignored.has(part));
+        const meaningful = subdomains.length ? subdomains[subdomains.length-1] : "";
+        const titleCase = str => str.split(/[-_]+/).filter(Boolean).map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(" ");
+        return [titleCase(brand), meaningful ? titleCase(meaningful) : ""].filter(Boolean).join(" ");
+    } catch(e) { return ""; }
+}
+function isValidAppURL(value){
+    let raw = (value || "").trim();
+    if (!raw) return false;
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) raw = "https://" + raw;
+    try{
+        const u = new URL(raw);
+        if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+        const domainPattern = /^[a-z0-9.-]+\.[a-z]{2,}$/i;
+        const ipv4Pattern = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/;
+        return domainPattern.test(u.hostname) || ipv4Pattern.test(u.hostname);
+    }catch(e){
+        return false;
+    }
+}
+function getAppURLParts(value){
+    let raw = (value || "").trim();
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) raw = "https://" + raw;
+    const u = new URL(raw);
+    return { url: u.href, domain: u.hostname };
+}
+
+function saveApp(){
+    const name = document.getElementById("appName").value.trim();
+    const urlRaw = document.getElementById("appURL").value.trim();
+    let iconRaw = document.getElementById("appIcon").value.trim();
+    if (!name || !urlRaw) { alert(t("invalidData")); return; }
+    if (!isValidAppURL(urlRaw)) { alert(t("invalidDomain")); return; }
+    const {url:fullURL, domain} = getAppURLParts(urlRaw);
+    if (!iconRaw){ iconRaw = stripProtocol(`https://www.google.com/s2/favicons?sz=128&domain=${domain}`); }
+    const newApp = { type:"app", name, url:normalize(fullURL), icon:normalize(iconRaw) };
+    closeAddModal();
+    goToLauncher([newApp]);
+}
+function saveFolder(){
+    const name = document.getElementById("folderName").value.trim();
+    if (!name){ alert(t("invalidName")); return; }
+    const iconRaw = document.getElementById("folderIcon").value.trim();
+    closeAddModal();
+    goToLauncher([{type:"folder", name, icon: iconRaw ? normalize(iconRaw) : "", apps:[]}]);
+}
+
+(function initAddModal(){
+    applyAddModalI18n();
+    document.getElementById("addTypeAppBtn").addEventListener("click", () => setAddType("app"));
+    document.getElementById("addTypeFolderBtn").addEventListener("click", () => setAddType("folder"));
+    document.getElementById("saveAddBtn").addEventListener("click", handleAddSave);
+    document.getElementById("cancelAddBtn").addEventListener("click", closeAddModal);
+    document.getElementById("appSvgApiLink").addEventListener("click", () => openSvgApiSearch("appName"));
+    document.getElementById("folderSvgApiLink").addEventListener("click", () => openSvgApiSearch("folderName"));
+
+    document.getElementById("appName").addEventListener("input", () => {
+        appNameAuto = !document.getElementById("appName").value.trim();
+    });
+    // Red de seguridad: al pasar el mouse sobre Nombre o Guardar, completa el nombre si sigue automático/vacío.
+    ["appName","saveAddBtn"].forEach(id => {
+        document.getElementById(id).addEventListener("mouseenter", fillAutoAppName);
+    });
+    document.getElementById("appURL").addEventListener("input", () => {
+        const url = document.getElementById("appURL").value.trim();
+        fillAutoAppName();
+        if (isValidAppURL(url)){
+            const {domain} = getAppURLParts(url);
+            detectIconsFor(domain, addIconCtx);
+        } else {
+            addIconCtx.candidates.length = 0;
+            document.getElementById("appIconOptions").innerHTML="";
+        }
+    });
+    document.getElementById("appIcon").addEventListener("input", () => {
+        const icon = document.getElementById("appIcon").value.trim();
+        const preview = document.getElementById("iconPreview");
+        if (!icon){ preview.style.display="none"; return; }
+        preview.src = normalize(icon);
+        preview.style.display = "block";
+        renderIconOptionsFor(addIconCtx);
+    });
+    bindIconPreview("folderIcon","folderIconPreview");
+
+    // Cierre: clic en el fondo oscurecido o tecla Escape
+    document.getElementById("addModal").addEventListener("click", (e) => { if (e.target.id === "addModal") closeAddModal(); });
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && document.getElementById("addModal").style.display === "block") closeAddModal();
+    });
+    // Sección "Pruébalo": la réplica del formulario abre el modal real al hacer clic en cualquiera de sus
+    // campos (o con Enter/Espacio sobre un campo). El segmento "Folder" abre el modal en modo folder.
+    const tryForm = document.getElementById("tryAddForm");
+    function openFromTryForm(e){
+        const seg = e.target.closest("[data-try-type]");
+        const fld = e.target.closest("[data-try-focus]");
+        openAddModal(seg ? seg.getAttribute("data-try-type") : "app", fld ? fld.getAttribute("data-try-focus") : undefined);
+    }
+    tryForm.addEventListener("click", openFromTryForm);
+    tryForm.addEventListener("keydown", (e) => {
+        if ((e.key === "Enter" || e.key === " ") && e.target.matches("input")) { e.preventDefault(); openFromTryForm(e); }
+    });
+    document.querySelectorAll('[data-try="add"]').forEach(b => b.addEventListener("click", () => openAddModal("app")));
+})();
+
+/* =========================================================
+   DEMO DE BÚSQUEDA — escribe el nombre de una app y muestra los resultados filtrados (misma lógica que
+   renderSearchResults de index.html: includes() sobre el nombre en minúsculas). Sin red: los iconos son
+   tiles con glifo. Los nombres son marcas, por eso no van en el diccionario por idioma.
+   Sin layout shift: la caja y la lista tienen altura fija en CSS; aquí solo cambia su contenido.
+   ========================================================= */
+const SEARCH_DEMO_APPS = [
+    {i18n:"demoMyApp", glyph:"★",  color:"#8e8e93"},
+    {name:"MSN",           glyph:"M",  color:"#2b2b30"},
+    {name:"Yahoo",         glyph:"Y!", color:"#6001D2"},
+    {name:"Youtube",       glyph:"▶",  color:"#FF0000"},
+    {name:"Amazon",        glyph:"a",  color:"#FF9900"},
+    {name:"Airbnb",        glyph:"A",  color:"#FF5A5F"},
+    {name:"ChatGPT",       glyph:"G",  color:"#10A37F"},
+    {name:"Claude",        glyph:"✻",  color:"#D97757"},
+    {name:"Coub",          glyph:"C",  color:"#0F8BFF"},
+    {name:"Copilot",       glyph:"✦",  color:"#0078D4"},
+    {name:"Google Maps",   glyph:"◎",  color:"#34A853"},
+    {name:"Google Photos", glyph:"✿",  color:"#F4A100"},
+    {name:"Google Drive",  glyph:"▲",  color:"#1FA463"}
+];
+const SEARCH_DEMO_MAX_ROWS = 3;                                // lo que cabe en la lista de altura fija
+const SEARCH_DEMO_QUERIES = ["go", "yo", "ms", "cl"];          // lo que "escribe" la demo, en orden (iguales en todos los idiomas)
+const SEARCH_DEMO_TIMING = {letter:800, view:3500, focus:600, hold:1600, erase:60, gap:400};   // ms
+function searchDemoLabel(a){ return a.i18n ? t(a.i18n) : a.name; }
+function searchDemoIcon(a, cls){ return '<div class="' + cls + '" style="background:' + a.color + '">' + escapeHtml(a.glyph) + '</div>'; }
+// Consulta vacía → todas las apps como chips (para que se vea qué hay); con texto → filas filtradas (includes, como index.html)
+function renderSearchDemo(query){
+    const listEl = document.getElementById("searchDemoList");
+    document.getElementById("searchDemoText").textContent = query;
+    const q = query.trim().toLowerCase();
+    if (!q) {
+        listEl.innerHTML = '<div class="searchChips">' + SEARCH_DEMO_APPS.map(function (a) {
+            return '<div class="searchChip">' + searchDemoIcon(a, "searchResultIcon") + escapeHtml(searchDemoLabel(a)) + '</div>';
+        }).join("") + '</div>';
+        return;
+    }
+    listEl.innerHTML = "";
+    SEARCH_DEMO_APPS.filter(function (a) { return searchDemoLabel(a).toLowerCase().includes(q); })
+        .slice(0, SEARCH_DEMO_MAX_ROWS).forEach(function (a) {
+            const row = document.createElement("div");
+            row.className = "searchRow";
+            row.innerHTML = searchDemoIcon(a, "searchResultIcon") + '<div class="searchResultName">' + escapeHtml(searchDemoLabel(a)) + '</div>';
+            listEl.appendChild(row);
+        });
+}
+(function initSearchDemo(){
+    const box = document.getElementById("searchDemo");
+    if (!box) return;
+    const bar = box.querySelector(".searchBox");
+    const setFocus = function (on) { bar.classList.toggle("focus", on); };
+    document.getElementById("searchDemoText").setAttribute("data-ph", t("searchPlaceholder"));
+    const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) { setFocus(true); renderSearchDemo(SEARCH_DEMO_QUERIES[0]); return; }   // estático, sin movimiento
+
+    const T = SEARCH_DEMO_TIMING;
+    const sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+    let run = 0, inView = true;
+    // 1) se ve la lista completa → 2) selecciona el campo → 3) escribe cada consulta letra a letra → repite
+    async function loop(my){
+        const live = function () { return my === run; };
+        while (live()) {
+            setFocus(false); renderSearchDemo("");
+            await sleep(T.view); if (!live()) return;
+            setFocus(true);
+            await sleep(T.focus); if (!live()) return;
+            for (const w of SEARCH_DEMO_QUERIES) {
+                for (let i = 1; i <= w.length; i++) { renderSearchDemo(w.slice(0, i)); await sleep(T.letter); if (!live()) return; }
+                await sleep(T.hold); if (!live()) return;
+                for (let i = w.length - 1; i >= 0; i--) { renderSearchDemo(w.slice(0, i)); await sleep(T.erase); if (!live()) return; }
+                await sleep(T.gap); if (!live()) return;
+            }
+        }
+    }
+    function start(){ if (inView && !document.hidden) { run++; loop(run); } }
+    function stop(){ run++; }
+    if ("IntersectionObserver" in window) {
+        new IntersectionObserver(function (entries) {
+            const was = inView;
+            inView = entries[entries.length - 1].isIntersecting;
+            if (inView && !was) start(); else if (!inView) stop();
+        }, {threshold: 0.1}).observe(box);
+    }
+    renderSearchDemo("");
+    start();
+    document.addEventListener("visibilitychange", function () { document.hidden ? stop() : start(); });
+})();
+
+/* =========================================================
+   MODAL IMPORTAR — lógica copiada de index.html (ioBuildModel, ioCounts, ioSelectedState, ioMakeRow,
+   ioAppIcon, ioRender, ioSync, ioParseImportField, pasteUrlIOField, closeUrlIOModal). Diferencias:
+   (1) solo existe el modo "importar" (no hay exportar); (2) NO se crea la carpeta "Importados N":
+   se conserva la estructura del Slug original con ioSelectedState() (apps de raíz en raíz, apps de un
+   folder en su folder con su nombre e icono, selección parcial = folder solo con lo marcado, folders sin
+   nada marcado se omiten); (3) al importar no se renderiza nada: goToLauncher(estado) entra a /launcher/.
+   ========================================================= */
+const FOLDER_SVG = '<svg class="folderSvgIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#4A90E2"><path d="M10 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V8C22 6.9 21.1 6 20 6H12L10 4Z"/></svg>';
+const FALLBACK_ICON = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#9aa0a6"><rect x="3" y="3" width="18" height="18" rx="5"/></svg>'
+);
+function attachIconFallback(img){
+    if (!img) return;
+    img.addEventListener("error", ()=>{
+        if (img.dataset.fallback) return;   // evita bucle si el fallback también falla
+        img.dataset.fallback = "1";
+        img.src = FALLBACK_ICON;
+    });
+}
+
+/* ioModel: [{type:"app", app, on} | {type:"folder", name, icon, on, apps:[{app, on}]}] */
+let ioModel = [];
+let ioRefs = {};
+
+function ioBuildModel(items){
+    return items.map(it => it.type === "folder"
+        ? { type:"folder", name:it.name, icon:it.icon, on:true,
+            apps:(it.apps || []).map(a => ({ app:a, on:true })) }
+        : { type:"app", app:it, on:true });
+}
+function ioCounts(){
+    let sel = 0, total = 0;
+    ioModel.forEach(m=>{
+        if (m.type === "app"){ total++; if (m.on) sel++; }
+        else m.apps.forEach(x=>{ total++; if (x.on) sel++; });
+    });
+    return {sel, total};
+}
+// Estructura (apps sueltas + folders) con SOLO lo marcado. Es la que se serializa al importar.
+function ioSelectedState(){
+    const out = [];
+    ioModel.forEach(m=>{
+        if (m.type === "app"){ if (m.on) out.push(m.app); return; }
+        const apps = m.apps.filter(x=>x.on).map(x=>x.app);
+        if (apps.length || (!m.apps.length && m.on)) out.push({type:"folder", name:m.name, icon:m.icon, apps});
+    });
+    return out;
+}
+function ioMakeRow(cls, labelText, iconNode){
+    const row = document.createElement("label");
+    row.className = "ioRow " + cls;
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    row.appendChild(cb);
+    if (iconNode) row.appendChild(iconNode);
+    const span = document.createElement("span");
+    span.textContent = labelText;      // textContent: el contenido de un URL importado no es de confianza
+    row.appendChild(span);
+    return {row, cb};
+}
+function ioAppIcon(app){
+    const img = document.createElement("img");
+    img.className = "ioIcon";
+    img.alt = "";
+    img.referrerPolicy = "no-referrer";
+    attachIconFallback(img);
+    img.src = app.icon || FALLBACK_ICON;
+    return img;
+}
+function ioRender(){
+    const wrap = document.getElementById("urlIOSelect");
+    const list = document.getElementById("urlIOList");
+    list.innerHTML = "";
+    ioRefs = {};
+    const {total} = ioCounts();
+    wrap.style.display = total ? "block" : "none";
+
+    if (total){
+        const all = ioMakeRow("ioAll", t("selectAll"));
+        const count = document.createElement("em");
+        count.className = "ioCount";
+        all.row.appendChild(count);
+        all.cb.onchange = ()=>{
+            ioModel.forEach(m=>{
+                m.on = all.cb.checked;
+                if (m.type === "folder") m.apps.forEach(x=>{ x.on = all.cb.checked; });
+            });
+            ioSync();
+        };
+        ioRefs.all = all.cb;
+        ioRefs.count = count;
+        list.appendChild(all.row);
+
+        ioModel.forEach(m=>{
+            if (m.type === "app"){
+                const r = ioMakeRow("", m.app.name, ioAppIcon(m.app));
+                m.cb = r.cb;
+                r.cb.onchange = ()=>{ m.on = r.cb.checked; ioSync(); };
+                list.appendChild(r.row);
+            } else {
+                const ico = document.createElement("span");
+                ico.className = "ioFolderIco";
+                ico.innerHTML = FOLDER_SVG;          // constante interna, no viene del URL
+                const r = ioMakeRow("ioFolder", m.name, ico);
+                m.cb = r.cb;
+                r.cb.onchange = ()=>{
+                    m.on = r.cb.checked;
+                    m.apps.forEach(x=>{ x.on = r.cb.checked; });
+                    ioSync();
+                };
+                list.appendChild(r.row);
+                m.apps.forEach(x=>{
+                    const c = ioMakeRow("ioChild", x.app.name, ioAppIcon(x.app));
+                    x.cb = c.cb;
+                    c.cb.onchange = ()=>{ x.on = c.cb.checked; ioSync(); };
+                    list.appendChild(c.row);
+                });
+            }
+        });
+    }
+    ioSync();
+}
+// Refleja el modelo en los checkboxes, el contador y el botón Importar.
+function ioSync(){
+    ioModel.forEach(m=>{
+        if (m.type === "app"){ if (m.cb) m.cb.checked = m.on; return; }
+        m.apps.forEach(x=>{ if (x.cb) x.cb.checked = x.on; });
+        if (!m.cb) return;
+        if (m.apps.length){
+            const n = m.apps.filter(x=>x.on).length;
+            m.cb.checked = n === m.apps.length;
+            m.cb.indeterminate = n > 0 && n < m.apps.length;
+        } else {
+            m.cb.checked = m.on;
+        }
+    });
+    const {sel, total} = ioCounts();
+    if (ioRefs.all){
+        ioRefs.all.checked = total > 0 && sel === total;
+        ioRefs.all.indeterminate = sel > 0 && sel < total;
+    }
+    if (ioRefs.count) ioRefs.count.textContent = sel + " / " + total;
+    document.getElementById("urlIOPrimaryBtn").disabled = (sel === 0);
+}
+// Lee el URL pegado (completo o solo "#SLUG…") y muestra las apps/folders que trae, con checkmark.
+function ioParseImportField(){
+    const field = document.getElementById("urlIOField");
+    const warn = document.getElementById("urlIOWarn");
+    const input = field.value.trim();
+    warn.style.display = "none";
+    ioModel = [];
+    if (input){
+        let hash = null;
+        try{
+            if (input.charAt(0) === "#") hash = input;
+            else {
+                try { hash = new URL(input).hash; }
+                catch(e){ hash = new URL("https://" + input).hash; }
+            }
+        }catch(e){ hash = null; }
+        if (hash === null){
+            warn.textContent = t("invalidImportUrl");
+            warn.style.display = "block";
+        } else {
+            // Folders vacíos no aportan nada al importar
+            const items = parseHash(hash).filter(i => i.type !== "folder" || (i.apps || []).length);
+            ioModel = ioBuildModel(items);
+            if (!ioCounts().total){
+                warn.textContent = t("importNoApps");
+                warn.style.display = "block";
+            }
+        }
+    }
+    ioRender();
+}
+async function pasteUrlIOField(){
+    try{
+        const text = await navigator.clipboard.readText();
+        if (text){
+            document.getElementById("urlIOField").value = text;
+            ioParseImportField();
+        }
+    }catch(e){ /* permiso denegado o no soportado: la persona puede pegar manualmente en el campo */ }
+}
+function openUrlIOModal(){
+    const field = document.getElementById("urlIOField");
+    ioModel = [];
+    field.value = "";
+    document.getElementById("urlIOWarn").style.display = "none";
+    document.getElementById("urlIOPasteBtn").style.display = (navigator.clipboard && navigator.clipboard.readText) ? "block" : "none";
+    ioRender();
+    document.getElementById("urlIOModal").style.display = "block";
+    document.body.style.overflow = "hidden";
+    setTimeout(function(){ field.focus(); }, 60);
+}
+function closeUrlIOModal(){
+    document.getElementById("urlIOModal").style.display = "none";
+    document.body.style.overflow = "";
+    ioModel = [];
+    ioRefs = {};
+    document.getElementById("urlIOList").innerHTML = "";
+}
+// Importar: estructura marcada (sin crear "Importados N") → #SLUG compatible → launcher real.
+function importSelectedApps(){
+    const {sel} = ioCounts();
+    if (!sel){ alert(t("selectOne")); return; }
+    goToLauncher(ioSelectedState());
+}
+(function initImportModal(){
+    document.getElementById("urlIOField").addEventListener("input", ioParseImportField);
+    document.getElementById("urlIOPasteBtn").addEventListener("click", pasteUrlIOField);
+    document.getElementById("urlIOPrimaryBtn").addEventListener("click", importSelectedApps);
+    document.getElementById("urlIOCancelBtn").addEventListener("click", closeUrlIOModal);
+    // Cierre: clic en el fondo oscurecido o tecla Escape
+    document.getElementById("urlIOModal").addEventListener("click", function (e) { if (e.target.id === "urlIOModal") closeUrlIOModal(); });
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && document.getElementById("urlIOModal").style.display === "block") closeUrlIOModal();
+    });
+    // Icono de folder de la réplica (constante interna)
+    document.querySelectorAll("#tryImportForm .ioFolderIco").forEach(function (el) { el.innerHTML = FOLDER_SVG; });
+    // Sección "Pruébalo": la réplica abre el modal real al interactuar (clic, o Enter/Espacio sobre el campo).
+    const tryImport = document.getElementById("tryImportForm");
+    if (tryImport){
+        tryImport.addEventListener("click", openUrlIOModal);
+        tryImport.addEventListener("keydown", function (e) {
+            if ((e.key === "Enter" || e.key === " ") && e.target.matches("textarea")) { e.preventDefault(); openUrlIOModal(); }
+        });
+    }
+    document.querySelectorAll('[data-try="import"]').forEach(function (b) { b.addEventListener("click", openUrlIOModal); });
+})();
+
+function changeLanguage(url){
+    if(!url) return;
+    window.location.href = url;
+}
+</script>
+</body>
+</html>
