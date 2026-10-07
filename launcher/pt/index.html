@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="index,follow,max-image-preview:large">
-<title>SlugLauncher — Lanzador de aplicaciones web privado</title>
-<meta name="description" content="SlugLauncher es un lanzador de aplicaciones web personalizable para organizar tus apps y sitios favoritos en un solo lugar. Sin cuenta ni base de datos: comparte tu launcher con un enlace.">
-<link rel="canonical" href="https://git.inriris.com/launcher/es/">
+<title>SlugLauncher — Launcher privado de apps web</title>
+<meta name="description" content="O SlugLauncher é um launcher de apps web personalizável para reunir seus apps e sites favoritos em um só lugar. Sem conta e sem banco de dados: compartilhe seu launcher com um link.">
+<link rel="canonical" href="https://git.inriris.com/launcher/pt/">
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
 <link rel="apple-touch-icon" href="../apple-icon-180x180.png">
@@ -29,25 +29,27 @@
 
 <!-- Open Graph -->
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://git.inriris.com/launcher/es/">
-<meta property="og:locale" content="es_US">
+<meta property="og:url" content="https://git.inriris.com/launcher/pt/">
+<meta property="og:locale" content="pt_BR">
 <meta property="og:site_name" content="SlugLauncher">
-<meta property="og:title" content="SlugLauncher — Lanzador de aplicaciones web privado">
-<meta property="og:description" content="Organiza tus apps y sitios web favoritos en un launcher personalizable. Sin cuenta, sin base de datos y compartible con un solo enlace.">
-<meta property="og:image" content="https://git.inriris.com/launcher/es/og-image-light.png">
+<meta property="og:title" content="SlugLauncher — Launcher privado de apps web">
+<meta property="og:description" content="Organize seus apps e sites favoritos em um launcher personalizável. Sem conta, sem banco de dados e compartilhável com um único link.">
+<meta property="og:image" content="https://git.inriris.com/launcher/pt/og-image-light.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="SlugLauncher: launcher privado de apps web, um launcher personalizável com seus apps e sites favoritos">
 
 <!-- X / Twitter -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="SlugLauncher — Lanzador de aplicaciones web privado">
-<meta name="twitter:description" content="Organiza tus apps y sitios web favoritos en un launcher personalizable y compártelo con un solo enlace.">
-<meta name="twitter:image" content="https://git.inriris.com/launcher/es/og-image-light.png">
+<meta name="twitter:title" content="SlugLauncher — Launcher privado de apps web">
+<meta name="twitter:description" content="Organize seus apps e sites favoritos em um launcher personalizável e compartilhe com um único link.">
+<meta name="twitter:image" content="https://git.inriris.com/launcher/pt/og-image-light.png">
+<meta name="twitter:image:alt" content="SlugLauncher: launcher privado de apps web, um launcher personalizável com seus apps e sites favoritos">
 
 <!-- Redirección de Slugs compartidos: el fragmento #SLUG nunca llega al servidor,
      pero sí está disponible para JavaScript en el navegador. Solo se redirige cuando el
      hash empieza por #SLUG; las anclas internas (#faq, #como-funciona...) NO redirigen,
-     y /launcher/es/ sin hash permanece como landing SEO indexable. -->
+     y /launcher/pt/ sin hash permanece como landing SEO indexable. -->
 <script>
 (function () {
     var hash = window.location.hash;
@@ -64,21 +66,21 @@
   "@graph": [
     {
       "@type": "WebSite",
-      "@id": "https://git.inriris.com/launcher/es/#website",
-      "url": "https://git.inriris.com/launcher/es/",
+      "@id": "https://git.inriris.com/launcher/pt/#website",
+      "url": "https://git.inriris.com/launcher/pt/",
       "name": "SlugLauncher",
-      "inLanguage": "es",
-      "description": "Lanzador de aplicaciones web personalizable para organizar apps y sitios favoritos en un solo lugar."
+      "inLanguage": "pt-BR",
+      "description": "Launcher de apps web personalizável para organizar apps e sites favoritos em um só lugar."
     },
     {
       "@type": "SoftwareApplication",
-      "@id": "https://git.inriris.com/launcher/es/#software",
+      "@id": "https://git.inriris.com/launcher/pt/#software",
       "name": "SlugLauncher",
       "url": "https://git.inriris.com/launcher/",
-      "description": "Lanzador de aplicaciones web privado y personalizable que permite organizar apps y sitios web favoritos y compartir un launcher mediante un enlace.",
+      "description": "Launcher de apps web privado e personalizável para organizar apps e sites favoritos e compartilhar um launcher por meio de um link.",
       "applicationCategory": "UtilitiesApplication",
       "operatingSystem": "Web",
-      "inLanguage": "es"
+      "inLanguage": "pt-BR"
     }
   ]
 }
@@ -500,22 +502,22 @@ html[data-theme="dark"]{color-scheme:dark}
 <body>
 <header class="header">
     <div class="container headerInner">
-        <a class="brand" href="/launcher/es/" aria-label="SlugLauncher">
+        <a class="brand" href="/launcher/pt/" aria-label="SlugLauncher">
             <svg class="titleIcon" xmlns="http://www.w3.org/2000/svg" viewBox="45 0 160 264" aria-hidden="true"><path fill="#4A90E2" d="m188.835,93.248c-6.319-10.976-13.982-18.705-18.862-22.973l17.009-40.097c7.051-0.929 12.529-7.305 12.529-15.022-2.84217e-14-8.357-6.415-15.156-14.301-15.156-7.888,0-14.305,6.799-14.305,15.155 0,3.18 0.934,6.13 2.52,8.57l-16.621,39.184-35.194-14.011c-1.115-7.186-7.002-12.691-14.095-12.691-7.888,0-14.305,6.798-14.305,15.153 0,8.355 6.417,15.152 14.305,15.152 3.448,0 6.615-1.3 9.088-3.462l36.296,14.449c-1.008,10.456-3.716,33.415-9.006,46.189-12.34,29.792-29.63,42.078-44.886,52.918-12.398,8.811-24.109,17.132-30.532,32.639-11.676,28.183 3.698,48.68 12.504,53.703 1.148,0.655 2.431,0.985 3.716,0.985 1.093,0 2.187-0.238 3.202-0.718 2.212-1.044 3.776-3.102 4.189-5.513 0.136-0.79 0.257-1.617 0.383-2.479 0.689-4.737 1.402-9.635 6.399-15.682 3.186-3.854 11.276-6.456 20.646-9.469 21.782-7.005 54.699-17.59 72.607-60.826 13.996-33.786 5.939-59.976-3.286-75.998zm-10.571,70.26c-15.252,36.821-41.917,45.396-63.342,52.286-11.61,3.734-21.637,6.958-27.616,14.194-2.808,3.398-4.75,6.664-6.123,9.708-2.275-5.955-3.152-14.324 1.149-24.71 4.771-11.52 13.859-17.977 25.364-26.152 16.067-11.417 36.063-25.627 50.054-59.405 4.72-11.395 7.541-28.744 9.069-41.188 2.947,3.324 6.143,7.499 9.017,12.491 10.972,19.057 11.788,40.177 2.428,62.776z"/></svg>
             <span class="brandText">SlugLauncher</span>
         </a>
         <div class="headerSpacer"></div>
         <div class="themeToggle" id="themeToggle" role="radiogroup" aria-label="Tema">
             <button type="button" class="themeOpt" role="radio" aria-checked="false" data-theme-opt="light" aria-label="Tema claro" title="Claro"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button>
-            <button type="button" class="themeOpt" role="radio" aria-checked="false" data-theme-opt="dark" aria-label="Tema oscuro" title="Oscuro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+            <button type="button" class="themeOpt" role="radio" aria-checked="false" data-theme-opt="dark" aria-label="Tema escuro" title="Escuro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
         </div>
         <label class="srOnly" for="languageSelect">Idioma</label>
         <select id="languageSelect" class="langSelect" aria-label="Idioma" onchange="changeLanguage(this.value)">
             <option value="/launcher/">English</option>
-            <option value="/launcher/es/" selected>Español</option>
+            <option value="/launcher/es/">Español</option>
             <option value="/launcher/fr/">Français</option>
             <option value="/launcher/de/">Deutsch</option>
-            <option value="/launcher/pt/">Português</option>
+            <option value="/launcher/pt/" selected>Português</option>
             <option value="/launcher/it/">Italiano</option>
             <option value="/launcher/ru/">Русский</option>
             <option value="/launcher/zh/">中文</option>
@@ -523,7 +525,7 @@ html[data-theme="dark"]{color-scheme:dark}
             <option value="/launcher/hi/">हिन्दी</option>
             <option value="/launcher/ar/">العربية</option>
         </select>
-        <a class="headerCta" href="/launcher/#SLUG:2,es,0," aria-label="Crear tu SlugLauncher">Crear mi launcher</a>
+        <a class="headerCta" href="/launcher/#SLUG:2,pt,0," aria-label="Criar seu SlugLauncher">Criar meu launcher</a>
     </div>
 </header>
 
@@ -531,19 +533,19 @@ html[data-theme="dark"]{color-scheme:dark}
 <section class="hero">
     <div class="container heroGrid">
         <div>
-            <div class="eyebrow"><span class="eyebrowDot"></span> Lanzador de aplicaciones web</div>
-            <h1>Tu lanzador de aplicaciones web.<br>En un solo lugar.<br>Con un solo enlace.</h1>
-            <p class="heroLead">SlugLauncher es un <strong>lanzador de aplicaciones</strong> personalizable para organizar tus apps y sitios web favoritos en una página de inicio limpia, rápida y privada.</p>
+            <div class="eyebrow"><span class="eyebrowDot"></span> Launcher de apps web</div>
+            <h1>Seu launcher de apps web.<br>Em um só lugar.<br>Com um único link.</h1>
+            <p class="heroLead">O SlugLauncher é um <strong>launcher de apps</strong> personalizável para organizar seus apps e sites favoritos em uma página inicial limpa, rápida e privada.</p>
             <div class="heroActions">
-                <a class="primaryCta" href="/launcher/#SLUG:2,es,0,">Crear mi SlugLauncher <span aria-hidden="true">→</span></a>
-                <a class="secondaryCta" href="#como-funciona">Cómo funciona</a>
+                <a class="primaryCta" href="/launcher/#SLUG:2,pt,0,">Criar meu SlugLauncher <span aria-hidden="true">→</span></a>
+                <a class="secondaryCta" href="#como-funciona">Como funciona</a>
             </div>
-            <div class="heroNote">Sin cuenta · Sin base de datos para tu configuración · Comparte tu launcher con un enlace</div>
-            <div class="trustStrip" aria-label="Características principales">
-                <span class="trustPill">Apps y sitios web</span>
-                <span class="trustPill">Folders</span>
-                <span class="trustPill">Temas claro y oscuro</span>
-                <span class="trustPill">Compartible</span>
+            <div class="heroNote">Sem conta · Sem banco de dados para sua configuração · Compartilhe seu launcher com um link</div>
+            <div class="trustStrip" aria-label="Principais recursos">
+                <span class="trustPill">Apps e sites</span>
+                <span class="trustPill">Pastas</span>
+                <span class="trustPill">Temas claro e escuro</span>
+                <span class="trustPill">Compartilhável</span>
             </div>
         </div>
 
@@ -552,7 +554,7 @@ html[data-theme="dark"]{color-scheme:dark}
             <div class="mockup">
                 <div class="mockHeader">
                     <svg class="mockLogo" xmlns="http://www.w3.org/2000/svg" viewBox="45 0 160 264"><path fill="#4A90E2" d="m188.835,93.248c-6.319-10.976-13.982-18.705-18.862-22.973l17.009-40.097c7.051-.929 12.529-7.305 12.529-15.022 0-8.357-6.415-15.156-14.301-15.156-7.888,0-14.305,6.799-14.305,15.155 0,3.18 .934,6.13 2.52,8.57l-16.621,39.184-35.194-14.011c-1.115-7.186-7.002-12.691-14.095-12.691-7.888,0-14.305,6.798-14.305,15.153 0,8.355 6.417,15.152 14.305,15.152 3.448,0,6.615-1.3,9.088-3.462l36.296,14.449c-1.008,10.456-3.716,33.415-9.006,46.189-12.34,29.792-29.63,42.078-44.886,52.918-12.398,8.811-24.109,17.132-30.532,32.639-11.676,28.183 3.698,48.68 12.504,53.703 1.148.655 2.431.985 3.716.985 1.093,0,2.187-.238 3.202-.718 2.212-1.044 3.776-3.102 4.189-5.513.136-.79.257-1.617.383-2.479.689-4.737 1.402-9.635 6.399-15.682 3.186-3.854 11.276-6.456 20.646-9.469 21.782-7.005 54.699-17.59 72.607-60.826 13.996-33.786 5.939-59.976-3.286-75.998zm-10.571,70.26c-15.252,36.821-41.917,45.396-63.342,52.286-11.61,3.734-21.637,6.958-27.616,14.194-2.808,3.398-4.75,6.664-6.123,9.708-2.275-5.955-3.152-14.324 1.149-24.71 4.771-11.52 13.859-17.977 25.364-26.152 16.067-11.417 36.063-25.627 50.054-59.405 4.72-11.395 7.541-28.744 9.069-41.188 2.947 3.324 6.143 7.499 9.017 12.491 10.972 19.057 11.788 40.177 2.428 62.776z"/></svg>
-                    <div class="mockTitle">Launcher — Mis apps</div>
+                    <div class="mockTitle">Launcher — Meus apps</div>
                     <div class="mockButtons"><span class="mockBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span><span class="mockBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></span><span class="mockBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg></span></div>
                 </div>
                 <div class="mockGrid">
@@ -563,7 +565,7 @@ html[data-theme="dark"]{color-scheme:dark}
                     <div class="mockApp"><div class="mockTile">▣</div><div class="mockName">Drive</div></div>
                     <div class="mockApp"><div class="mockTile">W</div><div class="mockName">WhatsApp</div></div>
                     <div class="mockApp"><div class="mockTile">♫</div><div class="mockName">Spotify</div></div>
-                    <div class="mockApp"><div class="mockTile">＋</div><div class="mockName">Añadir app</div></div>
+                    <div class="mockApp"><div class="mockTile">＋</div><div class="mockName">Adicionar</div></div>
                 </div>
             </div>
         </div>
@@ -573,24 +575,24 @@ html[data-theme="dark"]{color-scheme:dark}
 <section class="section sectionAlt" id="que-es">
     <div class="container">
         <div class="sectionHeader">
-            <h2>¿Qué es SlugLauncher?</h2>
-            <p>Un <strong>lanzador de apps</strong> y sitios web que convierte tu navegador en una página de inicio personalizable. En lugar de buscar tus aplicaciones entre pestañas, favoritos y marcadores, las tienes organizadas en un solo lugar.</p>
+            <h2>O que é o SlugLauncher?</h2>
+            <p>Um <strong>launcher de apps</strong> e sites que transforma seu navegador em uma página inicial personalizável. Em vez de procurar seus aplicativos entre abas, favoritos e marcadores, você os tem organizados em um só lugar.</p>
         </div>
         <div class="featureGrid">
             <article class="featureCard">
                 <div class="featureIcon" aria-hidden="true">⌘</div>
-                <h3>Organiza tus aplicaciones</h3>
-                <p>Añade accesos a tus aplicaciones web, sitios frecuentes y herramientas. Agrúpalos en folders y encuentra lo que necesitas de un vistazo.</p>
+                <h3>Organize seus aplicativos</h3>
+                <p>Adicione atalhos para seus aplicativos web, sites frequentes e ferramentas. Agrupe-os em pastas e encontre o que precisa num piscar de olhos.</p>
             </article>
             <article class="featureCard">
                 <div class="featureIcon" aria-hidden="true">↗</div>
-                <h3>Comparte con un enlace</h3>
-                <p>Tu configuración puede viajar dentro del propio enlace de SlugLauncher. Comparte una dirección y la otra persona puede abrir ese launcher.</p>
+                <h3>Compartilhe com um link</h3>
+                <p>Sua configuração pode viajar dentro do próprio link do SlugLauncher. Compartilhe um endereço e a outra pessoa pode abrir esse launcher.</p>
             </article>
             <article class="featureCard">
                 <div class="featureIcon" aria-hidden="true">◉</div>
-                <h3>Sin cuenta ni servidor para tu configuración</h3>
-                <p>SlugLauncher está diseñado para evitar que necesites una cuenta o una base de datos para guardar la estructura de tu launcher.</p>
+                <h3>Sem conta nem servidor para sua configuração</h3>
+                <p>O SlugLauncher foi pensado para que você não precise de conta nem de banco de dados para guardar a estrutura do seu launcher.</p>
             </article>
         </div>
     </div>
@@ -599,25 +601,25 @@ html[data-theme="dark"]{color-scheme:dark}
 <section class="section" id="como-funciona">
     <div class="container">
         <div class="sectionHeader">
-            <h2>Cómo funciona</h2>
-            <p>Crear un lanzador de aplicaciones web con SlugLauncher es un proceso sencillo y directo.</p>
+            <h2>Como funciona</h2>
+            <p>Criar um launcher de apps web com o SlugLauncher é simples e direto.</p>
         </div>
         <div class="workflow">
             <article class="step">
-                <div class="stepNum">Paso 01</div>
-                <h3>Añade tus apps</h3>
-                <p>Agrega el nombre y la URL de tus sitios y aplicaciones web favoritas. También puedes usar folders para mantener todo organizado.</p>
+                <div class="stepNum">Passo 01</div>
+                <h3>Adicione seus apps</h3>
+                <p>Informe o nome e a URL dos seus sites e aplicativos web favoritos. Você também pode usar pastas para manter tudo organizado.</p>
             </article>
             <article class="step">
-                <div class="stepNum">Paso 02</div>
-                <h3>Personaliza tu launcher</h3>
-                <p>Elige el idioma y el tema, edita nombres e iconos y mueve tus accesos para crear tu propia página de inicio.</p>
+                <div class="stepNum">Passo 02</div>
+                <h3>Personalize seu launcher</h3>
+                <p>Escolha o idioma e o tema, edite nomes e ícones e mova seus atalhos para criar sua própria página inicial.</p>
             </article>
             <article class="step">
-                <div class="stepNum">Paso 03</div>
-                <h3>Guarda o comparte</h3>
-                <p>Tu configuración se representa en la URL del launcher. Puedes copiarla, guardarla como acceso y compartirla con otras personas.</p>
-                <code>/launcher/#SLUG:2,es,1,...</code>
+                <div class="stepNum">Passo 03</div>
+                <h3>Salve ou compartilhe</h3>
+                <p>Sua configuração fica representada na URL do launcher. Você pode copiá-la, salvá-la como atalho e compartilhá-la com outras pessoas.</p>
+                <code>/launcher/#SLUG:2,pt,1,...</code>
             </article>
         </div>
     </div>
@@ -626,33 +628,33 @@ html[data-theme="dark"]{color-scheme:dark}
 <section class="section" id="pruebalo">
     <div class="container">
         <div class="sectionHeader">
-            <h2>Pruébalo ahora</h2>
-            <p>Añade tu primera app, mira cómo funciona la búsqueda o importa un SlugLauncher que ya tengas. Al terminar entrarás directamente a tu launcher.</p>
+            <h2>Experimente agora</h2>
+            <p>Adicione seu primeiro app, veja como funciona a busca ou importe um SlugLauncher que você já tenha. Ao terminar, você entrará direto no seu launcher.</p>
         </div>
         <div class="tryGrid">
             <article class="tryCard">
                 <div class="featureIcon" aria-hidden="true">＋</div>
-                <h3>Añadir una app o un folder</h3>
-                <p>Escribe la URL de tu sitio favorito: SlugLauncher sugiere el nombre y el icono por ti.</p>
+                <h3>Adicionar um app ou uma pasta</h3>
+                <p>Digite a URL do seu site favorito: o SlugLauncher sugere o nome e o ícone para você.</p>
                 <!-- Réplica del modal Añadir: cualquier interacción con sus campos abre el modal real -->
                 <div class="modalBox tryForm" id="tryAddForm">
                     <div class="segmentedControl">
                         <button type="button" class="segmentBtn active" data-try-type="app" data-i18n="typeApp">App</button>
-                        <button type="button" class="segmentBtn" data-try-type="folder" data-i18n="typeFolder">Folder</button>
+                        <button type="button" class="segmentBtn" data-try-type="folder" data-i18n="typeFolder">Pasta</button>
                     </div>
                     <input type="text" readonly data-try-focus="appURL" placeholder="URL" data-i18n-ph="placeholderURL">
-                    <input type="text" readonly data-try-focus="appName" placeholder="Nombre" data-i18n-ph="placeholderName">
-                    <div class="fieldLabel" data-i18n="iconOptionsLabel">Icono</div>
+                    <input type="text" readonly data-try-focus="appName" placeholder="Nome" data-i18n-ph="placeholderName">
+                    <div class="fieldLabel" data-i18n="iconOptionsLabel">Ícone</div>
                     <div class="iconOptionsRow" aria-hidden="true">
                         <span class="tryIconTile selected">G</span><span class="tryIconTile">▣</span><span class="tryIconTile">★</span>
                     </div>
-                    <button type="button" data-i18n="saveApp">Guardar</button>
+                    <button type="button" data-i18n="saveApp">Salvar</button>
                 </div>
             </article>
             <article class="tryCard">
                 <div class="featureIcon" aria-hidden="true">⌕</div>
-                <h3>Búsqueda instantánea</h3>
-                <p>Encuentra cualquiera de tus apps escribiendo unas pocas letras.</p>
+                <h3>Busca instantânea</h3>
+                <p>Encontre qualquer um dos seus apps digitando poucas letras.</p>
                 <div class="searchDemo" id="searchDemo" aria-hidden="true">
                     <div class="searchBox">
                         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -663,16 +665,16 @@ html[data-theme="dark"]{color-scheme:dark}
             </article>
             <article class="tryCard">
                 <div class="featureIcon" aria-hidden="true">↓</div>
-                <h3>Importar un SlugLauncher</h3>
-                <p>Pega el enlace de un launcher, elige qué apps y folders quieres y mantén su estructura.</p>
+                <h3>Importar um SlugLauncher</h3>
+                <p>Cole o link de um launcher, escolha quais apps e pastas você quer e mantenha a estrutura deles.</p>
                 <!-- Réplica del modal Importar: cualquier interacción abre el modal real. Casillas decorativas (no inputs). -->
                 <div class="modalBox tryForm" id="tryImportForm">
-                    <textarea rows="2" readonly data-try-focus="urlIOField" placeholder="Pega aquí un URL de SlugLauncher" data-i18n-ph="importPasteHint"></textarea>
-                    <button type="button" class="ioPasteBtn" data-i18n="pasteAction">Pegar</button>
+                    <textarea rows="2" readonly data-try-focus="urlIOField" placeholder="Cole aqui uma URL do SlugLauncher" data-i18n-ph="importPasteHint"></textarea>
+                    <button type="button" class="ioPasteBtn" data-i18n="pasteAction">Colar</button>
                     <div class="ioListBox" aria-hidden="true">
-                        <div class="ioRow ioAll"><span class="tryCheck">✓</span><span data-i18n="selectAll">Seleccionar todo</span><em class="ioCount">4 / 4</em></div>
+                        <div class="ioRow ioAll"><span class="tryCheck">✓</span><span data-i18n="selectAll">Selecionar tudo</span><em class="ioCount">4 / 4</em></div>
                         <div class="ioRow"><span class="tryCheck">✓</span><span class="ioIcon tryIo" style="background:#EA4335">✉</span><span>Gmail</span></div>
-                        <div class="ioRow ioFolder"><span class="tryCheck">✓</span><span class="ioFolderIco"></span><span data-i18n="tryDemoFolder">Trabajo</span></div>
+                        <div class="ioRow ioFolder"><span class="tryCheck">✓</span><span class="ioFolderIco"></span><span data-i18n="tryDemoFolder">Trabalho</span></div>
                         <div class="ioRow ioChild"><span class="tryCheck">✓</span><span class="ioIcon tryIo" style="background:#1FA463">▲</span><span>Drive</span></div>
                         <div class="ioRow ioChild"><span class="tryCheck">✓</span><span class="ioIcon tryIo" style="background:#00C4CC">C</span><span>Canva</span></div>
                     </div>
@@ -687,18 +689,18 @@ html[data-theme="dark"]{color-scheme:dark}
     <div class="container">
         <div class="previewCard">
             <div class="previewText">
-                <h2>Un launcher pensado para tus enlaces.</h2>
-                <p>SlugLauncher no intenta sustituir tu sistema operativo. Es una capa rápida y personalizable para acceder a tus aplicaciones web y sitios favoritos desde una sola página.</p>
+                <h2>Um launcher pensado para os seus links.</h2>
+                <p>O SlugLauncher não tenta substituir seu sistema operacional. É uma camada rápida e personalizável para acessar seus aplicativos web e sites favoritos a partir de uma única página.</p>
                 <ul class="checkList">
-                    <li><span>✓</span> Organiza aplicaciones y sitios web en un solo lugar.</li>
-                    <li><span>✓</span> Usa folders para separar trabajo, personal, estudio o cualquier categoría.</li>
-                    <li><span>✓</span> Comparte un launcher mediante un enlace.</li>
-                    <li><span>✓</span> Cambia entre temas claro, oscuro y sistema.</li>
+                    <li><span>✓</span> Organize aplicativos e sites em um só lugar.</li>
+                    <li><span>✓</span> Use pastas para separar trabalho, vida pessoal, estudos ou qualquer outra categoria.</li>
+                    <li><span>✓</span> Compartilhe um launcher por meio de um link.</li>
+                    <li><span>✓</span> Alterne entre os temas claro, escuro e do sistema.</li>
                 </ul>
             </div>
-            <div class="urlCard" aria-label="Ejemplo de un enlace de SlugLauncher">
-                <div class="urlBar">https://git.inriris.com/launcher/#SLUG:2,es,1,...</div>
-                <div class="urlCaption">El fragmento <strong>#SLUG</strong> contiene el estado del launcher. Al abrir un enlace compartido, la aplicación lo interpreta y reconstruye la configuración en el navegador.</div>
+            <div class="urlCard" aria-label="Exemplo de um link do SlugLauncher">
+                <div class="urlBar">https://git.inriris.com/launcher/#SLUG:2,pt,1,...</div>
+                <div class="urlCaption">O fragmento <strong>#SLUG</strong> contém o estado do launcher. Ao abrir um link compartilhado, o aplicativo o interpreta e reconstrói a configuração no navegador.</div>
             </div>
         </div>
     </div>
@@ -707,29 +709,29 @@ html[data-theme="dark"]{color-scheme:dark}
 <section class="section" id="faq">
     <div class="container">
         <div class="sectionHeader">
-            <h2>Preguntas frecuentes</h2>
-            <p>Información rápida sobre este lanzador de aplicaciones web.</p>
+            <h2>Perguntas frequentes</h2>
+            <p>Informações rápidas sobre este launcher de apps web.</p>
         </div>
         <div class="faq">
             <details open>
-                <summary>¿Qué es un lanzador de aplicaciones web?</summary>
-                <p>Es una página que reúne accesos a aplicaciones y sitios web que utilizas con frecuencia. SlugLauncher añade organización, folders, personalización y la posibilidad de compartir tu launcher mediante un enlace.</p>
+                <summary>O que é um launcher de apps web?</summary>
+                <p>É uma página que reúne atalhos para os aplicativos e sites que você usa com frequência. O SlugLauncher adiciona organização, pastas, personalização e a possibilidade de compartilhar seu launcher por meio de um link.</p>
             </details>
             <details>
-                <summary>¿Necesito crear una cuenta?</summary>
-                <p>No para crear y usar un launcher básico. El diseño de SlugLauncher permite representar la configuración directamente en la URL, evitando una cuenta para esa información.</p>
+                <summary>Preciso criar uma conta?</summary>
+                <p>Não, para criar e usar um launcher básico. O SlugLauncher foi projetado para representar a configuração diretamente na URL, dispensando uma conta para essas informações.</p>
             </details>
             <details>
-                <summary>¿Puedo organizar mis apps en carpetas?</summary>
-                <p>Sí. Puedes crear folders y agrupar dentro de ellos las aplicaciones y sitios web que quieras mantener juntos.</p>
+                <summary>Posso organizar meus apps em pastas?</summary>
+                <p>Sim. Você pode criar pastas e agrupar nelas os aplicativos e sites que quiser manter juntos.</p>
             </details>
             <details>
-                <summary>¿Puedo compartir mi launcher con otra persona?</summary>
-                <p>Sí. Puedes compartir la URL del launcher. Cuando alguien abre un enlace compartido, SlugLauncher utiliza el fragmento de la URL para reconstruir la configuración.</p>
+                <summary>Posso compartilhar meu launcher com outra pessoa?</summary>
+                <p>Sim. Você pode compartilhar a URL do launcher. Quando alguém abre um link compartilhado, o SlugLauncher usa o fragmento da URL para reconstruir a configuração.</p>
             </details>
             <details>
-                <summary>¿SlugLauncher es una aplicación instalada?</summary>
-                <p>SlugLauncher funciona como una aplicación web en el navegador y también puede utilizar las funciones de acceso o instalación que ofrece el navegador o el sistema operativo.</p>
+                <summary>O SlugLauncher é um aplicativo instalado?</summary>
+                <p>O SlugLauncher funciona como um aplicativo web no navegador e também pode usar os recursos de atalho ou instalação oferecidos pelo navegador ou pelo sistema operacional.</p>
             </details>
         </div>
     </div>
@@ -738,10 +740,10 @@ html[data-theme="dark"]{color-scheme:dark}
 <section class="ctaSection">
     <div class="container">
         <div class="ctaBox">
-            <h2>Crea tu propio SlugLauncher</h2>
-            <p>Empieza con un lanzador vacío, añade tus aplicaciones web favoritas y conviértelo en tu propia página de inicio personalizable.</p>
-            <a class="primaryCta" href="/launcher/#SLUG:2,es,0,">Crear mi SlugLauncher <span aria-hidden="true">→</span></a>
-            <div class="ctaFine">Tu launcher compartido puede abrirse desde una URL de SlugLauncher.</div>
+            <h2>Crie seu próprio SlugLauncher</h2>
+            <p>Comece com um launcher vazio, adicione seus aplicativos web favoritos e transforme-o na sua própria página inicial personalizável.</p>
+            <a class="primaryCta" href="/launcher/#SLUG:2,pt,0,">Criar meu SlugLauncher <span aria-hidden="true">→</span></a>
+            <div class="ctaFine">Seu launcher compartilhado pode ser aberto a partir de uma URL do SlugLauncher.</div>
         </div>
     </div>
 </section>
@@ -749,41 +751,41 @@ html[data-theme="dark"]{color-scheme:dark}
 
 <footer class="footer">
     <div class="container">
-        <div>SlugLauncher · Hecho con amor por Inriris</div>
-        <div style="margin-top:7px"><a href="/launcher/es/#como-funciona">Cómo funciona</a> · <a href="/launcher/es/#privacidad">Privacidad</a> · <a href="/launcher/es/#faq">Preguntas frecuentes</a></div>
+        <div>SlugLauncher · Feito com amor por Inriris</div>
+        <div style="margin-top:7px"><a href="/launcher/pt/#como-funciona">Como funciona</a> · <a href="/launcher/pt/#privacidad">Privacidade</a> · <a href="/launcher/pt/#faq">Perguntas frequentes</a></div>
     </div>
 </footer>
 
 <!-- MODAL AÑADIR (adaptado de #addModal de index.html). Al guardar NO renderiza nada: genera el #SLUG y entra a /launcher/ -->
 <div id="addModal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
     <div class="modalBox">
-        <h3 id="addModalTitle">Añadir App</h3>
+        <h3 id="addModalTitle">Adicionar App</h3>
 
         <div id="addTypeToggle" class="segmentedControl">
             <button type="button" class="segmentBtn" id="addTypeAppBtn">App</button>
-            <button type="button" class="segmentBtn" id="addTypeFolderBtn">Folder</button>
+            <button type="button" class="segmentBtn" id="addTypeFolderBtn">Pasta</button>
         </div>
 
         <div id="addAppSection">
             <input id="appURL" placeholder="URL" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false">
-            <input id="appName" placeholder="Nombre" autocomplete="off">
-            <div class="fieldLabel" id="iconOptionsLabel">Icono</div>
+            <input id="appName" placeholder="Nome" autocomplete="off">
+            <div class="fieldLabel" id="iconOptionsLabel">Ícone</div>
             <div id="appIconOptions" class="iconOptionsRow"></div>
             <div class="fieldNote" id="iconPrivacyNote"></div>
-            <input id="appIcon" placeholder="Icono URL (opcional)" autocomplete="off" autocapitalize="off" spellcheck="false">
+            <input id="appIcon" placeholder="URL do ícone (opcional)" autocomplete="off" autocapitalize="off" spellcheck="false">
             <img id="iconPreview" alt="">
-            <a class="helperLink" id="appSvgApiLink">🔍 Buscar icono SVG en svgapi.com</a>
+            <a class="helperLink" id="appSvgApiLink">🔍 Buscar ícone SVG em svgapi.com</a>
         </div>
 
         <div id="addFolderSection" style="display:none;">
-            <input id="folderName" placeholder="Nombre del folder" autocomplete="off">
-            <div class="fieldLabel" id="folderIconLabel">Icono del folder (opcional, se muestra en negro)</div>
-            <input id="folderIcon" placeholder="URL del icono (opcional)" autocomplete="off" autocapitalize="off" spellcheck="false">
+            <input id="folderName" placeholder="Nome da pasta" autocomplete="off">
+            <div class="fieldLabel" id="folderIconLabel">Ícone da pasta (opcional, exibido em preto)</div>
+            <input id="folderIcon" placeholder="URL do ícone (opcional)" autocomplete="off" autocapitalize="off" spellcheck="false">
             <img id="folderIconPreview" alt="">
-            <a class="helperLink" id="folderSvgApiLink">🔍 Buscar icono SVG en svgapi.com</a>
+            <a class="helperLink" id="folderSvgApiLink">🔍 Buscar ícone SVG em svgapi.com</a>
         </div>
 
-        <button type="button" id="saveAddBtn">Guardar</button>
+        <button type="button" id="saveAddBtn">Salvar</button>
         <button type="button" style="background:#aaa;" id="cancelAddBtn">Cancelar</button>
     </div>
 </div>
@@ -792,9 +794,9 @@ html[data-theme="dark"]{color-scheme:dark}
 <div id="urlIOModal">
     <div class="modalBox" role="dialog" aria-modal="true" aria-labelledby="urlIOTitle">
         <h3 id="urlIOTitle" data-i18n="importUrl" style="margin-top:0;">Importar URL</h3>
-        <textarea id="urlIOField" rows="3" data-i18n-ph="importPasteHint" placeholder="Pega aquí un URL de SlugLauncher" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+        <textarea id="urlIOField" rows="3" data-i18n-ph="importPasteHint" placeholder="Cole aqui uma URL do SlugLauncher" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
         <div id="urlIOWarn" class="fieldNote warn" role="status" style="display:none;"></div>
-        <button id="urlIOPasteBtn" class="ioPasteBtn" type="button" data-i18n="pasteAction" style="display:none;">Pegar</button>
+        <button id="urlIOPasteBtn" class="ioPasteBtn" type="button" data-i18n="pasteAction" style="display:none;">Colar</button>
         <div id="urlIOSelect" style="display:none;"><div id="urlIOList"></div></div>
         <button id="urlIOPrimaryBtn" type="button" data-i18n="importAction">Importar</button>
         <button id="urlIOCancelBtn" class="ioCancelBtn" type="button" data-i18n="cancel">Cancelar</button>
@@ -804,7 +806,7 @@ html[data-theme="dark"]{color-scheme:dark}
 <script>
 /* Configuración de idioma de ESTA landing. En /launcher/fr/ etc. solo cambian PAGE_LANG
    y el diccionario (se añade en el Paso 3). El idioma viaja dentro del #SLUG generado. */
-const PAGE_LANG = "es";
+const PAGE_LANG = "pt";
 /* Toggle de tema: aplica al instante, recuerda la elección y, mientras no haya elección,
    sigue los cambios del sistema. */
 const THEME_KEY = "slTheme";
@@ -836,50 +838,50 @@ function paintTheme(t){
    Cadenas tomadas del diccionario "es" de index.html (misma clave = mismo texto).
    ========================================================= */
 const I18N = {
-    es: {
-        addApp: "Añadir App",
-        addFolder: "Añadir Folder",
-        addAppTitle: "Añadir App",
-        addFolderTitle: "Crear Folder",
-        saveApp: "Guardar",
-        saveFolder: "Crear Folder",
+    pt: {
+        addApp: "Adicionar App",
+        addFolder: "Adicionar Pasta",
+        addAppTitle: "Adicionar App",
+        addFolderTitle: "Criar Pasta",
+        saveApp: "Salvar",
+        saveFolder: "Criar Pasta",
         cancel: "Cancelar",
-        placeholderName: "Nombre",
+        placeholderName: "Nome",
         placeholderURL: "URL",
-        placeholderIcon: "Icono URL (opcional)",
-        iconOptionsLabel: "Icono",
-        svgApiLink: "🔍 Buscar icono SVG en svgapi.com",
-        folderIconLabel: "Icono del folder (opcional, se muestra en negro)",
-        iconPrivacyNote: "Los íconos se buscan mediante el servicio de favicons de Google y el propio sitio de la app.",
-        invalidData: "Datos inválidos",
-        invalidDomain: "Dominio no válido",
-        invalidName: "Nombre inválido",
-        invalidImportUrl: "URL inválido",
-        selectApps: "Selecciona apps",
-        selectAll: "Seleccionar todo",
-        selectOne: "Selecciona al menos una app",
+        placeholderIcon: "URL do ícone (opcional)",
+        iconOptionsLabel: "Ícone",
+        svgApiLink: "🔍 Buscar ícone SVG em svgapi.com",
+        folderIconLabel: "Ícone da pasta (opcional, exibido em preto)",
+        iconPrivacyNote: "Os ícones são buscados pelo serviço de favicons do Google e pelo site do app.",
+        invalidData: "Dados inválidos",
+        invalidDomain: "Domínio inválido",
+        invalidName: "Nome inválido",
+        invalidImportUrl: "URL inválida",
+        selectApps: "Selecione apps",
+        selectAll: "Selecionar tudo",
+        selectOne: "Selecione pelo menos um app",
         importAction: "Importar",
-        pasteAction: "Pegar",
-        importNoApps: "No se encontraron apps en este URL",
-        importPasteHint: "Pega aquí un URL de SlugLauncher",
+        pasteAction: "Colar",
+        importNoApps: "Nenhum app encontrado neste URL",
+        importPasteHint: "Cole aqui uma URL do SlugLauncher",
         searchLabel: "Buscar",
-        searchPlaceholder: "Buscar por nombre...",
-        searchNoResults: "Sin resultados",
+        searchPlaceholder: "Buscar por nome...",
+        searchNoResults: "Nenhum resultado",
         importUrl: "Importar URL",
         typeApp: "App",
-        typeFolder: "Folder",
-        placeholderFolderName: "Nombre del folder",
-        placeholderFolderIcon: "URL del icono (opcional)",
-        limitDesktop: "Escritorio (máx. {max}): se eliminó \"{name}\"{extra}.",
-        limitFolder: "Folder \"{folder}\" (máx. {max}): se eliminó \"{name}\"{extra}.",
-        limitExtra: " y {n} más",
-        tryDemoFolder: "Trabajo",
-        demoMyApp: "Mi Aplicación"
+        typeFolder: "Pasta",
+        placeholderFolderName: "Nome da pasta",
+        placeholderFolderIcon: "URL do ícone (opcional)",
+        limitDesktop: "Área de trabalho (máx. {max}): “{name}” foi removido{extra}.",
+        limitFolder: "Pasta “{folder}” (máx. {max}): “{name}” foi removido{extra}.",
+        limitExtra: " e mais {n}",
+        tryDemoFolder: "Trabalho",
+        demoMyApp: "Meu app"
     }
 };
 function t(key, vars){
-    const dict = I18N[PAGE_LANG] || I18N.es;
-    let str = (dict[key] !== undefined) ? dict[key] : (I18N.es[key] !== undefined ? I18N.es[key] : key);
+    const dict = I18N[PAGE_LANG] || {};
+    let str = (dict[key] !== undefined) ? dict[key] : key;
     if (vars) Object.keys(vars).forEach(function (k) { str = str.split("{" + k + "}").join(vars[k]); });
     return str;
 }
