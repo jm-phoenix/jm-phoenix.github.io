@@ -10,7 +10,7 @@ import { generateGuideId, nowIso, escapeHtml } from '../shared/utils.js';
 import { alertMessage, confirmAction } from '../shared/dialogs.js';
 import { renderGuideHtml } from '../shared/render.js';
 import { buildThemeVariables } from '../shared/theme.js';
-import { renderAiView } from './admin-ai.js';
+import { renderAiView } from './admin-ai.js?v=2';
 import { downloadStandaloneHtml, downloadJson } from './export-html.js';
 
 const DRAFT_PREFIX = 'guideos:draft:';
