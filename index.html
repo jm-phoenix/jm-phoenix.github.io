@@ -1,44 +1,207 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Test Bot</title>
+  <title>Inriris — Proyectos web | SlugLauncher, GuideOS, Adilo Uploader</title>
+  <meta name="description" content="Proyectos web de Inriris: SlugLauncher (launcher privado de apps web), GuideOS (plataforma de guías), Adilo Family Uploader, Visor de Chats de WhatsApp Pro y chatbot de prueba. Explora cada proyecto en vivo." />
+  <meta name="keywords" content="Inriris, SlugLauncher, GuideOS, Adilo uploader, visor WhatsApp, proyectos web, web apps, PWA" />
+  <meta name="author" content="Inriris" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://git.inriris.com/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Inriris" />
+  <meta property="og:title" content="Inriris — Proyectos web" />
+  <meta property="og:description" content="SlugLauncher, GuideOS, Adilo Family Uploader, Visor de WhatsApp y más. Explora los proyectos en vivo." />
+  <meta property="og:url" content="https://git.inriris.com/" />
+  <meta property="og:locale" content="es_PR" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Inriris — Proyectos web" />
+  <meta name="twitter:description" content="SlugLauncher, GuideOS, Adilo Family Uploader, Visor de WhatsApp y más. Explora los proyectos en vivo." />
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Inriris — Proyectos",
+    "url": "https://git.inriris.com/",
+    "inLanguage": "es",
+    "description": "Colección de proyectos web de Inriris: launchers, guías, uploaders y herramientas."
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Proyectos de Inriris",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "SlugLauncher", "url": "https://git.inriris.com/launcher/", "description": "Launcher privado de aplicaciones web en una sola página, sin cuenta ni base de datos, en 10 idiomas."},
+      {"@type": "ListItem", "position": 2, "name": "GuideOS", "url": "https://git.inriris.com/guidos/", "description": "Plataforma para crear, organizar y visualizar guías."},
+      {"@type": "ListItem", "position": 3, "name": "Adilo Family Uploader", "url": "https://git.inriris.com/adilo/", "description": "Sube videos del teléfono a tu carpeta INBOX de Adilo."},
+      {"@type": "ListItem", "position": 4, "name": "Visor de Chats de WhatsApp Pro", "url": "https://git.inriris.com/whatsapp/", "description": "Visualiza tus chats de WhatsApp exportados."},
+      {"@type": "ListItem", "position": 5, "name": "Test Bot", "url": "https://git.inriris.com/chatbot/", "description": "Chatbot de prueba."}
+    ]
+  }
+  </script>
+
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: #f4f4f4;
+    :root {
+      --bg: #0b0f1a;
+      --bg2: #111827;
+      --card: rgba(255, 255, 255, 0.04);
+      --card-border: rgba(255, 255, 255, 0.09);
+      --text: #e8ecf4;
+      --muted: #9aa4b8;
+      --accent: #38bdf8;
+      --accent2: #a78bfa;
     }
-    #chat_form {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #fff;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      border-radius: 12px;
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(1200px 600px at 80% -10%, rgba(56,189,248,.12), transparent),
+                  radial-gradient(900px 500px at 10% 10%, rgba(167,139,250,.10), transparent),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
     }
-    iframe, .aminos-chat-form {
-      width: 100%;
-      height: 100%;
-      border: none;
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 1.25rem; }
+    header.hero { padding: 4.5rem 0 2.5rem; text-align: center; }
+    .kicker {
+      display: inline-block; font-size: .8rem; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--accent); border: 1px solid rgba(56,189,248,.35); border-radius: 999px;
+      padding: .35rem 1rem; margin-bottom: 1.25rem;
     }
+    h1 { font-size: clamp(2rem, 5vw, 3.25rem); margin: 0 0 .75rem; letter-spacing: -0.02em; }
+    h1 .grad {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .lede { color: var(--muted); font-size: 1.1rem; max-width: 640px; margin: 0 auto; }
+    main { padding-bottom: 3rem; }
+    .grid {
+      display: grid; gap: 1.25rem; margin-top: 2.5rem;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+    article.card {
+      background: var(--card); border: 1px solid var(--card-border); border-radius: 16px;
+      padding: 1.5rem; display: flex; flex-direction: column; gap: .6rem;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+    article.card:hover {
+      transform: translateY(-4px); border-color: rgba(56,189,248,.45);
+      box-shadow: 0 12px 32px rgba(0,0,0,.35);
+    }
+    .icon {
+      width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center;
+      background: linear-gradient(135deg, rgba(56,189,248,.18), rgba(167,139,250,.18));
+      border: 1px solid rgba(56,189,248,.25);
+    }
+    .icon svg { width: 24px; height: 24px; stroke: var(--accent); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    article.card h2 { margin: .25rem 0 0; font-size: 1.25rem; }
+    article.card p { margin: 0; color: var(--muted); font-size: .95rem; flex: 1; }
+    .tags { display: flex; flex-wrap: wrap; gap: .4rem; }
+    .tags span {
+      font-size: .72rem; color: var(--muted); border: 1px solid var(--card-border);
+      border-radius: 999px; padding: .15rem .6rem;
+    }
+    a.btn {
+      display: inline-block; margin-top: .5rem; text-decoration: none; font-weight: 600;
+      color: #06121f; background: linear-gradient(90deg, var(--accent), var(--accent2));
+      padding: .6rem 1.1rem; border-radius: 10px; text-align: center;
+    }
+    a.btn:hover { filter: brightness(1.08); }
+    section.about {
+      margin-top: 3rem; background: var(--card); border: 1px solid var(--card-border);
+      border-radius: 16px; padding: 1.75rem;
+    }
+    section.about h2 { margin-top: 0; }
+    section.about p { color: var(--muted); margin: .5rem 0; }
+    footer { border-top: 1px solid var(--card-border); padding: 1.5rem 0 2.5rem; color: var(--muted); font-size: .85rem; text-align: center; }
+    footer a { color: var(--accent); text-decoration: none; }
+    @media (max-width: 520px) { header.hero { padding: 3rem 0 1.5rem; } }
   </style>
 </head>
 <body>
-  <div id="chat_form">
-    
+  <div class="wrap">
+    <header class="hero">
+      <span class="kicker">git.inriris.com</span>
+      <h1>Proyectos de <span class="grad">Inriris</span></h1>
+      <p class="lede">Herramientas y experimentos web que estoy construyendo. Cada tarjeta te lleva al proyecto en vivo.</p>
+    </header>
+
+    <main>
+      <div class="grid">
+
+        <article class="card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          </div>
+          <h2>SlugLauncher</h2>
+          <p>Launcher privado de aplicaciones web en una sola página. Sin cuenta, sin base de datos: todo el estado vive en el hash de la URL. Disponible en 10 idiomas e instalable como PWA.</p>
+          <div class="tags"><span>PWA</span><span>10 idiomas</span><span>Sin backend</span></div>
+          <a class="btn" href="/launcher/">Abrir SlugLauncher</a>
+        </article>
+
+        <article class="card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </div>
+          <h2>GuideOS</h2>
+          <p>Plataforma para crear, organizar y visualizar guías, con panel de administración, visor y herramientas integradas.</p>
+          <div class="tags"><span>Guías</span><span>Admin</span><span>Visor</span></div>
+          <a class="btn" href="/guideos/">Abrir GuideOS</a>
+        </article>
+
+        <article class="card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <h2>Adilo Family Uploader</h2>
+          <p>Sube videos desde el teléfono a tu carpeta INBOX de Adilo. Elige tu nombre, guarda tus claves una vez y listo.</p>
+          <div class="tags"><span>Video</span><span>Móvil</span><span>Familiar</span></div>
+          <a class="btn" href="/adilo/">Abrir uploader</a>
+        </article>
+
+        <article class="card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          </div>
+          <h2>Visor de Chats de WhatsApp Pro</h2>
+          <p>Visualiza tus chats de WhatsApp exportados en una interfaz limpia y rápida, en español.</p>
+          <div class="tags"><span>WhatsApp</span><span>Español</span></div>
+          <a class="btn" href="/whatsapp/">Abrir visor</a>
+        </article>
+
+        <article class="card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <h2>Test Bot</h2>
+          <p>Chatbot de prueba integrado. El experimento original de este sitio, ahora con su propio espacio.</p>
+          <div class="tags"><span>Chatbot</span><span>Prueba</span></div>
+          <a class="btn" href="/chatbot/">Abrir chatbot</a>
+        </article>
+
+      </div>
+
+      <section class="about" aria-labelledby="about-title">
+        <h2 id="about-title">Sobre este sitio</h2>
+        <p>Este es el laboratorio personal de <strong>Inriris</strong>: una colección de proyectos web independientes, cada uno viviendo en su propia carpeta y desplegado automáticamente con GitHub Pages.</p>
+        <p>Todo el código es estático y abierto. Si algo te resulta útil, úsalo y adáptalo.</p>
+      </section>
+    </main>
+
+    <footer>
+      <p>© Inriris · <a href="https://github.com/jm-phoenix">github.com/jm-phoenix</a> · Hecho con GitHub Pages</p>
+    </footer>
   </div>
 </body>
-<script src="https://app.aminos.ai/js/chat_form_plugin.js" data-bot-id="55659"></script>
-
 </html>
-
-

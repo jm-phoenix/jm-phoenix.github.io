@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>GuideOS — Acceptance Tests</title>
-<link rel="stylesheet" href="/assets/css/base.css" />
+<link rel="stylesheet" href="../assets/css/base.css" />
 <style>
   main { max-width: 900px; margin: 32px auto; padding: 0 16px; }
   table { width: 100%; border-collapse: collapse; margin-top: 16px; }
@@ -20,14 +20,15 @@
 <button id="run" class="primary">Run tests</button>
 <table id="results"><thead><tr><th>ID</th><th>Description</th><th>Result</th></tr></thead><tbody></tbody></table>
 <script type="module">
-import { validateGuideSpec } from '/shared/validation.js';
-import { convertValue, convertTemperature, isUnitValid } from '/shared/units.js';
-import { resolveInstruction, isKnownEntityType } from '/shared/entities.js';
-import { isHexGuideId, generateGuideId } from '/shared/utils.js';
+import { validateGuideSpec } from '../shared/validation.js';
+import { convertValue, convertTemperature, isUnitValid } from '../shared/units.js';
+import { resolveInstruction, isKnownEntityType } from '../shared/entities.js';
+import { isHexGuideId, generateGuideId } from '../shared/utils.js';
+import { renderStepHtml, renderGuideHtml, buildDudaUrl } from '../shared/render.js';
 
 const tests = [
   ['GS001', 'Valid GuideSpec JSON loads', async () => {
-    const r = await fetch('/guides/8F/8F35A198.json'); const spec = await r.json();
+    const r = await fetch('../guides/8F/8F35A198.json'); const spec = await r.json();
     return validateGuideSpec(spec).valid;
   }],
   ['GS002', 'Invalid JSON rejected', () => !validateGuideSpec(null).valid],
@@ -72,6 +73,21 @@ const tests = [
   }],
   ['E002', 'Engineering types recognized', () => isKnownEntityType('pressure') && isKnownEntityType('tool')],
   ['ID001', 'Guide ID generator produces 8 hex chars', () => isHexGuideId(generateGuideId())],
+  ['R001', 'renderStepHtml incluye título e instrucción', () => {
+    const spec = makeMinimalSpec();
+    const html = renderStepHtml(spec.phases[0].steps[0], spec.phases[0], spec);
+    return html.includes('S1') && html.includes('¿Dudas con este paso?');
+  }],
+  ['R002', 'renderGuideHtml incluye fases y pasos', () => {
+    const spec = makeMinimalSpec();
+    const html = renderGuideHtml(spec);
+    return html.includes('P1') && html.includes('guide-doc');
+  }],
+  ['R003', 'buildDudaUrl usa formato Google AI Mode', () => {
+    const spec = makeMinimalSpec();
+    const url = buildDudaUrl(spec, spec.phases[0].steps[0], '¿por qué?');
+    return url.startsWith('https://www.google.com/search?udm=50&q=') && url.includes(encodeURIComponent('¿por qué?'));
+  }],
 ];
 
 function makeMinimalSpec() {
