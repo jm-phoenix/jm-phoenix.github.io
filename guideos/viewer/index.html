@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GuideOS — Guías publicadas</title>
+<meta name="description" content="Lista de guías técnicas publicadas en GuideOS." />
+<link rel="stylesheet" href="../assets/css/base.css" />
+<style>
+  main { max-width: 960px; margin: 0 auto; padding: 32px 20px 64px; }
+  .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 20px; }
+  .card { border: 1px solid var(--color-border); border-radius: 8px; padding: 18px; background: var(--color-bg); display: flex; flex-direction: column; gap: 8px; }
+  .card h2 { margin: 0; font-size: 1.1rem; }
+  .card p { margin: 0; color: var(--color-muted); font-size: .9rem; flex: 1; }
+  .card .meta { font-size: .8rem; color: var(--color-muted); }
+  .btn-link { text-decoration: none; border: 1px solid var(--color-border); border-radius: var(--radius); padding: 8px 12px; color: var(--color-fg); background: var(--color-surface); font-size: .9rem; }
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <h1>Guías publicadas</h1>
+    <a href="../" class="btn-link">← Inicio</a>
+  </div>
+  <p class="muted">Procedimientos técnicos listos para usar en el visor.</p>
+  <div class="grid" id="guide-grid"><p class="muted">Cargando…</p></div>
+</main>
+<script type="module">
+const grid = document.getElementById('guide-grid');
+try {
+  const res = await fetch('../guides/index.json');
+  if (!res.ok) throw new Error('no index');
+  const data = await res.json();
+  const guides = data.guides || [];
+  if (!guides.length) { grid.innerHTML = '<p class="muted">Aún no hay guías publicadas.</p>'; }
+  else {
+    grid.innerHTML = guides.map((g) => `
+      <article class="card">
+        <h2>${escapeHtml(g.title || g.id)}</h2>
+        <p>${escapeHtml([g.manufacturer, g.model].filter(Boolean).join(' ') || '')}</p>
+        <div class="meta">${escapeHtml(g.category || '')} · ${escapeHtml(g.difficulty || '')}${g.estimatedMinutes ? ` · ${g.estimatedMinutes} min` : ''}</div>
+        <a class="btn-link" style="text-align:center" href="./guide.html?id=${encodeURIComponent(g.id)}">Abrir guía →</a>
+      </article>`).join('');
+  }
+} catch (e) {
+  grid.innerHTML = '<p class="muted">No se pudo cargar la lista de guías.</p>';
+}
+function escapeHtml(t) {
+  return String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>

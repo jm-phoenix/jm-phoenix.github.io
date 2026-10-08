@@ -1,26 +1,27 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>GuideOS — Administration Console</title>
-<link rel="stylesheet" href="/assets/css/base.css" />
+<title>GuideOS — Creador de guías</title>
+<meta name="description" content="Crea guías técnicas con IA, edítalas en JSON con vista previa en vivo y expórtalas como HTML autocontenido." />
+<link rel="stylesheet" href="../assets/css/base.css" />
 <link rel="stylesheet" href="./admin.css" />
 </head>
 <body>
 <header class="app-header">
-  <h1>GuideOS Administration Console</h1>
+  <h1>GuideOS — Creador de guías</h1>
   <div class="actions">
-    <button id="view-drafts">Drafts</button>
-    <button id="view-ai">AI Generator</button>
-    <button id="new-draft" class="primary">+ New Draft</button>
-    <button id="import-draft">Import JSON</button>
-    <input type="file" id="import-file" accept="application/json" class="hidden" />
+    <button data-view="chat" id="view-chat" class="active">Chat IA</button>
+    <button id="view-new" class="primary">+ Nuevo borrador</button>
+    <button id="view-upload">Subir JSON</button>
+    <input type="file" id="upload-file" accept="application/json,.json" class="hidden" />
+    <a href="../" class="btn-link">← Inicio</a>
   </div>
 </header>
 <div class="admin-layout">
   <aside class="admin-sidebar">
-    <h2>Drafts</h2>
+    <h2>Borradores</h2>
     <ul class="draft-list" id="draft-list"></ul>
   </aside>
   <main class="admin-main" id="editor"></main>

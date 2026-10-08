@@ -1,28 +1,110 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>GuideOS</title>
-<link rel="stylesheet" href="/assets/css/base.css" />
+<title>GuideOS — Crea guías técnicas con IA</title>
+<meta name="description" content="GuideOS: plataforma para crear guías técnicas profesionales con ayuda de IA. Genera el procedimiento conversando, edítalo con vista previa en vivo y expórtalo como HTML autocontenido." />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://git.inriris.com/guidos/" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="GuideOS" />
+<meta property="og:title" content="GuideOS — Crea guías técnicas con IA" />
+<meta property="og:description" content="Genera procedimientos técnicos conversando con IA, edítalos con vista previa en vivo y expórtalos como HTML." />
+<meta property="og:url" content="https://git.inriris.com/guidos/" />
+<meta property="og:locale" content="es_PR" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="GuideOS — Crea guías técnicas con IA" />
+<meta name="twitter:description" content="Genera procedimientos técnicos conversando con IA y expórtalos como HTML autocontenido." />
+<link rel="stylesheet" href="./assets/css/base.css" />
+<style>
+  :root { --brand: #0054A6; }
+  body { background: linear-gradient(180deg, #f4f7fb 0%, #ffffff 60%); }
+  .wrap { max-width: 1020px; margin: 0 auto; padding: 0 20px; }
+  header.hero { text-align: center; padding: 72px 0 36px; }
+  .kicker { display: inline-block; font-size: .78rem; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--brand); border: 1px solid #bcd4ef; background: #eaf2fc;
+    border-radius: 999px; padding: 6px 14px; margin-bottom: 18px; }
+  h1 { font-size: clamp(2rem, 5vw, 3rem); margin: 0 0 12px; letter-spacing: -0.02em; }
+  .lede { color: var(--color-muted); font-size: 1.12rem; max-width: 640px; margin: 0 auto; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin: 36px 0 20px; }
+  .card { background: #fff; border: 1px solid var(--color-border); border-radius: 12px; padding: 24px;
+    display: flex; flex-direction: column; gap: 10px; box-shadow: 0 2px 10px rgba(0,84,166,.06);
+    transition: transform .15s ease, box-shadow .15s ease; }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(0,84,166,.12); }
+  .card .num { font-size: .75rem; font-weight: 700; color: var(--brand); letter-spacing: .1em; }
+  .card h2 { margin: 0; font-size: 1.25rem; }
+  .card p { margin: 0; color: var(--color-muted); font-size: .95rem; flex: 1; }
+  .card a.btn { display: inline-block; text-align: center; text-decoration: none; font-weight: 600;
+    background: var(--brand); color: #fff; padding: 10px 16px; border-radius: 8px; margin-top: 6px; }
+  .card a.btn:hover { background: #003e7a; }
+  .card a.btn.ghost { background: #fff; color: var(--brand); border: 1.5px solid var(--brand); }
+  .how { background: #fff; border: 1px solid var(--color-border); border-radius: 12px; padding: 24px; margin: 8px 0 40px; }
+  .how h2 { margin-top: 0; }
+  .how ol { margin: 0; padding-left: 1.2em; color: var(--color-muted); }
+  .how li { margin: 8px 0; }
+  .how strong { color: var(--color-fg); }
+  footer { border-top: 1px solid var(--color-border); padding: 20px 0 40px; color: var(--color-muted);
+    font-size: .85rem; text-align: center; }
+  footer a { color: var(--brand); }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "GuideOS",
+  "url": "https://git.inriris.com/guidos/",
+  "inLanguage": "es",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Web",
+  "description": "Plataforma para crear guías técnicas profesionales con ayuda de IA y exportarlas como HTML autocontenido."
+}
+</script>
 </head>
 <body>
-<main class="landing">
-  <h1>GuideOS</h1>
-  <p class="muted">Static web platform for professional technical procedures.</p>
-  <div class="cards">
-    <div class="card">
-      <h2>Guide Viewer</h2>
-      <p class="muted">Read-only application for technicians.</p>
-      <p><a href="/viewer/guide.html?id=8F35A198">Open sample guide →</a></p>
+<div class="wrap">
+  <header class="hero">
+    <span class="kicker">GuideOS</span>
+    <h1>Crea guías técnicas con IA</h1>
+    <p class="lede">Describe el equipo y el procedimiento conversando. La IA investiga, genera el JSON validado y tú lo exportas como un HTML completo y autocontenido.</p>
+  </header>
+
+  <main>
+    <div class="grid">
+      <article class="card">
+        <span class="num">01</span>
+        <h2>Crear guía con IA</h2>
+        <p>El chat te guía pregunta por pregunta. Si necesita datos técnicos, los busca en internet solo. Al terminar, el JSON pasa directo al editor.</p>
+        <a class="btn" href="./admin/">Empezar →</a>
+      </article>
+      <article class="card">
+        <span class="num">02</span>
+        <h2>Editar mi JSON</h2>
+        <p>¿Ya tienes un GuideSpec? Súbelo aquí para editarlo con vista previa en vivo y republicarlo como HTML.</p>
+        <a class="btn ghost" href="./admin/?mode=upload">Subir JSON →</a>
+      </article>
+      <article class="card">
+        <span class="num">03</span>
+        <h2>Ver guías</h2>
+        <p>Explora las guías publicadas en el visor, con seguimiento de progreso y ayuda de IA por paso.</p>
+        <a class="btn ghost" href="./viewer/">Ver guías →</a>
+      </article>
     </div>
-    <div class="card">
-      <h2>Administration Console</h2>
-      <p class="muted">Create, edit, validate and publish guides.</p>
-      <p><a href="/admin/admin.html">Open console →</a></p>
-    </div>
-  </div>
-  <p style="margin-top:32px"><a href="/tools/acceptance-runner.html">Run acceptance tests</a></p>
-</main>
+
+    <section class="how" aria-labelledby="how-title">
+      <h2 id="how-title">Cómo funciona</h2>
+      <ol>
+        <li><strong>Configura una vez</strong> tu endpoint compatible con OpenAI, modelo y API key (quedan en tu navegador).</li>
+        <li><strong>Conversa</strong>: describe el equipo y la tarea; la IA pregunta lo que falta y busca datos técnicos en la web por ti.</li>
+        <li><strong>Edita</strong> el JSON generado con vista previa WYSIWYG en vivo y validación automática.</li>
+        <li><strong>Exporta</strong> la guía como un archivo HTML completo — con estilos, buscador de dudas por paso e imprimible.</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>
+    <p>GuideOS · <a href="https://git.inriris.com/">Inriris</a> · 100% estático, tus claves nunca salen de tu navegador</p>
+  </footer>
+</div>
 </body>
 </html>
