@@ -167,8 +167,10 @@ function settingsHtml() {
       <div class="field"><textarea id="ai-sysprompt" rows="18" style="font-family:monospace;font-size:12px">${escapeHtml(s.systemPrompt)}</textarea></div>
       <div class="toolbar">
         <button id="ai-save" class="primary">Guardar ajustes</button>
+        <button id="ai-test">Probar conexión</button>
         <button id="ai-reset-prompt">Restablecer prompt</button>
       </div>
+      <div id="ai-test-result" class="muted" style="font-size:13px"></div>
     </div>`;
 }
 
@@ -183,6 +185,7 @@ function wireSettings(body) {
     saveSettings();
     alertMessage('Ajustes guardados.');
   });
+  body.querySelector('#ai-test').addEventListener('click', () => testConnection(body));
   body.querySelector('#ai-reset-prompt').addEventListener('click', () => {
     body.querySelector('#ai-sysprompt').value = DEFAULT_SYSTEM_PROMPT;
   });
@@ -353,6 +356,66 @@ async function callModel() {
   const content = data?.choices?.[0]?.message?.content;
   if (typeof content !== 'string') throw new Error('Respuesta inesperada del modelo (sin choices[0].message.content)');
   return content;
+}
+
+// Prueba la conexión con los valores actuales del formulario (sin necesidad
+// de guardar primero). Hace una petición mínima y explica el fallo en
+// lenguaje claro: red/CORS, key inválida, modelo/endpoint mal, cuota, etc.
+async function testConnection(body) {
+  const out = body.querySelector('#ai-test-result');
+  const say = (cls, html) => { out.innerHTML = `<span class="${cls}">${html}</span>`; };
+  const baseUrl = body.querySelector('#ai-baseurl').value.trim().replace(/\/+$/, '');
+  const apiKey = body.querySelector('#ai-apikey').value.trim();
+  const model = body.querySelector('#ai-model').value.trim();
+  if (!baseUrl || !apiKey || !model) {
+    say('error', 'Completa endpoint, API Key y modelo antes de probar.');
+    return;
+  }
+  say('muted', 'Probando conexión…');
+  const url = baseUrl + '/chat/completions';
+  const t0 = performance.now();
+  let res;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model,
+        temperature: 0,
+        max_tokens: 8,
+        messages: [{ role: 'user', content: 'Responde únicamente con la palabra: OK' }],
+      }),
+    });
+  } catch (e) {
+    // En Safari un fallo de red o de CORS llega como TypeError ("Load failed"):
+    // la petición nunca salió del navegador.
+    say('error', 'No se pudo contactar el endpoint (' + escapeHtml(e.message) + '). Revisa que la URL esté bien escrita, que tengas internet, y que el endpoint acepte llamadas desde el navegador: algunos, como el API de NVIDIA (integrate.api.nvidia.com), no tienen CORS habilitado y solo funcionan desde un servidor.');
+    return;
+  }
+  const ms = Math.round(performance.now() - t0);
+  if (!res.ok) {
+    const t = await res.text().catch(() => '');
+    let hint = '';
+    if (res.status === 401) hint = 'API Key inválida o ausente. Verifica la key.';
+    else if (res.status === 403) hint = 'Acceso denegado por el endpoint.';
+    else if (res.status === 404) hint = 'No encontrado. Verifica que el endpoint sea solo la URL base (sin /chat/completions al final) y que el nombre del modelo sea correcto.';
+    else if (res.status === 429) hint = 'Límite de uso excedido o sin crédito en tu cuenta.';
+    else if (res.status >= 500) hint = 'Error interno del endpoint. Intenta de nuevo en unos minutos.';
+    say('error', `El endpoint respondió ${res.status} ${escapeHtml(res.statusText)}. ${hint} Detalle: ${escapeHtml(t.substring(0, 220))}`);
+    return;
+  }
+  let data;
+  try { data = await res.json(); }
+  catch {
+    say('error', 'El endpoint respondió 200 pero no devolvió JSON válido.');
+    return;
+  }
+  const content = data?.choices?.[0]?.message?.content;
+  if (typeof content !== 'string') {
+    say('error', 'Respuesta inesperada: no trae choices[0].message.content. ¿Es un endpoint compatible con OpenAI?');
+    return;
+  }
+  say('ok', `✓ Conexión exitosa en ${ms} ms. El modelo respondió: “${escapeHtml(content.trim().substring(0, 80))}”. Ya puedes usar el chat.`);
 }
 
 function tryParseJson(text) {
