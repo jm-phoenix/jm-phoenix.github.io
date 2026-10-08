@@ -497,6 +497,11 @@ html[data-theme="dark"]{color-scheme:dark}
     .featureCard,.step,.previewCard{padding:20px}
     .ctaSection{padding:62px 0 70px}
 }
+/* ajustes tipográficos de este idioma */
+html[lang^="zh"] h1{font-size:clamp(32px,4.6vw,52px);line-height:1.25;letter-spacing:0;text-wrap:balance}
+html[lang^="zh"] h2,html[lang^="zh"] h3{letter-spacing:0;line-height:1.35;text-wrap:balance}
+html[lang^="zh"] p,html[lang^="zh"] li,html[lang^="zh"] .heroLead{text-wrap:pretty}
+@media (max-width:760px){html[lang^="zh"] h1{font-size:clamp(32px,9vw,44px)}}
 </style>
 </head>
 <body>
@@ -534,7 +539,7 @@ html[data-theme="dark"]{color-scheme:dark}
     <div class="container heroGrid">
         <div>
             <div class="eyebrow"><span class="eyebrowDot"></span> 网页应用启动器</div>
-            <h1>你的网页应用启动器。<br>集中在一处。<br>一个链接搞定。</h1>
+            <h1>你的<span style="white-space:nowrap">网页应用</span><span style="white-space:nowrap">启动器。</span><br>集中在一处。<br>一个链接搞定。</h1>
             <p class="heroLead">SlugLauncher 是一款可自定义的<strong>应用启动器</strong>，让你在简洁、快速、私密的主页上整理常用应用和网站。</p>
             <div class="heroActions">
                 <a class="primaryCta" href="/launcher/#SLUG:2,zh,0,">创建我的 SlugLauncher <span aria-hidden="true">→</span></a>
