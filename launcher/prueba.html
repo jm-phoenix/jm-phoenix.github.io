@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Prueba de captura de iconos · SlugLauncher</title>
+<style>
+:root{--bg:#f7f6f2;--fg:#1d1d1b;--card:#fff;--mut:#6a6a64;--bd:#d9d7cf;--ok:#17703a;--warn:#a85a00;--bad:#b3261e;--acc:#1f5fbf}
+@media(prefers-color-scheme:dark){:root{--bg:#121211;--fg:#ecebe6;--card:#1b1b19;--mut:#9a9890;--bd:#35342f;--ok:#5ccf84;--warn:#f0a548;--bad:#ff7b72;--acc:#7fa8ff}}
+*{box-sizing:border-box}
+body{margin:0 auto;padding:16px;max-width:1100px;background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:22px 0 8px}
+p.s{margin:0 0 12px;color:var(--mut)}
+textarea{width:100%;min-height:92px;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--fg);font:12px/1.4 ui-monospace,Menlo,Consolas,monospace}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+button{padding:8px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--fg);font:inherit;cursor:pointer}
+button.p{background:var(--acc);border-color:var(--acc);color:#fff}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.kp div{border:1px solid var(--bd);border-radius:8px;padding:8px 10px;background:var(--card)}
+.kp b{display:block;font-size:20px}
+.kp span{color:var(--mut);font-size:12px}
+.w{overflow-x:auto;border:1px solid var(--bd);border-radius:8px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:720px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:middle}
+th{font-weight:600;color:var(--mut);font-size:12px}
+tr:last-child td{border-bottom:0}
+td img{width:40px;height:40px;object-fit:contain;display:block;background:repeating-conic-gradient(#8883 0 25%,transparent 0 50%) 0 0/10px 10px;border-radius:6px}
+.ok{color:var(--ok)}.fb{color:var(--warn)}.no{color:var(--bad)}.mut{color:var(--mut);font-size:12px}
+.u{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#log{white-space:pre-wrap;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;color:var(--mut);margin-top:8px}
+.g{display:flex;flex-wrap:wrap;gap:6px}
+.g span{border:1px solid var(--bd);border-radius:999px;padding:2px 10px;background:var(--card);font-size:12px}
+</style>
+</head>
+<body>
+<h1>Prueba de captura de iconos</h1>
+<p class="s">Descarga cada icono de un SlugLauncher, comprueba si el servidor permite leerlo (CORS), lo reduce a PNG de 96 px y lo guarda en IndexedDB. Después genera un preview con los iconos incrustados.</p>
+
+<textarea id="inp" spellcheck="false" placeholder="Pega aquí el URL completo de un SlugLauncher (o solo el hash que empieza con #SLUG...)"></textarea>
+<div class="bar">
+  <button id="bLast" type="button">Cargar el último de este navegador</button>
+  <button id="bCap" type="button" class="p">Analizar y capturar iconos</button>
+  <button id="bIdb" type="button">Probar lectura de IndexedDB</button>
+  <button id="bPrev" type="button" disabled>Abrir preview</button>
+  <button id="bDown" type="button" disabled>Descargar preview.html</button>
+  <button id="bRep" type="button" disabled>Copiar informe</button>
+  <button id="bClr" type="button">Borrar caché de iconos</button>
+</div>
+
+<div class="kp" id="kp"></div>
+<div id="log"></div>
+
+<h2>Por servidor de iconos</h2>
+<div class="g" id="grp"><span>Sin datos todavía</span></div>
+
+<h2>Detalle por icono</h2>
+<div class="w"><table>
+<thead><tr><th>App</th><th>Icono elegido</th><th>Estado</th><th>Método</th><th>KB</th><th>ms</th><th>IDB</th><th></th></tr></thead>
+<tbody id="tb"><tr><td colspan="8" class="mut">Pega un URL y pulsa «Analizar y capturar iconos».</td></tr></tbody>
+</table></div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const PX=96, SMALL=64, MAXCH=20000, TMO=8000, CONC=6;
+const HORSE="https://icon.horse/icon/";
+const DB="sluglauncher-icons", ST="icons";
+let rows=[], previewHtml="", previewUrl="";
+
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const sd=s=>{try{return decodeURIComponent(s)}catch(e){return s}};
+const norm=s=>{s=(s||"").trim();return(!s||/^(data:|https?:\/\/)/i.test(s))?s:"https://"+s};
+const hostOf=u=>{try{return new URL(/^https?:\/\//i.test(u)?u:"https://"+u).hostname}catch(e){return ""}};
+const log=t=>{$("log").textContent=t};
+
+/* ---------- Lectura del hash (misma lógica que index: decodifica todo una vez y cada campo otra) ---------- */
+function parse(input){
+  const i=input.indexOf("#"); if(i<0) return [];
+  const parts=sd(input.slice(i)).slice(1).split("#").filter(p=>p&&!p.startsWith("SLUG:"));
+  const out=[];
+  const app=(slug,folder)=>{
+    const f=slug.split(","), name=sd(f.shift()||""), url=norm(sd(f.shift()||"")), icon=norm(sd(f.join(",")));
+    out.push({name,folder,url,icon,host:hostOf(url),status:"",via:"",bytes:0,ms:0,data:"",note:"",idb:""});
+  };
+  parts.forEach(p=>{
+    if(p.startsWith("FOLDER:")){
+      const seg=p.split("|"); let head=seg[0].slice(7); const hs=head.split("::");
+      const fIcon=hs.length>1?norm(sd(hs.pop())):""; const fName=sd(hs.join("::"));
+      if(fIcon) out.push({name:"(carpeta) "+fName,folder:"",url:"",icon:fIcon,host:"",status:"",via:"",bytes:0,ms:0,data:"",note:"",idb:""});
+      seg.slice(1).filter(Boolean).forEach(s=>app(s,fName));
+    } else app(p,"");
+  });
+  return out;
+}
+
+/* ---------- IndexedDB (misma base que podría usar index.html: mismo origen) ---------- */
+const dbo=()=>new Promise((res,rej)=>{const q=indexedDB.open(DB,1);q.onupgradeneeded=()=>q.result.createObjectStore(ST,{keyPath:"url"});q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});
+async function tx(mode,fn){const db=await dbo();return new Promise((res,rej)=>{const t=db.transaction(ST,mode),rq=fn(t.objectStore(ST));t.oncomplete=()=>{db.close();res(rq&&rq.result)};t.onerror=t.onabort=()=>{db.close();rej(t.error)}})}
+const dbPut=v=>tx("readwrite",s=>s.put(v)), dbAll=()=>tx("readonly",s=>s.getAll()), dbClear=()=>tx("readwrite",s=>s.clear());
+
+/* ---------- Captura ---------- */
+const tmo=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("timeout")),ms))]);
+function loadImg(src,cors){return new Promise((res,rej)=>{const im=new Image();if(cors)im.crossOrigin="anonymous";im.referrerPolicy="no-referrer";im.onload=()=>res(im);im.onerror=()=>rej(new Error("no carga"));im.src=src})}
+function toPng(im){
+  const draw=px=>{const nw=im.naturalWidth||px,nh=im.naturalHeight||px,k=Math.min(px/nw,px/nh),w=Math.max(1,Math.round(nw*k)),h=Math.max(1,Math.round(nh*k));
+    const c=document.createElement("canvas");c.width=c.height=px;c.getContext("2d").drawImage(im,Math.round((px-w)/2),Math.round((px-h)/2),w,h);return c.toDataURL("image/png")};
+  let o=draw(PX); if(o.length>16000) o=draw(SMALL); return o;
+}
+async function viaFetch(u){
+  const r=await tmo(fetch(u,{mode:"cors",credentials:"omit",referrerPolicy:"no-referrer"}),TMO);
+  if(!r.ok) throw new Error("HTTP "+r.status);
+  const b=await r.blob(), o=URL.createObjectURL(b);
+  try{return toPng(await loadImg(o,false))}finally{URL.revokeObjectURL(o)}
+}
+const viaImg=async u=>toPng(await tmo(loadImg(u,true),TMO));
+const visible=async u=>{try{await tmo(loadImg(u,false),TMO);return true}catch(e){return false}};
+
+async function captureOne(r){
+  const t0=performance.now(), done=()=>{r.ms=Math.round(performance.now()-t0);r.bytes=r.data?Math.round(r.data.length*.75):0;return r};
+  if(!r.icon){r.status="fail";r.via="—";r.note="Sin icono";return done()}
+  if(/^data:image\//i.test(r.icon)){r.data=r.icon;r.status="ok";r.via="data: propio";return done()}
+  const errs=[];
+  for(const [n,f] of [["fetch CORS",viaFetch],["img crossOrigin",viaImg]]){
+    try{r.data=await f(r.icon);r.status="ok";r.via=n;return done()}catch(e){errs.push(n+": "+e.message)}
+  }
+  r.note=(await visible(r.icon))?"Se ve, pero el servidor no da CORS":"No carga (caída o bloqueada)";
+  if(r.host){
+    try{r.data=await viaImg(HORSE+encodeURIComponent(r.host));r.status="fallback";r.via="icon.horse";return done()}catch(e){errs.push("icon.horse: "+e.message)}
+  }
+  r.status="fail";r.via="—";r.note+=" · "+errs.join(" | ");return done();
+}
+async function pool(items,n,fn){let i=0;await Promise.all(Array.from({length:n},async()=>{while(i<items.length)await fn(items[i++])}))}
+
+/* ---------- Pintado ---------- */
+function render(){
+  const tb=$("tb");
+  tb.innerHTML=rows.length?rows.map(r=>{
+    const cls=r.status==="ok"?"ok":r.status==="fallback"?"fb":r.status==="fail"?"no":"mut";
+    const lbl=r.status==="ok"?"Capturado":r.status==="fallback"?"Solo icon.horse":r.status==="fail"?"Sin captura":"…";
+    return `<tr><td>${esc(r.name)}<div class="mut">${esc(r.folder)}</div></td>
+<td><div class="u" title="${esc(r.icon)}">${esc(r.icon.replace(/^https?:\/\//,""))}</div><div class="mut">${esc(hostOf(r.icon))}</div></td>
+<td class="${cls}">${lbl}<div class="mut" title="${esc(r.note)}">${esc(r.note.slice(0,70))}</div></td>
+<td>${esc(r.via)}</td><td>${r.bytes?(r.bytes/1024).toFixed(1):""}</td><td>${r.ms||""}</td><td>${esc(r.idb)}</td>
+<td>${r.data?`<img alt="" src="${r.data}">`:""}</td></tr>`}).join(""):
+    `<tr><td colspan="8" class="mut">No se encontraron apps en ese URL.</td></tr>`;
+
+  const n=rows.length, ok=rows.filter(r=>r.status==="ok").length, fb=rows.filter(r=>r.status==="fallback").length,
+        no=rows.filter(r=>r.status==="fail").length, kb=rows.reduce((a,r)=>a+r.bytes,0)/1024;
+  $("kp").innerHTML=[[n,"iconos"],[ok,"capturados directo"],[fb,"solo vía icon.horse"],[no,"sin captura"],[kb.toFixed(0)+" KB","peso total guardado"]]
+    .map(([a,b])=>`<div><b>${a}</b><span>${b}</span></div>`).join("");
+
+  const g={}; rows.forEach(r=>{if(!r.icon||/^data:/.test(r.icon))return;const h=hostOf(r.icon),o=g[h]||(g[h]={ok:0,n:0});o.n++;if(r.status==="ok")o.ok++});
+  const ks=Object.keys(g).sort((a,b)=>g[b].n-g[a].n);
+  $("grp").innerHTML=ks.length?ks.map(h=>`<span class="${g[h].ok===g[h].n?"ok":g[h].ok?"fb":"no"}">${esc(h)}: ${g[h].ok}/${g[h].n} capturables</span>`).join(""):"<span>Sin datos todavía</span>";
+  ["bRep"].forEach(id=>$(id).disabled=!rows.length);
+}
+
+/* ---------- Preview con iconos incrustados ---------- */
+function buildPreview(){
+  const tiles=rows.filter(r=>r.name&&!r.name.startsWith("(carpeta)")).map(r=>{
+    let h=0;for(const c of r.name)h=(h*31+c.charCodeAt(0))%360;
+    const inner=r.data?`<img src="${r.data}" alt="">`:`<i style="background:hsl(${h} 55% 45%)">${esc(r.name.charAt(0).toUpperCase())}</i>`;
+    return `<a class="t">${inner}<span>${esc(r.name)}</span></a>`}).join("");
+  const emb=rows.filter(r=>r.data).length;
+  previewHtml=`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Preview SlugLauncher</title>
+<style>body{margin:0;padding:20px;background:#111;color:#eee;font:13px system-ui,sans-serif}.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:18px 10px;max-width:520px;margin:auto}
+.t{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}.t img,.t i{width:60px;height:60px;border-radius:14px;object-fit:contain;background:#fff;display:flex;align-items:center;justify-content:center;font:600 26px system-ui;color:#fff;font-style:normal}
+.t span{max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}</style></head><body><div class="g">${tiles}</div>
+<!-- prueba.html | iconos incrustados: ${emb}/${rows.length} | sin captura: ${rows.length-emb} --></body></html>`;
+  if(previewUrl)URL.revokeObjectURL(previewUrl);
+  previewUrl=URL.createObjectURL(new Blob([previewHtml],{type:"text/html"}));
+  $("bPrev").disabled=$("bDown").disabled=false;
+  return (previewHtml.length/1024).toFixed(0);
+}
+
+/* ---------- Acciones ---------- */
+$("bLast").onclick=()=>{let h="";try{h=localStorage.getItem("sluglauncher:lastHash")||""}catch(e){}
+  if(h)$("inp").value=location.origin+"/launcher/"+h; else log("No hay un último launcher guardado en este navegador/origen.")};
+
+$("bCap").onclick=async()=>{
+  rows=parse($("inp").value.trim()); render();
+  if(!rows.length){log("No se encontraron apps. Pega un URL con #SLUG...");return}
+  $("bCap").disabled=true; let n=0; const t0=performance.now();
+  log("Capturando 0/"+rows.length+"…");
+  const existing=new Map(); try{(await dbAll()).forEach(v=>existing.set(v.url,v))}catch(e){}
+  await pool(rows,CONC,async r=>{
+    await captureOne(r);
+    if(r.data){try{await dbPut({url:r.icon,data:r.data,via:r.via,host:r.host,name:r.name,ts:Date.now()});r.idb="guardado"}catch(e){r.idb="error"}}
+    log("Capturando "+(++n)+"/"+rows.length+"…");
+  });
+  const kb=buildPreview(); render();
+  log("Listo en "+Math.round(performance.now()-t0)+" ms. Preview con iconos incrustados: "+kb+" KB.");
+  $("bCap").disabled=false;
+};
+
+$("bIdb").onclick=async()=>{
+  try{
+    const t0=performance.now(), all=await dbAll(), tr=Math.round(performance.now()-t0);
+    if(!all.length){log("IndexedDB está vacía: primero captura iconos.");return}
+    const t1=performance.now(); const box=document.createElement("div");
+    await Promise.all(all.map(v=>new Promise(res=>{const im=new Image();im.onload=im.onerror=res;im.src=v.data;box.appendChild(im)})));
+    const tp=Math.round(performance.now()-t1), kb=all.reduce((a,v)=>a+v.data.length*.75,0)/1024;
+    rows.forEach(r=>{r.idb=all.some(v=>v.url===r.icon)?"en caché":"no está"}); render();
+    log("IndexedDB: "+all.length+" iconos ("+kb.toFixed(0)+" KB). Lectura: "+tr+" ms · decodificar y pintar todos: "+tp+" ms.");
+  }catch(e){log("Error leyendo IndexedDB: "+e.message)}
+};
+
+$("bClr").onclick=async()=>{try{await dbClear();rows.forEach(r=>r.idb="");render();log("Caché de iconos borrada.")}catch(e){log("Error: "+e.message)}};
+$("bPrev").onclick=()=>{if(previewUrl)window.open(previewUrl,"_blank")};
+$("bDown").onclick=()=>{if(!previewHtml)return;const a=document.createElement("a");a.href=previewUrl;a.download="preview.html";document.body.appendChild(a);a.click();a.remove()};
+$("bRep").onclick=async()=>{
+  const rep={fecha:new Date().toISOString(),navegador:navigator.userAgent,origen:location.origin,
+    resumen:{total:rows.length,ok:rows.filter(r=>r.status==="ok").length,icon_horse:rows.filter(r=>r.status==="fallback").length,sin_captura:rows.filter(r=>r.status==="fail").length},
+    iconos:rows.map(r=>({app:r.name,icono:r.icon,estado:r.status,metodo:r.via,kb:+(r.bytes/1024).toFixed(1),ms:r.ms,nota:r.note}))};
+  const t=JSON.stringify(rep,null,1);
+  try{await navigator.clipboard.writeText(t);log("Informe copiado al portapapeles.")}catch(e){$("inp").value=t;log("No se pudo copiar; el informe quedó en el cuadro de texto.")}
+};
+
+if(location.hash.length>1)$("inp").value=location.href;
+render();
+</script>
+</body>
+</html>
