@@ -48,9 +48,14 @@ td img{width:40px;height:40px;object-fit:contain;display:block;background:repeat
   <button id="bDown" type="button" disabled>Descargar preview.html</button>
   <button id="bRep" type="button" disabled>Copiar informe</button>
   <button id="bClr" type="button">Borrar caché de iconos (IndexedDB)</button>
-  <label class="mut"><input type="checkbox" id="nocache"> Ignorar caché HTTP en fetch</label>
+  <label class="mut"><input type="checkbox" id="nocache" checked> Ignorar caché HTTP en fetch</label>
 </div>
 
+<div class="bar">
+  <label class="mut" for="proxy">Proxy (Worker de Cloudflare):</label>
+  <input id="proxy" type="text" spellcheck="false" value="https://icon-proxy.jorgelmaldonado.workers.dev/?u=" style="flex:1;min-width:260px;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--fg);font:12px ui-monospace,Menlo,Consolas,monospace">
+  <button id="bPx" type="button">Probar proxy</button>
+</div>
 <div class="kp" id="kp"></div>
 <div id="log"></div>
 
@@ -132,13 +137,13 @@ async function captureOne(r){
   const t0=performance.now(), done=()=>{r.ms=Math.round(performance.now()-t0);r.bytes=r.data?Math.round(r.data.length*.75):0;return r};
   if(!r.icon){r.status="fail";r.via="—";r.note="Sin icono";return done()}
   if(/^data:image\//i.test(r.icon)){r.data=r.icon;r.status="ok";r.via="data: propio";return done()}
-  const errs=[], tryChain=async(url,tag,st)=>{
+  const errs=r.errs=[], tryChain=async(url,tag,st)=>{
     for(const [n,f] of [["fetch CORS",viaFetch],["img crossOrigin",viaImg]]){
       try{r.data=await f(url);r.status=st;r.via=tag?tag+" · "+n:n;return true}catch(e){errs.push((tag||"directo")+" "+n+": "+e.message)}
     }return false};
   if(await tryChain(r.icon,"","ok"))return done();
-  const d=s2Domain(r.icon);
-  if(d&&await tryChain(FV2(d),"faviconV2","equiv"))return done();
+  const px=$("proxy").value.trim();
+  if(px&&await tryChain(px+encodeURIComponent(r.icon),"proxy","ok"))return done();
   r.note=(await visible(r.icon))?"Se ve, pero el servidor no da CORS":"No carga (caída o bloqueada)";
   const fh=fbHost(r);
   if(fh){
@@ -166,7 +171,7 @@ function render(){
 
   const n=rows.length, ok=rows.filter(r=>r.status==="ok").length, eq=rows.filter(r=>r.status==="equiv").length, fb=rows.filter(r=>r.status==="fallback").length,
         no=rows.filter(r=>r.status==="fail").length, kb=rows.reduce((a,r)=>a+r.bytes,0)/1024;
-  $("kp").innerHTML=[[n,"iconos"],[ok,"capturados exactos"],[eq,"equivalentes (faviconV2)"],[fb,"solo icono del dominio"],[no,"sin captura"],[kb.toFixed(0)+" KB","peso total guardado"]]
+  $("kp").innerHTML=[[n,"iconos"],[ok,"capturados exactos"],[rows.filter(r=>/^proxy/.test(r.via)).length,"de ellos, vía proxy"],[fb,"solo icono del dominio"],[no,"sin captura"],[kb.toFixed(0)+" KB","peso total guardado"]]
     .map(([a,b])=>`<div><b>${a}</b><span>${b}</span></div>`).join("");
 
   const g={}; rows.forEach(r=>{if(!r.icon||/^data:/.test(r.icon))return;const h=hostOf(r.icon),o=g[h]||(g[h]={ok:0,eq:0,n:0});o.n++;if(r.status==="ok")o.ok++;if(r.status==="equiv")o.eq++});
@@ -225,13 +230,22 @@ $("bIdb").onclick=async()=>{
   }catch(e){log("Error leyendo IndexedDB: "+e.message)}
 };
 
+$("bPx").onclick=async()=>{
+  const px=$("proxy").value.trim(); if(!px){log("Escribe la URL base del proxy.");return}
+  const t0=performance.now();
+  try{
+    const r=await fetch(px+encodeURIComponent("https://github.com/apple-touch-icon.png"),{mode:"cors",cache:"reload"});
+    const b=await r.blob();
+    log("Proxy: HTTP "+r.status+" · "+(b.type||"sin tipo")+" · "+b.size+" bytes · "+Math.round(performance.now()-t0)+" ms"+(r.ok&&b.type.startsWith("image/")?" → funciona.":" → respuesta inesperada."));
+  }catch(e){log("Proxy: falló ("+e.message+"). Si abres esta página desde otro origen que git.inriris.com, añádelo a ALLOWED_ORIGINS del Worker.")}
+};
 $("bClr").onclick=async()=>{try{await dbClear();rows.forEach(r=>r.idb="");render();log("Caché de iconos borrada.")}catch(e){log("Error: "+e.message)}};
 $("bPrev").onclick=()=>{if(previewUrl)window.open(previewUrl,"_blank")};
 $("bDown").onclick=()=>{if(!previewHtml)return;const a=document.createElement("a");a.href=previewUrl;a.download="preview.html";document.body.appendChild(a);a.click();a.remove()};
 $("bRep").onclick=async()=>{
-  const rep={fecha:new Date().toISOString(),ignorar_cache_http:$("nocache").checked,navegador:navigator.userAgent,origen:location.origin,
-    resumen:{total:rows.length,ok:rows.filter(r=>r.status==="ok").length,equivalente_faviconV2:rows.filter(r=>r.status==="equiv").length,icon_horse:rows.filter(r=>r.status==="fallback").length,sin_captura:rows.filter(r=>r.status==="fail").length},
-    iconos:rows.map(r=>({app:r.name,icono:r.icon,estado:r.status,metodo:r.via,dominio_fallback:fbHost(r),kb:+(r.bytes/1024).toFixed(1),ms:r.ms,nota:r.note}))};
+  const rep={fecha:new Date().toISOString(),proxy:$("proxy").value.trim(),ignorar_cache_http:$("nocache").checked,navegador:navigator.userAgent,origen:location.origin,
+    resumen:{total:rows.length,ok:rows.filter(r=>r.status==="ok").length,via_proxy:rows.filter(r=>/^proxy/.test(r.via)).length,icon_horse:rows.filter(r=>r.status==="fallback").length,sin_captura:rows.filter(r=>r.status==="fail").length},
+    iconos:rows.map(r=>({app:r.name,icono:r.icon,estado:r.status,metodo:r.via,dominio_fallback:fbHost(r),errores:(r.errs||[]).join(" | "),kb:+(r.bytes/1024).toFixed(1),ms:r.ms,nota:r.note}))};
   const t=JSON.stringify(rep,null,1);
   try{await navigator.clipboard.writeText(t);log("Informe copiado al portapapeles.")}catch(e){$("inp").value=t;log("No se pudo copiar; el informe quedó en el cuadro de texto.")}
 };
