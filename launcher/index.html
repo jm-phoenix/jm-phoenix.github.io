@@ -4340,7 +4340,7 @@ function setIconsLoadingProgress(done, total){
     if (!bar || !num) return;
     const f = total ? done / total : 1;
     bar.style.strokeDashoffset = String(264 * (1 - Math.max(0.04, f)));   /* 2π·42 ≈ 264 */
-    num.textContent = done + "/" + total;
+    num.textContent = Math.round(f * 100) + "%";   /* % en vez de n/N: el total solo cuenta los iconos que faltan */
 }
 function openIconsLoadingModal(total){
     const m = _ilEl("iconsLoadingModal"); if (!m) return;
