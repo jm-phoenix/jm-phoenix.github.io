@@ -47,7 +47,8 @@ td img{width:40px;height:40px;object-fit:contain;display:block;background:repeat
   <button id="bPrev" type="button" disabled>Abrir preview</button>
   <button id="bDown" type="button" disabled>Descargar preview.html</button>
   <button id="bRep" type="button" disabled>Copiar informe</button>
-  <button id="bClr" type="button">Borrar caché de iconos</button>
+  <button id="bClr" type="button">Borrar caché de iconos (IndexedDB)</button>
+  <label class="mut"><input type="checkbox" id="nocache"> Ignorar caché HTTP en fetch</label>
 </div>
 
 <div class="kp" id="kp"></div>
@@ -75,6 +76,15 @@ const sd=s=>{try{return decodeURIComponent(s)}catch(e){return s}};
 const norm=s=>{s=(s||"").trim();return(!s||/^(data:|https?:\/\/)/i.test(s))?s:"https://"+s};
 const hostOf=u=>{try{return new URL(/^https?:\/\//i.test(u)?u:"https://"+u).hostname}catch(e){return ""}};
 const log=t=>{$("log").textContent=t};
+/* dominio que S2 lleva en ?domain= (el icono pedido, no necesariamente el de la app) */
+const s2Domain=u=>{try{const x=new URL(u);return(x.hostname.endsWith("google.com")&&x.pathname.includes("/s2/favicons"))?(x.searchParams.get("domain")||"").toLowerCase():""}catch(e){return ""}};
+const isPrivate=h=>!h||/^(localhost|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.)/.test(h)||/^[\d.]+$/.test(h)||!h.includes(".");
+/* dominio para el plan B (icon.horse): el de S2 si existe; si la app es local, el del icono; si no, el de la app */
+const fbHost=r=>s2Domain(r.icon)||(isPrivate(r.host)?hostOf(r.icon):r.host);
+const FV2=d=>"https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url="+encodeURIComponent("http://"+d)+"&size=128";
+/* icon.horse: máx. 3 a la vez y 1 reintento (la primera prueba tuvo fallos transitorios) */
+let hq=0;const hw=[];
+async function horseSlot(fn){while(hq>=3)await new Promise(r=>hw.push(r));hq++;try{return await fn()}finally{hq--;const n=hw.shift();if(n)n()}}
 
 /* ---------- Lectura del hash (misma lógica que index: decodifica todo una vez y cada campo otra) ---------- */
 function parse(input){
@@ -110,7 +120,7 @@ function toPng(im){
   let o=draw(PX); if(o.length>16000) o=draw(SMALL); return o;
 }
 async function viaFetch(u){
-  const r=await tmo(fetch(u,{mode:"cors",credentials:"omit",referrerPolicy:"no-referrer"}),TMO);
+  const r=await tmo(fetch(u,{mode:"cors",credentials:"omit",referrerPolicy:"no-referrer",cache:$("nocache").checked?"reload":"default"}),TMO);
   if(!r.ok) throw new Error("HTTP "+r.status);
   const b=await r.blob(), o=URL.createObjectURL(b);
   try{return toPng(await loadImg(o,false))}finally{URL.revokeObjectURL(o)}
@@ -122,13 +132,20 @@ async function captureOne(r){
   const t0=performance.now(), done=()=>{r.ms=Math.round(performance.now()-t0);r.bytes=r.data?Math.round(r.data.length*.75):0;return r};
   if(!r.icon){r.status="fail";r.via="—";r.note="Sin icono";return done()}
   if(/^data:image\//i.test(r.icon)){r.data=r.icon;r.status="ok";r.via="data: propio";return done()}
-  const errs=[];
-  for(const [n,f] of [["fetch CORS",viaFetch],["img crossOrigin",viaImg]]){
-    try{r.data=await f(r.icon);r.status="ok";r.via=n;return done()}catch(e){errs.push(n+": "+e.message)}
-  }
+  const errs=[], tryChain=async(url,tag,st)=>{
+    for(const [n,f] of [["fetch CORS",viaFetch],["img crossOrigin",viaImg]]){
+      try{r.data=await f(url);r.status=st;r.via=tag?tag+" · "+n:n;return true}catch(e){errs.push((tag||"directo")+" "+n+": "+e.message)}
+    }return false};
+  if(await tryChain(r.icon,"","ok"))return done();
+  const d=s2Domain(r.icon);
+  if(d&&await tryChain(FV2(d),"faviconV2","equiv"))return done();
   r.note=(await visible(r.icon))?"Se ve, pero el servidor no da CORS":"No carga (caída o bloqueada)";
-  if(r.host){
-    try{r.data=await viaImg(HORSE+encodeURIComponent(r.host));r.status="fallback";r.via="icon.horse";return done()}catch(e){errs.push("icon.horse: "+e.message)}
+  const fh=fbHost(r);
+  if(fh){
+    for(let k=0;k<2;k++){
+      try{r.data=await horseSlot(()=>viaImg(HORSE+encodeURIComponent(fh)));r.status="fallback";r.via="icon.horse ("+fh+")";return done()}
+      catch(e){errs.push("icon.horse "+fh+": "+e.message);await new Promise(x=>setTimeout(x,700))}
+    }
   }
   r.status="fail";r.via="—";r.note+=" · "+errs.join(" | ");return done();
 }
@@ -138,8 +155,8 @@ async function pool(items,n,fn){let i=0;await Promise.all(Array.from({length:n},
 function render(){
   const tb=$("tb");
   tb.innerHTML=rows.length?rows.map(r=>{
-    const cls=r.status==="ok"?"ok":r.status==="fallback"?"fb":r.status==="fail"?"no":"mut";
-    const lbl=r.status==="ok"?"Capturado":r.status==="fallback"?"Solo icon.horse":r.status==="fail"?"Sin captura":"…";
+    const cls=r.status==="ok"||r.status==="equiv"?"ok":r.status==="fallback"?"fb":r.status==="fail"?"no":"mut";
+    const lbl=r.status==="ok"?"Capturado (exacto)":r.status==="equiv"?"Equivalente (faviconV2)":r.status==="fallback"?"Icono del dominio":r.status==="fail"?"Sin captura":"…";
     return `<tr><td>${esc(r.name)}<div class="mut">${esc(r.folder)}</div></td>
 <td><div class="u" title="${esc(r.icon)}">${esc(r.icon.replace(/^https?:\/\//,""))}</div><div class="mut">${esc(hostOf(r.icon))}</div></td>
 <td class="${cls}">${lbl}<div class="mut" title="${esc(r.note)}">${esc(r.note.slice(0,70))}</div></td>
@@ -147,14 +164,14 @@ function render(){
 <td>${r.data?`<img alt="" src="${r.data}">`:""}</td></tr>`}).join(""):
     `<tr><td colspan="8" class="mut">No se encontraron apps en ese URL.</td></tr>`;
 
-  const n=rows.length, ok=rows.filter(r=>r.status==="ok").length, fb=rows.filter(r=>r.status==="fallback").length,
+  const n=rows.length, ok=rows.filter(r=>r.status==="ok").length, eq=rows.filter(r=>r.status==="equiv").length, fb=rows.filter(r=>r.status==="fallback").length,
         no=rows.filter(r=>r.status==="fail").length, kb=rows.reduce((a,r)=>a+r.bytes,0)/1024;
-  $("kp").innerHTML=[[n,"iconos"],[ok,"capturados directo"],[fb,"solo vía icon.horse"],[no,"sin captura"],[kb.toFixed(0)+" KB","peso total guardado"]]
+  $("kp").innerHTML=[[n,"iconos"],[ok,"capturados exactos"],[eq,"equivalentes (faviconV2)"],[fb,"solo icono del dominio"],[no,"sin captura"],[kb.toFixed(0)+" KB","peso total guardado"]]
     .map(([a,b])=>`<div><b>${a}</b><span>${b}</span></div>`).join("");
 
-  const g={}; rows.forEach(r=>{if(!r.icon||/^data:/.test(r.icon))return;const h=hostOf(r.icon),o=g[h]||(g[h]={ok:0,n:0});o.n++;if(r.status==="ok")o.ok++});
+  const g={}; rows.forEach(r=>{if(!r.icon||/^data:/.test(r.icon))return;const h=hostOf(r.icon),o=g[h]||(g[h]={ok:0,eq:0,n:0});o.n++;if(r.status==="ok")o.ok++;if(r.status==="equiv")o.eq++});
   const ks=Object.keys(g).sort((a,b)=>g[b].n-g[a].n);
-  $("grp").innerHTML=ks.length?ks.map(h=>`<span class="${g[h].ok===g[h].n?"ok":g[h].ok?"fb":"no"}">${esc(h)}: ${g[h].ok}/${g[h].n} capturables</span>`).join(""):"<span>Sin datos todavía</span>";
+  $("grp").innerHTML=ks.length?ks.map(h=>`<span class="${g[h].ok+g[h].eq===g[h].n?"ok":g[h].ok+g[h].eq?"fb":"no"}">${esc(h)}: ${g[h].ok} directo${g[h].eq?" + "+g[h].eq+" vía faviconV2":""} de ${g[h].n}</span>`).join(""):"<span>Sin datos todavía</span>";
   ["bRep"].forEach(id=>$(id).disabled=!rows.length);
 }
 
@@ -164,12 +181,12 @@ function buildPreview(){
     let h=0;for(const c of r.name)h=(h*31+c.charCodeAt(0))%360;
     const inner=r.data?`<img src="${r.data}" alt="">`:`<i style="background:hsl(${h} 55% 45%)">${esc(r.name.charAt(0).toUpperCase())}</i>`;
     return `<a class="t">${inner}<span>${esc(r.name)}</span></a>`}).join("");
-  const emb=rows.filter(r=>r.data).length;
+  const emb=rows.filter(r=>r.data).length, ex=rows.filter(r=>r.status==="ok"||r.status==="equiv").length;
   previewHtml=`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Preview SlugLauncher</title>
 <style>body{margin:0;padding:20px;background:#111;color:#eee;font:13px system-ui,sans-serif}.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:18px 10px;max-width:520px;margin:auto}
 .t{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}.t img,.t i{width:60px;height:60px;border-radius:14px;object-fit:contain;background:#fff;display:flex;align-items:center;justify-content:center;font:600 26px system-ui;color:#fff;font-style:normal}
 .t span{max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}</style></head><body><div class="g">${tiles}</div>
-<!-- prueba.html | iconos incrustados: ${emb}/${rows.length} | sin captura: ${rows.length-emb} --></body></html>`;
+<!-- prueba.html | iconos incrustados: ${emb}/${rows.length} | exactos o equivalentes: ${ex} | del dominio: ${emb-ex} | sin captura: ${rows.length-emb} --></body></html>`;
   if(previewUrl)URL.revokeObjectURL(previewUrl);
   previewUrl=URL.createObjectURL(new Blob([previewHtml],{type:"text/html"}));
   $("bPrev").disabled=$("bDown").disabled=false;
@@ -188,7 +205,7 @@ $("bCap").onclick=async()=>{
   const existing=new Map(); try{(await dbAll()).forEach(v=>existing.set(v.url,v))}catch(e){}
   await pool(rows,CONC,async r=>{
     await captureOne(r);
-    if(r.data){try{await dbPut({url:r.icon,data:r.data,via:r.via,host:r.host,name:r.name,ts:Date.now()});r.idb="guardado"}catch(e){r.idb="error"}}
+    if(r.data){try{await dbPut({url:r.icon,data:r.data,via:r.via,exact:r.status!=="fallback",host:r.host,name:r.name,ts:Date.now()});r.idb="guardado"}catch(e){r.idb="error"}}
     log("Capturando "+(++n)+"/"+rows.length+"…");
   });
   const kb=buildPreview(); render();
@@ -212,9 +229,9 @@ $("bClr").onclick=async()=>{try{await dbClear();rows.forEach(r=>r.idb="");render
 $("bPrev").onclick=()=>{if(previewUrl)window.open(previewUrl,"_blank")};
 $("bDown").onclick=()=>{if(!previewHtml)return;const a=document.createElement("a");a.href=previewUrl;a.download="preview.html";document.body.appendChild(a);a.click();a.remove()};
 $("bRep").onclick=async()=>{
-  const rep={fecha:new Date().toISOString(),navegador:navigator.userAgent,origen:location.origin,
-    resumen:{total:rows.length,ok:rows.filter(r=>r.status==="ok").length,icon_horse:rows.filter(r=>r.status==="fallback").length,sin_captura:rows.filter(r=>r.status==="fail").length},
-    iconos:rows.map(r=>({app:r.name,icono:r.icon,estado:r.status,metodo:r.via,kb:+(r.bytes/1024).toFixed(1),ms:r.ms,nota:r.note}))};
+  const rep={fecha:new Date().toISOString(),ignorar_cache_http:$("nocache").checked,navegador:navigator.userAgent,origen:location.origin,
+    resumen:{total:rows.length,ok:rows.filter(r=>r.status==="ok").length,equivalente_faviconV2:rows.filter(r=>r.status==="equiv").length,icon_horse:rows.filter(r=>r.status==="fallback").length,sin_captura:rows.filter(r=>r.status==="fail").length},
+    iconos:rows.map(r=>({app:r.name,icono:r.icon,estado:r.status,metodo:r.via,dominio_fallback:fbHost(r),kb:+(r.bytes/1024).toFixed(1),ms:r.ms,nota:r.note}))};
   const t=JSON.stringify(rep,null,1);
   try{await navigator.clipboard.writeText(t);log("Informe copiado al portapapeles.")}catch(e){$("inp").value=t;log("No se pudo copiar; el informe quedó en el cuadro de texto.")}
 };
