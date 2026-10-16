@@ -95,10 +95,10 @@ function parse(input){
 }
 
 /* Conversión a data: URI, igual que mockupIconToDataURI de index */
-function toData(src){
+function toData(src,ms){
   return new Promise(res=>{
     let done=false,tm; const fin=v=>{if(done)return;done=true;clearTimeout(tm);res(v)};
-    tm=setTimeout(()=>fin({err:"timeout 5 s"}),TMO);
+    tm=setTimeout(()=>fin({err:"timeout"}),ms||TMO);
     try{
       const im=new Image(); im.crossOrigin="anonymous";
       im.onload=()=>{try{
@@ -111,10 +111,17 @@ function toData(src){
     }catch(e){fin({err:e.message})}
   });
 }
-async function viaProxy(url){
-  const full=PROXY()+encodeURIComponent(url), t0=performance.now(), r=await toData(full);
+const S2="https://www.google.com/s2/favicons?sz=128&domain=";
+const fbDomain=d=>(!d||/^[\d.]+$/.test(d)||!d.includes("."))?"":d;
+/* Igual que loadMockupIcons de index: icono elegido por el proxy; si falla, S2 del dominio por el proxy (mismo presupuesto de 5 s) */
+async function viaProxy(url,domain){
+  const t0=performance.now(); let r=await toData(PROXY()+encodeURIComponent(url));
+  if(!r.data){
+    const first=r.err,fb=domain?S2+encodeURIComponent(domain):"",left=TMO-(performance.now()-t0);
+    if(fb&&fb!==url&&left>800){const r2=await toData(PROXY()+encodeURIComponent(fb),left);if(r2.data){r=r2;r.via="S2";r.firstErr=first}}
+  }
   r.ms=Math.round(performance.now()-t0);
-  if(r.err&&!/timeout/.test(r.err)){try{const f=await fetch(full,{signal:AbortSignal.timeout(3000)});r.err+=" · HTTP "+f.status+" "+(await f.text()).slice(0,30)}catch(e){}}
+  if(r.err&&!/timeout/.test(r.err)){try{const f=await fetch(PROXY()+encodeURIComponent(url),{signal:AbortSignal.timeout(3000)});r.err+=" · HTTP "+f.status+" "+(await f.text()).slice(0,30)}catch(e){}}
   return r;
 }
 const viaHorse=async host=>{const t0=performance.now(),r=await toData("https://icon.horse/icon/"+encodeURIComponent(host));r.ms=Math.round(performance.now()-t0);return r};
@@ -152,7 +159,8 @@ $("bRun").onclick=async()=>{
   const urls=[...new Set(apps.map(iconUrl).filter(Boolean))], res=new Map();
   $("logA").textContent="Pidiendo "+urls.length+" iconos en paralelo (como index)…";
   const t0=performance.now();
-  await Promise.all(urls.map(async u=>res.set(u,await viaProxy(u))));
+  const dom=new Map();apps.forEach(a=>{const u=iconUrl(a);if(u&&!dom.has(u))dom.set(u,fbDomain(a.host))});
+  await Promise.all(urls.map(async u=>res.set(u,await viaProxy(u,dom.get(u)))));
   const total=Math.round(performance.now()-t0);
   const hz=new Map();
   if($("cmp").checked){$("logA").textContent="Comparando con icon.horse…";
@@ -161,13 +169,13 @@ $("bRun").onclick=async()=>{
   const ext=(pv.html.match(/<img[^>]+src="(?!data:)/g)||[]).length, kb=Math.round(new Blob([pv.html]).size/1024);
   Object.assign(LAST,{html:pv.html,total,urls:urls.length,ok:okA.length,fail:urls.length-okA.length,
     timeouts:urls.filter(u=>/timeout/.test(res.get(u).err||"")).length,p50:pct(msA,.5),p95:pct(msA,.95),max:Math.max(0,...msA),emb:pv.emb,used:pv.used,kb,ext,
-    rows:apps.map(a=>{const u=iconUrl(a),r=res.get(u)||{};return{app:a.name,icono:u,ok:!!r.data,ms:r.ms,error:r.err||"",kb:r.data?+(r.data.length*.75/1024).toFixed(1):0}})});
-  $("kp").innerHTML=[[LAST.urls,"iconos pedidos"],[LAST.ok,"embebidos OK"],[LAST.fail,"fallidos"],[LAST.timeouts,"timeouts (5 s)"],[total+" ms","tiempo total (modal)"],
+    rows:apps.map(a=>{const u=iconUrl(a),r=res.get(u)||{};return{app:a.name,icono:u,ok:!!r.data,via:r.via||"elegido",primerError:r.firstErr||"",ms:r.ms,error:r.err||"",kb:r.data?+(r.data.length*.75/1024).toFixed(1):0}})});
+  $("kp").innerHTML=[[LAST.urls,"iconos pedidos"],[LAST.ok,"embebidos OK"],[LAST.fail,"fallidos"],[urls.filter(u=>res.get(u).via==="S2").length,"rescatados con S2"],[LAST.timeouts,"timeouts (5 s)"],[total+" ms","tiempo total (modal)"],
     ["p50 "+LAST.p50+" / p95 "+LAST.p95,"ms por icono"],[kb+" KB","tamaño del HTML"],[pv.used+" / "+MAXTOTAL,"caracteres de iconos"],[ext,"imágenes externas"]].map(([a,b])=>`<div><b>${a}</b><span>${b}</span></div>`).join("");
   const img=r=>r&&r.data?`<img alt="" src="${r.data}">`:"";
   $("tb").innerHTML=apps.map(a=>{const u=iconUrl(a),r=res.get(u)||{},h=hz.get(a.host);
     return`<tr><td>${esc(a.name)}<div class="mut">${esc(a.host)}</div></td><td><div class="u" title="${esc(u)}">${esc(u.replace(/^https?:\/\//,""))}</div></td>
-<td class="${r.data?"ok":"no"}">${r.data?"OK · "+r.ms+" ms · "+(r.data.length*.75/1024).toFixed(1)+" KB":esc(r.err||"—")}</td><td>${img(r)}</td><td>${h?img(h)||'<span class="mut">falló</span>':""}</td></tr>`}).join("");
+<td class="${r.data?"ok":"no"}">${r.data?"OK · "+r.ms+" ms · "+(r.data.length*.75/1024).toFixed(1)+" KB"+(r.via==="S2"?" · vía S2":""):esc(r.err||"—")}</td><td>${img(r)}</td><td>${h?img(h)||'<span class="mut">falló</span>':""}</td></tr>`}).join("");
   if(prevUrl)URL.revokeObjectURL(prevUrl); prevUrl=URL.createObjectURL(new Blob([pv.html],{type:"text/html"}));
   $("fr").hidden=false;$("fr").srcdoc=pv.html;$("bOpen").disabled=$("bDown").disabled=false;
   $("logA").textContent="Listo. Primeros "+shown.length+" elementos del escritorio; las carpetas se dibujan con su SVG y contador (sin icono).";
