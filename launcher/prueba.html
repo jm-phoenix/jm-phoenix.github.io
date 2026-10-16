@@ -4,254 +4,252 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Prueba de captura de iconos · SlugLauncher</title>
+<title>Prueba del preview con iconos vía proxy · SlugLauncher</title>
 <style>
 :root{--bg:#f7f6f2;--fg:#1d1d1b;--card:#fff;--mut:#6a6a64;--bd:#d9d7cf;--ok:#17703a;--warn:#a85a00;--bad:#b3261e;--acc:#1f5fbf}
 @media(prefers-color-scheme:dark){:root{--bg:#121211;--fg:#ecebe6;--card:#1b1b19;--mut:#9a9890;--bd:#35342f;--ok:#5ccf84;--warn:#f0a548;--bad:#ff7b72;--acc:#7fa8ff}}
 *{box-sizing:border-box}
 body{margin:0 auto;padding:16px;max-width:1100px;background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:22px 0 8px}
-p.s{margin:0 0 12px;color:var(--mut)}
-textarea{width:100%;min-height:92px;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--fg);font:12px/1.4 ui-monospace,Menlo,Consolas,monospace}
-.bar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:26px 0 6px}
+p.s,.mut{color:var(--mut)}p.s{margin:0 0 12px}.mut{font-size:12px}
+textarea,input[type=text],select{padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--fg);font:12px ui-monospace,Menlo,Consolas,monospace}
+textarea{width:100%;min-height:84px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
 button{padding:8px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--fg);font:inherit;cursor:pointer}
-button.p{background:var(--acc);border-color:var(--acc);color:#fff}
-button:disabled{opacity:.5;cursor:default}
-button:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
-.kp div{border:1px solid var(--bd);border-radius:8px;padding:8px 10px;background:var(--card)}
-.kp b{display:block;font-size:20px}
-.kp span{color:var(--mut);font-size:12px}
-.w{overflow-x:auto;border:1px solid var(--bd);border-radius:8px;background:var(--card)}
-table{border-collapse:collapse;width:100%;min-width:720px}
-th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:middle}
-th{font-weight:600;color:var(--mut);font-size:12px}
-tr:last-child td{border-bottom:0}
-td img{width:40px;height:40px;object-fit:contain;display:block;background:repeating-conic-gradient(#8883 0 25%,transparent 0 50%) 0 0/10px 10px;border-radius:6px}
-.ok{color:var(--ok)}.fb{color:var(--warn)}.no{color:var(--bad)}.mut{color:var(--mut);font-size:12px}
-.u{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#log{white-space:pre-wrap;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;color:var(--mut);margin-top:8px}
-.g{display:flex;flex-wrap:wrap;gap:6px}
-.g span{border:1px solid var(--bd);border-radius:999px;padding:2px 10px;background:var(--card);font-size:12px}
+button.p{background:var(--acc);border-color:var(--acc);color:#fff}button:disabled{opacity:.5;cursor:default}
+button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:8px 0}
+.kp div{border:1px solid var(--bd);border-radius:8px;padding:8px 10px;background:var(--card)}.kp b{display:block;font-size:19px}.kp span{color:var(--mut);font-size:12px}
+.w{overflow-x:auto;border:1px solid var(--bd);border-radius:8px;background:var(--card);margin-top:8px}
+table{border-collapse:collapse;width:100%;min-width:680px}th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:middle}
+th{font-weight:600;color:var(--mut);font-size:12px}tr:last-child td{border-bottom:0}
+td img{width:40px;height:40px;object-fit:contain;display:block;border-radius:6px;background:repeating-conic-gradient(#8883 0 25%,transparent 0 50%) 0 0/10px 10px}
+.ok{color:var(--ok)}.fb{color:var(--warn)}.no{color:var(--bad)}.u{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log{white-space:pre-wrap;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;color:var(--mut);margin-top:6px}
+iframe{width:100%;height:440px;border:1px solid var(--bd);border-radius:8px;background:#fff;margin-top:8px}
 </style>
 </head>
 <body>
-<h1>Prueba de captura de iconos</h1>
-<p class="s">Descarga cada icono de un SlugLauncher, comprueba si el servidor permite leerlo (CORS), lo reduce a PNG de 96 px y lo guarda en IndexedDB. Después genera un preview con los iconos incrustados.</p>
+<h1>Prueba del preview con iconos vía proxy</h1>
+<p class="s">Reproduce el flujo que tendría <b>index</b> al tocar Compartir/Guardar: pide cada icono elegido al Worker (mismo origen), lo reduce a 96 px y lo incrusta como <code>data:</code>. Sube este archivo junto a <code>index.html</code>.</p>
 
-<textarea id="inp" spellcheck="false" placeholder="Pega aquí el URL completo de un SlugLauncher (o solo el hash que empieza con #SLUG...)"></textarea>
+<label class="mut" for="px">Ruta del proxy:</label>
+<input id="px" type="text" value="/launcher/icon-proxy?u=" style="width:100%;max-width:420px">
+
+<h2>A. Preview completo (igual que index)</h2>
+<textarea id="inp" spellcheck="false" placeholder="Pega el URL completo de un SlugLauncher (o el hash #SLUG...)"></textarea>
 <div class="bar">
   <button id="bLast" type="button">Cargar el último de este navegador</button>
-  <button id="bCap" type="button" class="p">Analizar y capturar iconos</button>
-  <button id="bIdb" type="button">Probar lectura de IndexedDB</button>
-  <button id="bPrev" type="button" disabled>Abrir preview</button>
-  <button id="bDown" type="button" disabled>Descargar preview.html</button>
-  <button id="bRep" type="button" disabled>Copiar informe</button>
-  <button id="bClr" type="button">Borrar caché de iconos (IndexedDB)</button>
-  <label class="mut"><input type="checkbox" id="nocache" checked> Ignorar caché HTTP en fetch</label>
+  <label class="mut">Alcance
+    <select id="scope"><option value="prev">Solo lo del preview (18 del escritorio)</option><option value="all">Todos los iconos, también en carpetas</option></select></label>
+  <label class="mut"><input type="checkbox" id="cmp" checked> Comparar con icon.horse (lo actual)</label>
+  <button id="bRun" type="button" class="p">Ejecutar prueba del preview</button>
 </div>
+<div class="kp" id="kp"></div><div class="log" id="logA"></div>
+<div class="w"><table><thead><tr><th>App</th><th>Icono elegido</th><th>Proxy</th><th>Vía proxy</th><th>icon.horse (actual)</th></tr></thead>
+<tbody id="tb"><tr><td colspan="5" class="mut">Pega un URL y pulsa «Ejecutar prueba del preview».</td></tr></tbody></table></div>
+<div class="bar"><button id="bOpen" type="button" disabled>Abrir preview</button><button id="bDown" type="button" disabled>Descargar preview.html</button></div>
+<iframe id="fr" sandbox="" title="Preview generado" hidden></iframe>
 
-<div class="bar">
-  <label class="mut" for="proxy">Proxy (Worker de Cloudflare):</label>
-  <input id="proxy" type="text" spellcheck="false" value="https://git.inriris.com/launcher/icon-proxy?u=" style="flex:1;min-width:260px;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--fg);font:12px ui-monospace,Menlo,Consolas,monospace">
-  <button id="bPx" type="button">Probar proxy</button>
-</div>
-<div class="kp" id="kp"></div>
-<div id="log"></div>
+<h2>B. Casos y seguridad del proxy</h2>
+<p class="s">Formatos reales, entradas inválidas y el bloqueo de peticiones de otros sitios (iframe aislado).</p>
+<div class="bar"><button id="bCases" type="button" class="p">Ejecutar casos</button></div>
+<div class="w"><table><thead><tr><th>Caso</th><th>Esperado</th><th>Obtenido</th><th>Tipo</th><th>KB</th><th>ms</th><th></th></tr></thead><tbody id="tc"></tbody></table></div>
 
-<h2>Por servidor de iconos</h2>
-<div class="g" id="grp"><span>Sin datos todavía</span></div>
+<h2>C. Ráfaga y límite de peticiones</h2>
+<p class="s">Lanza 130 peticiones en paralelo a un icono de GitHub. Con tu regla (120 por 10 s) deben aparecer 429 y el proxy se bloquea ~10 s; después debe recuperarse solo.</p>
+<div class="bar"><button id="bBurst" type="button">Probar límite (130 peticiones)</button></div><div class="log" id="logC"></div>
 
-<h2>Detalle por icono</h2>
-<div class="w"><table>
-<thead><tr><th>App</th><th>Icono elegido</th><th>Estado</th><th>Método</th><th>KB</th><th>ms</th><th>IDB</th><th></th></tr></thead>
-<tbody id="tb"><tr><td colspan="8" class="mut">Pega un URL y pulsa «Analizar y capturar iconos».</td></tr></tbody>
-</table></div>
+<h2>D. Compartir archivo (móvil o escritorio)</h2>
+<p class="s">Usa el preview de la prueba A. Simula la espera de la captura y llama a <code>navigator.share</code>; en iOS y algunos Android tras esperar suele dar <code>NotAllowedError</code>, y index ya lo trata con el botón «Compartir» del modal.</p>
+<div class="bar"><label class="mut">Espera antes de compartir
+  <select id="wait"><option value="0">0 s</option><option value="6" selected>6 s</option></select></label>
+  <button id="bShare" type="button">Probar compartir</button></div><div class="log" id="logD"></div>
+
+<div class="bar" style="margin-top:22px"><button id="bRep" type="button">Copiar informe</button></div><div class="log" id="logR"></div>
 
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
-const PX=96, SMALL=64, MAXCH=20000, TMO=8000, CONC=6;
-const HORSE="https://icon.horse/icon/";
-const DB="sluglauncher-icons", ST="icons";
-let rows=[], previewHtml="", previewUrl="";
-
+/* Mismos valores que index */
+const DESK=18, MOB=16, PX=96, TMO=5000, MAXDATA=20000, MAXTOTAL=260000;
+const LAST={}; let prevUrl="";
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const sd=s=>{try{return decodeURIComponent(s)}catch(e){return s}};
 const norm=s=>{s=(s||"").trim();return(!s||/^(data:|https?:\/\/)/i.test(s))?s:"https://"+s};
 const hostOf=u=>{try{return new URL(/^https?:\/\//i.test(u)?u:"https://"+u).hostname}catch(e){return ""}};
-const log=t=>{$("log").textContent=t};
-/* dominio que S2 lleva en ?domain= (el icono pedido, no necesariamente el de la app) */
-const s2Domain=u=>{try{const x=new URL(u);return(x.hostname.endsWith("google.com")&&x.pathname.includes("/s2/favicons"))?(x.searchParams.get("domain")||"").toLowerCase():""}catch(e){return ""}};
-const isPrivate=h=>!h||/^(localhost|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.)/.test(h)||/^[\d.]+$/.test(h)||!h.includes(".");
-/* dominio para el plan B (icon.horse): el de S2 si existe; si la app es local, el del icono; si no, el de la app */
-const fbHost=r=>s2Domain(r.icon)||(isPrivate(r.host)?hostOf(r.icon):r.host);
-const FV2=d=>"https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url="+encodeURIComponent("http://"+d)+"&size=128";
-/* icon.horse: máx. 3 a la vez y 1 reintento (la primera prueba tuvo fallos transitorios) */
-let hq=0;const hw=[];
-async function horseSlot(fn){while(hq>=3)await new Promise(r=>hw.push(r));hq++;try{return await fn()}finally{hq--;const n=hw.shift();if(n)n()}}
+const PROXY=()=>$("px").value.trim();
+const iconUrl=it=>it.icon||(it.host?"https://www.google.com/s2/favicons?sz=128&domain="+encodeURIComponent(it.host):"");
+const pct=(a,p)=>a.length?a.slice().sort((x,y)=>x-y)[Math.min(a.length-1,Math.floor(p*a.length))]:0;
 
-/* ---------- Lectura del hash (misma lógica que index: decodifica todo una vez y cada campo otra) ---------- */
+/* Lectura del hash (como index: decodifica todo una vez y cada campo otra) */
 function parse(input){
   const i=input.indexOf("#"); if(i<0) return [];
   const parts=sd(input.slice(i)).slice(1).split("#").filter(p=>p&&!p.startsWith("SLUG:"));
-  const out=[];
-  const app=(slug,folder)=>{
-    const f=slug.split(","), name=sd(f.shift()||""), url=norm(sd(f.shift()||"")), icon=norm(sd(f.join(",")));
-    out.push({name,folder,url,icon,host:hostOf(url),status:"",via:"",bytes:0,ms:0,data:"",note:"",idb:""});
-  };
-  parts.forEach(p=>{
-    if(p.startsWith("FOLDER:")){
-      const seg=p.split("|"); let head=seg[0].slice(7); const hs=head.split("::");
-      const fIcon=hs.length>1?norm(sd(hs.pop())):""; const fName=sd(hs.join("::"));
-      if(fIcon) out.push({name:"(carpeta) "+fName,folder:"",url:"",icon:fIcon,host:"",status:"",via:"",bytes:0,ms:0,data:"",note:"",idb:""});
-      seg.slice(1).filter(Boolean).forEach(s=>app(s,fName));
-    } else app(p,"");
+  const mk=slug=>{const f=slug.split(","),name=sd(f.shift()||""),url=norm(sd(f.shift()||"")),icon=norm(sd(f.join(",")));return{type:"app",name,url,icon,host:hostOf(url)}};
+  return parts.map(p=>{
+    if(!p.startsWith("FOLDER:")) return mk(p);
+    const seg=p.split("|"),hs=seg[0].slice(7).split("::"),icon=hs.length>1?norm(sd(hs.pop())):"";
+    return{type:"folder",name:sd(hs.join("::")),icon,apps:seg.slice(1).filter(Boolean).map(mk)};
   });
-  return out;
 }
 
-/* ---------- IndexedDB (misma base que podría usar index.html: mismo origen) ---------- */
-const dbo=()=>new Promise((res,rej)=>{const q=indexedDB.open(DB,1);q.onupgradeneeded=()=>q.result.createObjectStore(ST,{keyPath:"url"});q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});
-async function tx(mode,fn){const db=await dbo();return new Promise((res,rej)=>{const t=db.transaction(ST,mode),rq=fn(t.objectStore(ST));t.oncomplete=()=>{db.close();res(rq&&rq.result)};t.onerror=t.onabort=()=>{db.close();rej(t.error)}})}
-const dbPut=v=>tx("readwrite",s=>s.put(v)), dbAll=()=>tx("readonly",s=>s.getAll()), dbClear=()=>tx("readwrite",s=>s.clear());
-
-/* ---------- Captura ---------- */
-const tmo=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("timeout")),ms))]);
-function loadImg(src,cors){return new Promise((res,rej)=>{const im=new Image();if(cors)im.crossOrigin="anonymous";im.referrerPolicy="no-referrer";im.onload=()=>res(im);im.onerror=()=>rej(new Error("no carga"));im.src=src})}
-function toPng(im){
-  const draw=px=>{const nw=im.naturalWidth||px,nh=im.naturalHeight||px,k=Math.min(px/nw,px/nh),w=Math.max(1,Math.round(nw*k)),h=Math.max(1,Math.round(nh*k));
-    const c=document.createElement("canvas");c.width=c.height=px;c.getContext("2d").drawImage(im,Math.round((px-w)/2),Math.round((px-h)/2),w,h);return c.toDataURL("image/png")};
-  let o=draw(PX); if(o.length>16000) o=draw(SMALL); return o;
+/* Conversión a data: URI, igual que mockupIconToDataURI de index */
+function toData(src){
+  return new Promise(res=>{
+    let done=false,tm; const fin=v=>{if(done)return;done=true;clearTimeout(tm);res(v)};
+    tm=setTimeout(()=>fin({err:"timeout 5 s"}),TMO);
+    try{
+      const im=new Image(); im.crossOrigin="anonymous";
+      im.onload=()=>{try{
+        const draw=px=>{const nw=im.naturalWidth||px,nh=im.naturalHeight||px,k=Math.min(px/nw,px/nh),w=Math.max(1,Math.round(nw*k)),h=Math.max(1,Math.round(nh*k));
+          const c=document.createElement("canvas");c.width=c.height=px;c.getContext("2d").drawImage(im,Math.round((px-w)/2),Math.round((px-h)/2),w,h);return c.toDataURL("image/png")};
+        let o=draw(PX); if(o.length>16000)o=draw(64);
+        o.length<=MAXDATA?fin({data:o}):fin({err:"demasiado grande ("+o.length+")"});
+      }catch(e){fin({err:"canvas: "+e.name})}};
+      im.onerror=()=>fin({err:"no carga"}); im.src=src;
+    }catch(e){fin({err:e.message})}
+  });
 }
-async function viaFetch(u){
-  const r=await tmo(fetch(u,{mode:"cors",credentials:"omit",referrerPolicy:"no-referrer",cache:$("nocache").checked?"reload":"default"}),TMO);
-  if(!r.ok) throw new Error("HTTP "+r.status);
-  const b=await r.blob(), o=URL.createObjectURL(b);
-  try{return toPng(await loadImg(o,false))}finally{URL.revokeObjectURL(o)}
+async function viaProxy(url){
+  const full=PROXY()+encodeURIComponent(url), t0=performance.now(), r=await toData(full);
+  r.ms=Math.round(performance.now()-t0);
+  if(r.err&&!/timeout/.test(r.err)){try{const f=await fetch(full,{signal:AbortSignal.timeout(3000)});r.err+=" · HTTP "+f.status+" "+(await f.text()).slice(0,30)}catch(e){}}
+  return r;
 }
-const viaImg=async u=>toPng(await tmo(loadImg(u,true),TMO));
-const visible=async u=>{try{await tmo(loadImg(u,false),TMO);return true}catch(e){return false}};
+const viaHorse=async host=>{const t0=performance.now(),r=await toData("https://icon.horse/icon/"+encodeURIComponent(host));r.ms=Math.round(performance.now()-t0);return r};
 
-async function captureOne(r){
-  const t0=performance.now(), done=()=>{r.ms=Math.round(performance.now()-t0);r.bytes=r.data?Math.round(r.data.length*.75):0;return r};
-  if(!r.icon){r.status="fail";r.via="—";r.note="Sin icono";return done()}
-  if(/^data:image\//i.test(r.icon)){r.data=r.icon;r.status="ok";r.via="data: propio";return done()}
-  const errs=r.errs=[], tryChain=async(url,tag,st)=>{
-    for(const [n,f] of [["fetch CORS",viaFetch],["img crossOrigin",viaImg]]){
-      try{r.data=await f(url);r.status=st;r.via=tag?tag+" · "+n:n;return true}catch(e){errs.push((tag||"directo")+" "+n+": "+e.message)}
-    }return false};
-  if(await tryChain(r.icon,"","ok"))return done();
-  const px=$("proxy").value.trim();
-  if(px&&await tryChain(px+encodeURIComponent(r.icon),"proxy","ok"))return done();
-  r.note=(await visible(r.icon))?"Se ve, pero el servidor no da CORS":"No carga (caída o bloqueada)";
-  const fh=fbHost(r);
-  if(fh){
-    for(let k=0;k<2;k++){
-      try{r.data=await horseSlot(()=>viaImg(HORSE+encodeURIComponent(fh)));r.status="fallback";r.via="icon.horse ("+fh+")";return done()}
-      catch(e){errs.push("icon.horse "+fh+": "+e.message);await new Promise(x=>setTimeout(x,700))}
-    }
-  }
-  r.status="fail";r.via="—";r.note+=" · "+errs.join(" | ");return done();
-}
-async function pool(items,n,fn){let i=0;await Promise.all(Array.from({length:n},async()=>{while(i<items.length)await fn(items[i++])}))}
-
-/* ---------- Pintado ---------- */
-function render(){
-  const tb=$("tb");
-  tb.innerHTML=rows.length?rows.map(r=>{
-    const cls=r.status==="ok"||r.status==="equiv"?"ok":r.status==="fallback"?"fb":r.status==="fail"?"no":"mut";
-    const lbl=r.status==="ok"?"Capturado (exacto)":r.status==="equiv"?"Equivalente (faviconV2)":r.status==="fallback"?"Icono del dominio":r.status==="fail"?"Sin captura":"…";
-    return `<tr><td>${esc(r.name)}<div class="mut">${esc(r.folder)}</div></td>
-<td><div class="u" title="${esc(r.icon)}">${esc(r.icon.replace(/^https?:\/\//,""))}</div><div class="mut">${esc(hostOf(r.icon))}</div></td>
-<td class="${cls}">${lbl}<div class="mut" title="${esc(r.note)}">${esc(r.note.slice(0,70))}</div></td>
-<td>${esc(r.via)}</td><td>${r.bytes?(r.bytes/1024).toFixed(1):""}</td><td>${r.ms||""}</td><td>${esc(r.idb)}</td>
-<td>${r.data?`<img alt="" src="${r.data}">`:""}</td></tr>`}).join(""):
-    `<tr><td colspan="8" class="mut">No se encontraron apps en ese URL.</td></tr>`;
-
-  const n=rows.length, ok=rows.filter(r=>r.status==="ok").length, eq=rows.filter(r=>r.status==="equiv").length, fb=rows.filter(r=>r.status==="fallback").length,
-        no=rows.filter(r=>r.status==="fail").length, kb=rows.reduce((a,r)=>a+r.bytes,0)/1024;
-  $("kp").innerHTML=[[n,"iconos"],[ok,"capturados exactos"],[rows.filter(r=>/^proxy/.test(r.via)).length,"de ellos, vía proxy"],[fb,"solo icono del dominio"],[no,"sin captura"],[kb.toFixed(0)+" KB","peso total guardado"]]
-    .map(([a,b])=>`<div><b>${a}</b><span>${b}</span></div>`).join("");
-
-  const g={}; rows.forEach(r=>{if(!r.icon||/^data:/.test(r.icon))return;const h=hostOf(r.icon),o=g[h]||(g[h]={ok:0,eq:0,n:0});o.n++;if(r.status==="ok")o.ok++;if(r.status==="equiv")o.eq++});
-  const ks=Object.keys(g).sort((a,b)=>g[b].n-g[a].n);
-  $("grp").innerHTML=ks.length?ks.map(h=>`<span class="${g[h].ok+g[h].eq===g[h].n?"ok":g[h].ok+g[h].eq?"fb":"no"}">${esc(h)}: ${g[h].ok} directo${g[h].eq?" + "+g[h].eq+" vía faviconV2":""} de ${g[h].n}</span>`).join(""):"<span>Sin datos todavía</span>";
-  ["bRep"].forEach(id=>$(id).disabled=!rows.length);
+/* Preview estático: misma cuadrícula (6x3 / 4x4), tope por icono y total */
+function buildPreview(shown,res){
+  let used=0,emb=0;
+  const safe=it=>{let d=/^data:image\//i.test(it.icon||"")?it.icon:((res.get(iconUrl(it))||{}).data||"");
+    if(!d||d.length>MAXDATA||used+d.length>MAXTOTAL)return"";used+=d.length;emb++;return d};
+  const hue=n=>{let h=0;for(const c of String(n))h=(h*31+c.codePointAt(0))%360;return h};
+  const folder='<svg viewBox="0 0 24 24" fill="#4A90E2" width="46" height="46"><path d="M10 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V8C22 6.9 21.1 6 20 6H12L10 4Z"/></svg>';
+  const tiles=shown.map((it,i)=>{
+    const cls="t"+(i>=MOB?" d":""),lbl=`<span>${esc(it.name)}</span>`;
+    if(it.type==="folder")return`<div class="${cls}"><div class="ic">${folder}<i>${(it.apps||[]).length}</i></div>${lbl}</div>`;
+    const d=safe(it);
+    return`<div class="${cls}"><div class="ic">${d?`<img src="${esc(d)}" alt="">`:`<b style="background:hsl(${hue(it.name)},55%,52%)">${esc((Array.from(it.name.trim())[0]||"?").toUpperCase())}</b>`}</div>${lbl}</div>`}).join("");
+  const html=`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Preview de prueba</title><style>
+body{margin:0;padding:18px;background:#f4f4f6;font:12px system-ui,sans-serif;color:#222}.g{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 8px;max-width:560px;margin:auto}
+@media(min-width:651px){.g{grid-template-columns:repeat(6,1fr)}}@media(max-width:650px){.d{display:none}}
+.t{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}.ic{position:relative;width:58px;height:58px;display:flex;align-items:center;justify-content:center}
+.ic img,.ic b{width:58px;height:58px;border-radius:13px;object-fit:contain;display:flex;align-items:center;justify-content:center;font:600 26px system-ui;color:#fff}
+.ic i{position:absolute;right:-4px;top:-4px;background:#e53935;color:#fff;font:600 10px system-ui;border-radius:9px;padding:1px 5px;font-style:normal}.t span{max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style></head><body><div class="g">${tiles}</div><!-- prueba.html | iconos embebidos: ${emb} | caracteres: ${used} --></body></html>`;
+  return{html,emb,used};
 }
 
-/* ---------- Preview con iconos incrustados ---------- */
-function buildPreview(){
-  const tiles=rows.filter(r=>r.name&&!r.name.startsWith("(carpeta)")).map(r=>{
-    let h=0;for(const c of r.name)h=(h*31+c.charCodeAt(0))%360;
-    const inner=r.data?`<img src="${r.data}" alt="">`:`<i style="background:hsl(${h} 55% 45%)">${esc(r.name.charAt(0).toUpperCase())}</i>`;
-    return `<a class="t">${inner}<span>${esc(r.name)}</span></a>`}).join("");
-  const emb=rows.filter(r=>r.data).length, ex=rows.filter(r=>r.status==="ok"||r.status==="equiv").length;
-  previewHtml=`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Preview SlugLauncher</title>
-<style>body{margin:0;padding:20px;background:#111;color:#eee;font:13px system-ui,sans-serif}.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:18px 10px;max-width:520px;margin:auto}
-.t{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}.t img,.t i{width:60px;height:60px;border-radius:14px;object-fit:contain;background:#fff;display:flex;align-items:center;justify-content:center;font:600 26px system-ui;color:#fff;font-style:normal}
-.t span{max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}</style></head><body><div class="g">${tiles}</div>
-<!-- prueba.html | iconos incrustados: ${emb}/${rows.length} | exactos o equivalentes: ${ex} | del dominio: ${emb-ex} | sin captura: ${rows.length-emb} --></body></html>`;
-  if(previewUrl)URL.revokeObjectURL(previewUrl);
-  previewUrl=URL.createObjectURL(new Blob([previewHtml],{type:"text/html"}));
-  $("bPrev").disabled=$("bDown").disabled=false;
-  return (previewHtml.length/1024).toFixed(0);
-}
-
-/* ---------- Acciones ---------- */
+/* ---------- A. Preview completo ---------- */
 $("bLast").onclick=()=>{let h="";try{h=localStorage.getItem("sluglauncher:lastHash")||""}catch(e){}
-  if(h)$("inp").value=location.origin+"/launcher/"+h; else log("No hay un último launcher guardado en este navegador/origen.")};
-
-$("bCap").onclick=async()=>{
-  rows=parse($("inp").value.trim()); render();
-  if(!rows.length){log("No se encontraron apps. Pega un URL con #SLUG...");return}
-  $("bCap").disabled=true; let n=0; const t0=performance.now();
-  log("Capturando 0/"+rows.length+"…");
-  const existing=new Map(); try{(await dbAll()).forEach(v=>existing.set(v.url,v))}catch(e){}
-  await pool(rows,CONC,async r=>{
-    await captureOne(r);
-    if(r.data){try{await dbPut({url:r.icon,data:r.data,via:r.via,exact:r.status!=="fallback",host:r.host,name:r.name,ts:Date.now()});r.idb="guardado"}catch(e){r.idb="error"}}
-    log("Capturando "+(++n)+"/"+rows.length+"…");
-  });
-  const kb=buildPreview(); render();
-  log("Listo en "+Math.round(performance.now()-t0)+" ms. Preview con iconos incrustados: "+kb+" KB.");
-  $("bCap").disabled=false;
-};
-
-$("bIdb").onclick=async()=>{
-  try{
-    const t0=performance.now(), all=await dbAll(), tr=Math.round(performance.now()-t0);
-    if(!all.length){log("IndexedDB está vacía: primero captura iconos.");return}
-    const t1=performance.now(); const box=document.createElement("div");
-    await Promise.all(all.map(v=>new Promise(res=>{const im=new Image();im.onload=im.onerror=res;im.src=v.data;box.appendChild(im)})));
-    const tp=Math.round(performance.now()-t1), kb=all.reduce((a,v)=>a+v.data.length*.75,0)/1024;
-    rows.forEach(r=>{r.idb=all.some(v=>v.url===r.icon)?"en caché":"no está"}); render();
-    log("IndexedDB: "+all.length+" iconos ("+kb.toFixed(0)+" KB). Lectura: "+tr+" ms · decodificar y pintar todos: "+tp+" ms.");
-  }catch(e){log("Error leyendo IndexedDB: "+e.message)}
-};
-
-$("bPx").onclick=async()=>{
-  const px=$("proxy").value.trim(); if(!px){log("Escribe la URL base del proxy.");return}
+  if(h)$("inp").value=location.origin+"/launcher/"+h;else $("logA").textContent="No hay un último launcher guardado en este navegador."};
+$("bRun").onclick=async()=>{
+  const top=parse($("inp").value.trim()); if(!top.length){$("logA").textContent="No se encontraron elementos. Pega un URL con #SLUG...";return}
+  $("bRun").disabled=true; const shown=top.slice(0,DESK);
+  let apps=$("scope").value==="all"?top.flatMap(x=>x.type==="folder"?x.apps:[x]):shown.filter(x=>x.type==="app");
+  apps=apps.filter(a=>!/^data:image\//i.test(a.icon));
+  const urls=[...new Set(apps.map(iconUrl).filter(Boolean))], res=new Map();
+  $("logA").textContent="Pidiendo "+urls.length+" iconos en paralelo (como index)…";
   const t0=performance.now();
-  try{
-    const r=await fetch(px+encodeURIComponent("https://github.com/apple-touch-icon.png"),{mode:"cors",cache:"reload"});
-    const b=await r.blob();
-    log("Proxy: HTTP "+r.status+" · "+(b.type||"sin tipo")+" · "+b.size+" bytes · "+Math.round(performance.now()-t0)+" ms"+(r.ok&&b.type.startsWith("image/")?" → funciona.":" → respuesta inesperada."));
-  }catch(e){log("Proxy: falló ("+e.message+"). Si abres esta página desde otro origen que git.inriris.com, añádelo a ALLOWED_ORIGINS del Worker.")}
+  await Promise.all(urls.map(async u=>res.set(u,await viaProxy(u))));
+  const total=Math.round(performance.now()-t0);
+  const hz=new Map();
+  if($("cmp").checked){$("logA").textContent="Comparando con icon.horse…";
+    await Promise.all([...new Set(apps.map(a=>a.host).filter(Boolean))].map(async h=>hz.set(h,await viaHorse(h))))}
+  const okA=urls.filter(u=>res.get(u).data), msA=okA.map(u=>res.get(u).ms), pv=buildPreview(shown,res);
+  const ext=(pv.html.match(/<img[^>]+src="(?!data:)/g)||[]).length, kb=Math.round(new Blob([pv.html]).size/1024);
+  Object.assign(LAST,{html:pv.html,total,urls:urls.length,ok:okA.length,fail:urls.length-okA.length,
+    timeouts:urls.filter(u=>/timeout/.test(res.get(u).err||"")).length,p50:pct(msA,.5),p95:pct(msA,.95),max:Math.max(0,...msA),emb:pv.emb,used:pv.used,kb,ext,
+    rows:apps.map(a=>{const u=iconUrl(a),r=res.get(u)||{};return{app:a.name,icono:u,ok:!!r.data,ms:r.ms,error:r.err||"",kb:r.data?+(r.data.length*.75/1024).toFixed(1):0}})});
+  $("kp").innerHTML=[[LAST.urls,"iconos pedidos"],[LAST.ok,"embebidos OK"],[LAST.fail,"fallidos"],[LAST.timeouts,"timeouts (5 s)"],[total+" ms","tiempo total (modal)"],
+    ["p50 "+LAST.p50+" / p95 "+LAST.p95,"ms por icono"],[kb+" KB","tamaño del HTML"],[pv.used+" / "+MAXTOTAL,"caracteres de iconos"],[ext,"imágenes externas"]].map(([a,b])=>`<div><b>${a}</b><span>${b}</span></div>`).join("");
+  const img=r=>r&&r.data?`<img alt="" src="${r.data}">`:"";
+  $("tb").innerHTML=apps.map(a=>{const u=iconUrl(a),r=res.get(u)||{},h=hz.get(a.host);
+    return`<tr><td>${esc(a.name)}<div class="mut">${esc(a.host)}</div></td><td><div class="u" title="${esc(u)}">${esc(u.replace(/^https?:\/\//,""))}</div></td>
+<td class="${r.data?"ok":"no"}">${r.data?"OK · "+r.ms+" ms · "+(r.data.length*.75/1024).toFixed(1)+" KB":esc(r.err||"—")}</td><td>${img(r)}</td><td>${h?img(h)||'<span class="mut">falló</span>':""}</td></tr>`}).join("");
+  if(prevUrl)URL.revokeObjectURL(prevUrl); prevUrl=URL.createObjectURL(new Blob([pv.html],{type:"text/html"}));
+  $("fr").hidden=false;$("fr").srcdoc=pv.html;$("bOpen").disabled=$("bDown").disabled=false;
+  $("logA").textContent="Listo. Primeros "+shown.length+" elementos del escritorio; las carpetas se dibujan con su SVG y contador (sin icono).";
+  $("bRun").disabled=false;
 };
-$("bClr").onclick=async()=>{try{await dbClear();rows.forEach(r=>r.idb="");render();log("Caché de iconos borrada.")}catch(e){log("Error: "+e.message)}};
-$("bPrev").onclick=()=>{if(previewUrl)window.open(previewUrl,"_blank")};
-$("bDown").onclick=()=>{if(!previewHtml)return;const a=document.createElement("a");a.href=previewUrl;a.download="preview.html";document.body.appendChild(a);a.click();a.remove()};
-$("bRep").onclick=async()=>{
-  const rep={fecha:new Date().toISOString(),proxy:$("proxy").value.trim(),ignorar_cache_http:$("nocache").checked,navegador:navigator.userAgent,origen:location.origin,
-    resumen:{total:rows.length,ok:rows.filter(r=>r.status==="ok").length,via_proxy:rows.filter(r=>/^proxy/.test(r.via)).length,icon_horse:rows.filter(r=>r.status==="fallback").length,sin_captura:rows.filter(r=>r.status==="fail").length},
-    iconos:rows.map(r=>({app:r.name,icono:r.icon,estado:r.status,metodo:r.via,dominio_fallback:fbHost(r),errores:(r.errs||[]).join(" | "),kb:+(r.bytes/1024).toFixed(1),ms:r.ms,nota:r.note}))};
-  const t=JSON.stringify(rep,null,1);
-  try{await navigator.clipboard.writeText(t);log("Informe copiado al portapapeles.")}catch(e){$("inp").value=t;log("No se pudo copiar; el informe quedó en el cuadro de texto.")}
+$("bOpen").onclick=()=>prevUrl&&window.open(prevUrl,"_blank");
+$("bDown").onclick=()=>{if(!prevUrl)return;const a=document.createElement("a");a.href=prevUrl;a.download="preview-prueba.html";document.body.appendChild(a);a.click();a.remove()};
+
+/* ---------- B. Casos y seguridad ---------- */
+const CASES=[
+ ["PNG apple-touch (GitHub)","https://github.com/apple-touch-icon.png",[200],"img"],
+ ["SVG (gstatic Tasks)","https://www.gstatic.com/images/branding/productlogos/tasks_2026/v2/web/192px.svg",[200],"img"],
+ ["ICO (Retell)","https://dashboard.retellai.com/favicon_dashboard.ico",[200],"img"],
+ ["WebP (Ai Video Builder)","https://aivideobuilder.com/special/images/favicon.webp",[200],"img"],
+ ["JPEG con espacio en la URL (Hartzell)","https://hartzellflow.com/HTML/images/Hartzells logo.jpg",[200],"img"],
+ ["Favicon de Google S2","https://www.google.com/s2/favicons?sz=128&domain=google.com",[200],"img"],
+ ["Origen lento (Ai Funnels)","https://aifunnels.in/storage/system/s22GA2JzUkDrhqx9jYZyPDhni8ghBI3qiN9ptABM.png",[200],"img"],
+ ["Rechaza http://","http://example.com/x.png",[400],"txt"],
+ ["Rechaza IP privada","https://192.168.1.50/favicon.ico",[400],"txt"],
+ ["Rechaza localhost","https://localhost/x.png",[400],"txt"],
+ ["Rechaza puerto no estándar","https://example.com:8443/x.png",[400],"txt"],
+ ["Rechaza lo que no es imagen (HTML)","https://example.com/",[415],"txt"],
+ ["URL inválida","no-es-una-url",[400],"txt"],
+ ["Sin parámetro u",null,[400],"txt"],
+ ["Método POST",null,[405],"post"],
+ ["Archivo muy grande (>2 MB)","https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg",[413,502],"txt"]
+];
+const ccls=ok=>ok?"ok":"no";
+$("bCases").onclick=async()=>{
+  $("bCases").disabled=true;const tb=$("tc");tb.innerHTML="";LAST.cases=[];
+  for(const [name,u,exp,kind] of CASES){
+    const t0=performance.now();let st="error",ty="",kb="";
+    try{
+      const base=PROXY(),url=u===null?base.split("?")[0]:base+encodeURIComponent(u);
+      const r=await fetch(url,{method:kind==="post"?"POST":"GET",cache:"reload",signal:AbortSignal.timeout(9000)});
+      st=r.status;ty=r.headers.get("Content-Type")||"";kb=((await r.blob()).size/1024).toFixed(1);
+    }catch(e){st=e.name}
+    const ok=exp.includes(st),ms=Math.round(performance.now()-t0);
+    LAST.cases.push({caso:name,esperado:exp.join("/"),obtenido:st,ok});
+    tb.insertAdjacentHTML("beforeend",`<tr><td>${esc(name)}</td><td>${exp.join(" o ")}</td><td class="${ccls(ok)}">${esc(st)}</td><td>${esc(ty)}</td><td>${kb}</td><td>${ms}</td><td class="${ccls(ok)}">${ok?"✔":"✘"}</td></tr>`);
+  }
+  /* Bloqueo cross-site: un iframe sandbox (sin allow-same-origin) tiene origen opaco; su <img> debe recibir 403 */
+  const abs=new URL(PROXY()+encodeURIComponent("https://github.com/apple-touch-icon.png"),location.href).href;
+  const r=await new Promise(res=>{const f=document.createElement("iframe");f.sandbox="allow-scripts";f.hidden=true;let tm;
+    const on=e=>{if(e.source===f.contentWindow){clearTimeout(tm);removeEventListener("message",on);f.remove();res(e.data)}};addEventListener("message",on);
+    tm=setTimeout(()=>{removeEventListener("message",on);f.remove();res("timeout")},7000);
+    f.srcdoc=`<img src="${abs}" onload="parent.postMessage('cargó','*')" onerror="parent.postMessage('bloqueada','*')">`;document.body.appendChild(f)});
+  const ok=r==="bloqueada";LAST.cases.push({caso:"Bloqueo cross-site (403)",esperado:"bloqueada",obtenido:r,ok});
+  tb.insertAdjacentHTML("beforeend",`<tr><td>Bloqueo de otro sitio (iframe aislado, Sec-Fetch-Site)</td><td>imagen bloqueada</td><td class="${ccls(ok)}">${esc(r)}</td><td></td><td></td><td></td><td class="${ccls(ok)}">${ok?"✔":"✘"}</td></tr>`);
+  $("bCases").disabled=false;
 };
 
-if(location.hash.length>1)$("inp").value=location.href;
-render();
+/* ---------- C. Ráfaga ---------- */
+$("bBurst").onclick=async()=>{
+  if(!confirm("Se lanzarán 130 peticiones y tu IP puede quedar bloqueada ~10 s en el proxy. ¿Continuar?"))return;
+  $("bBurst").disabled=true;$("logC").textContent="Lanzando…";const url=PROXY()+encodeURIComponent("https://github.com/apple-touch-icon.png"),c={};
+  await Promise.all(Array.from({length:130},async()=>{try{const r=await fetch(url,{cache:"reload",signal:AbortSignal.timeout(9000)});c[r.status]=(c[r.status]||0)+1}catch(e){c[e.name]=(c[e.name]||0)+1}}));
+  $("logC").textContent="Resultado: "+JSON.stringify(c)+"\nEsperando 12 s para comprobar la recuperación…";
+  await new Promise(r=>setTimeout(r,12000));
+  let rec="";try{rec=(await fetch(url,{cache:"reload"})).status}catch(e){rec=e.name}
+  LAST.burst={conteo:c,recuperacion:rec};
+  $("logC").textContent="Resultado: "+JSON.stringify(c)+"\nTras 12 s: HTTP "+rec+(rec===200?" (recuperado)":" (¡sigue bloqueado!)");
+  $("bBurst").disabled=false;
+};
+
+/* ---------- D. Compartir ---------- */
+$("bShare").onclick=async()=>{
+  if(!LAST.html){$("logD").textContent="Primero ejecuta la prueba A.";return}
+  const d={files:[new File([LAST.html],"preview-prueba.html",{type:"text/html"})],title:"Prueba SlugLauncher"};
+  if(!(navigator.share&&navigator.canShare&&navigator.canShare(d))){LAST.share="no soportado";$("logD").textContent="Este navegador no soporta compartir archivos: index descargaría el archivo.";return}
+  const w=+$("wait").value;$("logD").textContent=w?"Esperando "+w+" s (simula la captura)…":"Compartiendo…";
+  await new Promise(r=>setTimeout(r,w*1000));
+  try{await navigator.share(d);LAST.share="OK ("+w+" s)"}catch(e){LAST.share=e.name+" ("+w+" s)"}
+  $("logD").textContent="Resultado: "+LAST.share+(/NotAllowed/.test(LAST.share)?" → el navegador exige un toque nuevo; index lo cubre con el botón «Compartir» del modal.":"");
+};
+
+/* ---------- Informe ---------- */
+$("bRep").onclick=async()=>{
+  const{html,...rep}=LAST;rep.fecha=new Date().toISOString();rep.navegador=navigator.userAgent;rep.origen=location.origin;rep.proxy=PROXY();
+  const t=JSON.stringify(rep,null,1);
+  try{await navigator.clipboard.writeText(t);$("logR").textContent="Informe copiado."}catch(e){$("inp").value=t;$("logR").textContent="No se pudo copiar; quedó en el cuadro de texto de la sección A."}
+};
 </script>
 </body>
 </html>
