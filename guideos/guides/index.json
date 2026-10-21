@@ -12,6 +12,18 @@
       "estimatedMinutes": 45,
       "version": "1.0.0",
       "path": "8F/8F35A198.json"
+    },
+    {
+      "id": "4C5A91B2",
+      "title": "Puesta en marcha — Bomba dosificadora LMI",
+      "manufacturer": "LMI",
+      "series": "AA / B / C / E / J / P",
+      "model": "AA / B / C / E / J / P",
+      "category": "Maintenance",
+      "difficulty": "Intermediate",
+      "estimatedMinutes": 45,
+      "version": "1.0.0",
+      "path": "4C/4C5A91B2.json"
     }
   ]
 }
