@@ -24,6 +24,18 @@
       "estimatedMinutes": 45,
       "version": "1.0.0",
       "path": "4C/4C5A91B2.json"
+    },
+    {
+      "id": "84708CDC",
+      "title": "Arranque a producción — Checklist del dueño de GuideOS",
+      "manufacturer": "GuideOS",
+      "series": "v2",
+      "model": "SaaS — Firebase + Sheets + Stripe",
+      "category": "Operations",
+      "difficulty": "Beginner",
+      "estimatedMinutes": 180,
+      "version": "1.0.0",
+      "path": "84/84708CDC.json"
     }
   ]
 }
