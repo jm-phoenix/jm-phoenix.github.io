@@ -1,0 +1,339 @@
+{
+  "equipment": {
+    "manufacturer": "GuideOS",
+    "model": "SaaS — Firebase + Sheets + Stripe",
+    "series": "v2"
+  },
+  "guide": {
+    "author": "Jorge Luis Maldonado Díaz",
+    "category": "Operations",
+    "created": "2026-10-22T09:41:00-04:00",
+    "description": "Checklist del dueño para llevar GuideOS v2 a producción: decisiones previas, cuenta Google dedicada, figura para cobrar en Puerto Rico, Firebase, hojas de datos, Stripe en modo prueba y en vivo, dominio y la verificación final antes de abrir al público. Tiempo activo estimado: 2 a 3 horas repartidas, sin contar las esperas de verificación de Stripe y del DNS.",
+    "difficulty": "Beginner",
+    "estimatedMinutes": 180,
+    "id": "84708CDC",
+    "keywords": [
+      "GuideOS",
+      "producción",
+      "checklist",
+      "Firebase",
+      "Stripe",
+      "lanzamiento"
+    ],
+    "language": "es",
+    "title": "Arranque a producción — Checklist del dueño de GuideOS",
+    "updated": "2026-10-22T09:41:00-04:00",
+    "version": "1.0.0"
+  },
+  "guideSpecVersion": "1.0",
+  "metadata": {},
+  "phases": [
+    {
+      "description": "",
+      "estimatedMinutes": 30,
+      "id": "phase-decisiones",
+      "steps": [
+        {
+          "entities": {},
+          "id": "step-1",
+          "instruction": "Confirma Firebase Authentication como plataforma de cuentas: entrar con Google como puerta principal; leer una guía por QR nunca debe pedir login.",
+          "title": "Confirmar el sign-in"
+        },
+        {
+          "entities": {},
+          "id": "step-2",
+          "instruction": "Confirma arrancar con Google Sheets + Apps Script detrás de una API propia; Firestore queda como ruta futura si la escala lo pide.",
+          "title": "Confirmar la base de datos de arranque"
+        },
+        {
+          "entities": {},
+          "id": "step-3",
+          "instruction": "Escoge qué verticales abren el producto. Recomendación: solo la técnica al lanzar; las demás se abren después sin rehacer nada.",
+          "title": "Escoger las verticales del lanzamiento"
+        },
+        {
+          "entities": {},
+          "id": "step-4",
+          "instruction": "Aprueba el esquema de la guía (GuideSpec 1.1 aditiva, equipment obligatorio solo en la vertical técnica) y las convenciones: frontend vanilla, sin framework ni paso de build.",
+          "title": "Aprobar esquema y convenciones"
+        },
+        {
+          "entities": {},
+          "id": "step-5",
+          "instruction": "Corta el plan a lo mínimo vendible (entrar, crear con BYOK, publicar pagando, leer por QR) y decide el dominio público. Recomendación: guideos.inriris.com.",
+          "title": "Cortar el MVP y decidir el dominio"
+        }
+      ],
+      "title": "Decisiones previas"
+    },
+    {
+      "description": "",
+      "estimatedMinutes": 20,
+      "id": "phase-cuenta-google",
+      "steps": [
+        {
+          "entities": {},
+          "id": "step-6",
+          "instruction": "Crea una cuenta de Google dedicada al negocio (no la personal ni la del empleo). Será dueña de Firebase, del Sheet y de los Apps Script, y el email remitente del producto.",
+          "title": "Crear la cuenta de GuideOS"
+        },
+        {
+          "entities": {},
+          "id": "step-7",
+          "instruction": "Activa la verificación en 2 pasos con app de autenticación o llave, no solo SMS, y añade email y teléfono de recuperación tuyos.",
+          "title": "Activar verificación en 2 pasos"
+        },
+        {
+          "entities": {},
+          "id": "step-8",
+          "instruction": "Guarda usuario y contraseña en tu gestor de contraseñas. Nunca en el repositorio, nunca en chats.",
+          "title": "Guardar las credenciales"
+        },
+        {
+          "entities": {},
+          "id": "step-9",
+          "instruction": "Anota solo el email (sin secretos) en docs/CUENTAS.md del repositorio guideos.",
+          "title": "Anotar el email en CUENTAS.md"
+        }
+      ],
+      "title": "Cuenta Google dedicada"
+    },
+    {
+      "description": "",
+      "estimatedMinutes": 15,
+      "id": "phase-figura-pr",
+      "steps": [
+        {
+          "entities": {},
+          "id": "step-10",
+          "instruction": "Decide si vas a cobrar como individuo (sole proprietor) o como entidad. Stripe te lo pregunta al activar.",
+          "title": "Decidir individuo o entidad"
+        },
+        {
+          "entities": {},
+          "id": "step-11",
+          "instruction": "Ten disponible tu EIN o el identificador fiscal que aplique; Stripe lo exige para activar cobros en vivo.",
+          "title": "Tener el identificador fiscal a mano"
+        },
+        {
+          "entities": {},
+          "id": "step-12",
+          "instruction": "Consulta con tu contador el Registro de Comerciante (SURI) y si los precios de GuideOS (publicar $20, hosting $3/año, $10/5 años) incluyen el IVU o se le añade. Esa decisión cambia la configuración de Stripe.",
+          "title": "Consultar el IVU con tu contador"
+        }
+      ],
+      "title": "Figura para cobrar en Puerto Rico"
+    },
+    {
+      "description": "",
+      "estimatedMinutes": 30,
+      "id": "phase-firebase",
+      "steps": [
+        {
+          "entities": {},
+          "id": "step-13",
+          "instruction": "Entra a console.firebase.google.com firmado con la cuenta Google de GuideOS, no con otra.",
+          "title": "Entrar a la consola con la cuenta dedicada"
+        },
+        {
+          "entities": {},
+          "id": "step-14",
+          "instruction": "Crea el proyecto guideos-prod y el proyecto guideos-dev. Google Analytics no hace falta por ahora.",
+          "title": "Crear los dos proyectos"
+        },
+        {
+          "entities": {},
+          "id": "step-15",
+          "instruction": "En ambos proyectos: Build, Authentication, Sign-in method, habilita Google y pon como email de soporte la cuenta dedicada.",
+          "title": "Habilitar Google como proveedor de acceso"
+        },
+        {
+          "entities": {},
+          "id": "step-16",
+          "instruction": "Deja ambos proyectos en el plan Spark (gratis): Authentication y Hosting no necesitan tarjeta. El plan Blaze solo hará falta si algún día se usan Cloud Functions, y sería decisión aparte.",
+          "title": "Dejar el plan Spark"
+        },
+        {
+          "entities": {},
+          "id": "step-17",
+          "instruction": "Anota los nombres e IDs de ambos proyectos en docs/CUENTAS.md del repositorio guideos.",
+          "title": "Anotar los proyectos en CUENTAS.md"
+        }
+      ],
+      "title": "Firebase: proyectos y acceso"
+    },
+    {
+      "description": "",
+      "estimatedMinutes": 10,
+      "id": "phase-sheets",
+      "steps": [
+        {
+          "entities": {},
+          "id": "step-18",
+          "instruction": "En el Drive de la cuenta dedicada crea la carpeta GuideOS con dos subcarpetas: Produccion y Dev.",
+          "title": "Crear la carpeta GuideOS en Drive"
+        },
+        {
+          "entities": {},
+          "id": "step-19",
+          "instruction": "Dentro de cada subcarpeta crea una hoja de cálculo en blanco: guideos-db-prod y guideos-db-dev. No montes tabs: la estructura la crea el script de setup de los agentes.",
+          "title": "Crear las hojas en blanco"
+        },
+        {
+          "entities": {},
+          "id": "step-20",
+          "instruction": "Copia el ID de cada hoja (el texto largo en su URL, entre /d/ y /edit) y guárdalo en tu gestor seguro. Se lo pasarás al agente cuando llegue el paso del setup.",
+          "title": "Guardar los IDs de las hojas"
+        }
+      ],
+      "title": "Drive y hojas de datos"
+    },
+    {
+      "description": "",
+      "estimatedMinutes": 20,
+      "id": "phase-stripe-prueba",
+      "steps": [
+        {
+          "entities": {},
+          "id": "step-21",
+          "instruction": "Regístrate en Stripe con el email dedicado y confirma que el panel está en Test mode antes de crear nada.",
+          "title": "Crear la cuenta de Stripe en Test mode"
+        },
+        {
+          "entities": {},
+          "id": "step-22",
+          "instruction": "En Products crea: Publicación de guía, $20.00, cobro único; Hosting 1 año, $3.00, cobro único; Hosting 5 años, $10.00, cobro único. Son cobros únicos porque la caducidad la controla el estado de la guía, no una suscripción.",
+          "title": "Crear los tres productos"
+        },
+        {
+          "entities": {},
+          "id": "step-23",
+          "instruction": "Por cada producto crea su Payment Link y exige el email del cliente: con ese email el sistema amarra el pago a la guía.",
+          "title": "Crear los Payment Links"
+        },
+        {
+          "entities": {},
+          "id": "step-24",
+          "instruction": "Completa un pago de prueba con la tarjeta 4242 4242 4242 4242, cualquier fecha futura y cualquier CVC, y confirma que el flujo llega hasta el final.",
+          "title": "Probar un pago completo"
+        }
+      ],
+      "title": "Stripe en modo prueba"
+    },
+    {
+      "description": "",
+      "estimatedMinutes": 45,
+      "id": "phase-stripe-vivo",
+      "steps": [
+        {
+          "entities": {},
+          "id": "step-25",
+          "instruction": "Completa la activación: tipo de negocio, identificador fiscal, dirección y la cuenta de banco a donde llegarán los depósitos.",
+          "title": "Activar la cuenta"
+        },
+        {
+          "entities": {},
+          "id": "step-26",
+          "instruction": "Envía la verificación de identidad que pida Stripe y espera el estado Charges enabled y Payouts enabled. Puede tardar de minutos a días, y el primer depósito siempre tarda más: no cuentes con ese dinero la primera semana.",
+          "title": "Completar la verificación de identidad"
+        },
+        {
+          "entities": {},
+          "id": "step-27",
+          "instruction": "Los productos y enlaces de Test no pasan solos a Live. Recréalos en modo Live o usa Copy to live en cada producto, aplicando la decisión del IVU.",
+          "title": "Recrear productos y enlaces en Live"
+        },
+        {
+          "entities": {},
+          "id": "step-28",
+          "instruction": "Haz una compra real con tu tarjeta (la de $3 es la más barata), verifica que el dinero se mueve y luego practica el reembolso desde el panel.",
+          "title": "Compra real pequeña y reembolso"
+        }
+      ],
+      "title": "Stripe en vivo"
+    },
+    {
+      "description": "",
+      "estimatedMinutes": 15,
+      "id": "phase-dominio",
+      "steps": [
+        {
+          "entities": {},
+          "id": "step-29",
+          "instruction": "Localiza dónde se maneja el DNS del dominio (registrador) y anótalo en docs/CUENTAS.md.",
+          "title": "Identificar el DNS de inriris.com"
+        },
+        {
+          "entities": {},
+          "id": "step-30",
+          "instruction": "En Firebase Console, proyecto guideos-prod, Hosting, Add custom domain: entra guideos.inriris.com (o el dominio decidido).",
+          "title": "Añadir el dominio personalizado"
+        },
+        {
+          "entities": {},
+          "id": "step-31",
+          "instruction": "En tu DNS añade los registros que Firebase indique: primero el TXT de verificación y luego los A o CNAME de conexión.",
+          "title": "Añadir los registros DNS"
+        },
+        {
+          "entities": {},
+          "id": "step-32",
+          "instruction": "Espera el certificado SSL automático (puede tardar hasta 24 horas) y verifica el sitio desde tu teléfono: tu dispositivo es la referencia que manda.",
+          "title": "Esperar el SSL y verificar desde tu teléfono"
+        }
+      ],
+      "title": "Dominio en Firebase Hosting"
+    },
+    {
+      "description": "",
+      "estimatedMinutes": 30,
+      "id": "phase-apertura",
+      "steps": [
+        {
+          "entities": {},
+          "id": "step-33",
+          "instruction": "Confirma que los Términos de Servicio están publicados, incluida la licencia de contenido: el autor conserva su copyright y concede a GuideOS licencia no exclusiva para hostear, mostrar, traducir y generar el QR de su guía.",
+          "title": "Términos de Servicio publicados"
+        },
+        {
+          "entities": {},
+          "id": "step-34",
+          "instruction": "Verifica que el backup periódico de la hoja de datos corre y que el interruptor de suspensión de guías (kill switch) funciona.",
+          "title": "Backup y kill switch probados"
+        },
+        {
+          "entities": {},
+          "id": "step-35",
+          "instruction": "Migra la guía LMI 4C5A91B2 a la nueva plataforma, imprime su QR y escanéalo desde tu teléfono pegado al equipo.",
+          "title": "Guía LMI migrada y QR probado"
+        },
+        {
+          "entities": {},
+          "id": "step-36",
+          "instruction": "Logra un pago real completo, del QR al hosting activo, con un usuario que no seas tú.",
+          "title": "Pago real de un tercero"
+        },
+        {
+          "entities": {},
+          "id": "step-37",
+          "instruction": "Recibe un email de prueba del sistema (un reporte o aviso) desde la cuenta remitente de GuideOS.",
+          "title": "Email del sistema probado"
+        },
+        {
+          "entities": {},
+          "id": "step-38",
+          "instruction": "Confirma que docs/CUENTAS.md está completo: si mañana entra ayuda, la casa se entiende sin preguntarte.",
+          "title": "Mapa de cuentas completo"
+        }
+      ],
+      "title": "Antes de abrir al público"
+    }
+  ],
+  "resources": [],
+  "theme": {
+    "accentColor": "#F59E0B",
+    "enabled": false,
+    "primaryColor": "#0054A6",
+    "secondaryColor": "#003E7A"
+  }
+}
