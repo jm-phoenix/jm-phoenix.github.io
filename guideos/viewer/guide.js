@@ -129,9 +129,10 @@ function renderStep() {
       <textarea id="step-notes" placeholder="Las notas se guardan localmente en este dispositivo">${escapeHtml(notes)}</textarea>
     </div>`);
 
+  const isDone = state.completed.has(step.id);
   out.push(`
-    <div class="step-section">
-      <label><input type="checkbox" id="mark-complete" ${state.completed.has(step.id) ? 'checked' : ''}/> Marcar paso como completado</label>
+    <div class="step-section complete-row">
+      <button id="mark-complete" class="complete-btn ${isDone ? 'done primary' : ''}" aria-pressed="${isDone}">${isDone ? '✓ Paso completado' : 'Marcar paso como completado'}</button>
     </div>`);
 
   out.push(`
@@ -156,10 +157,16 @@ function renderStep() {
     writeItem(`viewer:notes:${state.spec.guide.id}:${step.id}`, e.target.value);
   });
 
-  document.getElementById('mark-complete').addEventListener('change', (e) => {
-    if (e.target.checked) state.completed.add(step.id);
-    else state.completed.delete(step.id);
+  const completeBtn = document.getElementById('mark-complete');
+  completeBtn.addEventListener('click', () => {
+    if (state.completed.has(step.id)) state.completed.delete(step.id);
+    else state.completed.add(step.id);
     writeItem(`viewer:progress:${state.spec.guide.id}`, [...state.completed]);
+    const done = state.completed.has(step.id);
+    completeBtn.classList.toggle('done', done);
+    completeBtn.classList.toggle('primary', done);
+    completeBtn.setAttribute('aria-pressed', String(done));
+    completeBtn.textContent = done ? '✓ Paso completado' : 'Marcar paso como completado';
     renderTOC();
   });
 
@@ -218,8 +225,20 @@ document.getElementById('toggle-theme').addEventListener('click', () => {
   writeItem('viewer:theme', state.theme);
   applyTheme();
 });
-document.getElementById('toggle-sidebar').addEventListener('click', () => {
-  document.getElementById('sidebar').classList.toggle('open');
+const toggleSidebarBtn = document.getElementById('toggle-sidebar');
+toggleSidebarBtn.addEventListener('click', () => {
+  const sidebar = document.getElementById('sidebar');
+  const layout = document.querySelector('.viewer-layout');
+  if (window.matchMedia('(max-width: 800px)').matches) {
+    // Móvil: el sidebar es un panel deslizable (ver guide.css).
+    const open = sidebar.classList.toggle('open');
+    toggleSidebarBtn.setAttribute('aria-expanded', String(open));
+  } else {
+    // Desktop: el sidebar está fijo en la rejilla; la clase `open` no
+    // tiene efecto visual, así que se colapsa la columna completa.
+    const collapsed = layout.classList.toggle('sidebar-collapsed');
+    toggleSidebarBtn.setAttribute('aria-expanded', String(!collapsed));
+  }
 });
 
 applyTheme();
