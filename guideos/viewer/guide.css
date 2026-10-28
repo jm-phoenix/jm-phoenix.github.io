@@ -73,6 +73,35 @@
   .sidebar.open { transform: translateX(0); }
 }
 
+/* Correcciones visor v1 (2026-10-28) */
+
+/* Hamburguesa en desktop: antes la clase `open` solo existía dentro del
+   media query móvil, así que el botón no hacía nada visible. Ahora
+   colapsa la columna del sidebar en la rejilla. */
+.viewer-layout.sidebar-collapsed { grid-template-columns: 1fr; }
+.viewer-layout.sidebar-collapsed .sidebar { display: none; }
+@media (max-width: 800px) {
+  /* En móvil el sidebar es un panel deslizable: que `sidebar-collapsed`
+     no lo esconda cuando el usuario lo abre con la hamburguesa. */
+  .viewer-layout.sidebar-collapsed .sidebar { display: block; }
+}
+
+/* Title bar con el color de los botones (primary) y filete del accent. */
+.app-header {
+  background: var(--color-primary);
+  border-bottom: 3px solid var(--color-accent);
+}
+.app-header h1 { color: #fff; }
+
+/* Botón de completado: tamaño de los botones de navegación (Siguiente)
+   y a la derecha. Cuando el paso está completado usa .primary. */
+.complete-row { display: flex; justify-content: flex-end; }
+.complete-btn {
+  padding: var(--space-2) var(--space-4);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
 /* Añadidos: enlace de navegación, panel de dudas */
 .btn-link {
   text-decoration: none; border: 1px solid var(--color-border); border-radius: var(--radius);
