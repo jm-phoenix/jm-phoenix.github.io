@@ -86,11 +86,19 @@
 }
 </script>
 
+<!-- ==== CONFIG GLOBAL (único sitio para claves de almacenamiento; copia del bloque de index (en): mantener las claves iguales) ====
+     Se define antes de cualquier otro script: lo usan el tema (aquí abajo) y la landing (THEME_KEY). -->
+<script>
+const SL_CONFIG = Object.freeze({
+    themeKey: "slTheme",                    /* localStorage: "light" | "dark"; sin valor = seguir al sistema */
+    lastHashKey: "sluglauncher:lastHash"    /* localStorage: último #SLUG (restaura la app instalada sin hash) */
+});
+</script>
 <!-- Tema: sin elección guardada sigue al sistema; si la persona eligió, se respeta (localStorage "slTheme"). -->
 <script>
 (function () {
     var t = null;
-    try { t = localStorage.getItem("slTheme"); } catch (e) {}
+    try { t = localStorage.getItem(SL_CONFIG.themeKey); } catch (e) {}
     if (t !== "light" && t !== "dark") {
         t = (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
     }
@@ -512,7 +520,7 @@ html[data-theme="dark"]{color-scheme:dark}
             <button type="button" class="themeOpt" role="radio" aria-checked="false" data-theme-opt="dark" aria-label="Thème sombre" title="Sombre"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
         </div>
         <label class="srOnly" for="languageSelect">Langue</label>
-        <select id="languageSelect" class="langSelect" aria-label="Langue" onchange="changeLanguage(this.value)">
+        <select id="languageSelect" class="langSelect" autocomplete="off" aria-label="Langue">
             <option value="/launcher/">English</option>
             <option value="/launcher/es/">Español</option>
             <option value="/launcher/fr/" selected>Français</option>
@@ -809,7 +817,7 @@ html[data-theme="dark"]{color-scheme:dark}
 const PAGE_LANG = "fr";
 /* Toggle de tema: aplica al instante, recuerda la elección y, mientras no haya elección,
    sigue los cambios del sistema. */
-const THEME_KEY = "slTheme";
+const THEME_KEY = SL_CONFIG.themeKey;   /* definida en <head> */
 function currentTheme(){ return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light"; }
 function getStoredTheme(){ try { const t = localStorage.getItem(THEME_KEY); return (t === "light" || t === "dark") ? t : null; } catch (e) { return null; } }
 function paintTheme(t){
@@ -892,7 +900,7 @@ function t(key, vars){
    (2) enforceIconLimits usa t() en lugar de textos fijos. Todo lo demás es idéntico.
    ========================================================= */
 const DESKTOP_MAX = 64;             // máx. items (apps+folders) en el escritorio raíz
-const FOLDER_MAX = 35;              // máx. apps dentro de un folder
+const FOLDER_MAX = 36;              // máx. apps dentro de un folder
 let globalTheme = 2;                // 0 = dark, 1 = light, 2 = system
 const globalLang = PAGE_LANG;
 let globalSaved = 0;                // la landing nunca genera un launcher "guardado"
@@ -901,10 +909,10 @@ let pageTitle = "";
 function normalize(str) {
     if (!str) return "";
     str = str.trim();
+    if (!str) return "";   /* solo espacios: devuelve vacío (antes devolvía "https://") */
     return /^https?:\/\//i.test(str) ? str : "https://" + str;
 }
 function stripProtocol(str){ return (str||"").replace(/^https:\/\//i,''); }
-function isValidDomain(domain){ return /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(domain); }
 function escapeHtml(str){
     return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -915,9 +923,11 @@ function safeDecode(str){
 // Doble encode (ver comentario largo en index.html): el launcher decodifica TODO el hash una vez
 // antes de separar campos; con doble encode, #, "," y "|" dentro de nombres/URLs/iconos sobreviven.
 function safeEncode(str){
-    return encodeURIComponent(encodeURIComponent(str||""));
+    str = String(str || "");
+    if (typeof str.toWellFormed === "function") str = str.toWellFormed();   /* emoji partido → U+FFFD en vez de URIError */
+    return encodeURIComponent(encodeURIComponent(str));
 }
-function globalPartString(){ return `SLUG:${globalTheme},${globalLang},${globalSaved},${encodeURIComponent(pageTitle || "")}`; }
+function globalPartString(){ return `SLUG:${globalTheme},${globalLang},${globalSaved},${safeEncode(pageTitle || "")}`; }
 function getDecodedHashString(h){
     const hashOriginal = (h !== undefined) ? h : window.location.hash;
     if (!hashOriginal) return "";
@@ -1626,6 +1636,21 @@ function changeLanguage(url){
     if(!url) return;
     window.location.href = url;
 }
+
+/* Selector de idioma: refleja el idioma propio al cargar y al volver con "atrás" (pageshow, bfcache). */
+(function initLanguageSelect(){
+    var languageSelect = document.getElementById("languageSelect");
+    var ownLangPath = (PAGE_LANG === "en") ? "/launcher/" : "/launcher/" + PAGE_LANG + "/";
+    function syncLanguageSelect(){ if (languageSelect) languageSelect.value = ownLangPath; }
+    if (languageSelect) {
+        syncLanguageSelect();
+        languageSelect.addEventListener("change", function(){
+            if (this.value === ownLangPath) return;
+            changeLanguage(this.value);
+        });
+        window.addEventListener("pageshow", syncLanguageSelect);
+    }
+})();
 </script>
 </body>
 </html>

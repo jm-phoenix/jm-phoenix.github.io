@@ -2,6 +2,51 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
+<!-- ==== ÍNDICE DEL ARCHIVO (línea de inicio de cada bloque; se regenera al reorganizar) ====
+        3  <head>
+       22  CHECKLIST: cambios para las landings por idioma (es, fr, it, ...)
+       52  SEO: título, Open Graph, hreflang
+       92  JSON-LD (datos estructurados)
+      120  SL_CONFIG (claves de almacenamiento)
+      125  Script de tema (antes de pintar)
+      136  Script de modo app/landing (antes de pintar)
+      151  CSS landing (#landingStyles)
+      549  CSS app (#appStyles1)
+     1310  CSS modo híbrido (#hybridModeStyle)
+     1314  HTML shell de la landing (#landingShell)
+     1602  HTML shell de la app (#slugAppShell)
+     1775  JS de la app (índice de secciones 0–30)
+     5045  JS de la landing (IIFE de la landing en inglés)
+     5715  JS final (modo híbrido)
+     ==== -->
+<!-- ==== CAMBIOS PARA LAS LANDINGS POR IDIOMA (index es, fr, it, de, pt, ru, zh, ja, hi, ar) ====
+ Objetivo: que todas queden unificadas con este archivo. Verificado contra index (es) en el Paso 8. Para las demás
+ (fr, it, ...) ejecutar:  node landing_cmp.js archivo.html   (carpeta pruebas/; marca con ✔/✘ cada punto de abajo
+ y lista las funciones distintas a las de este archivo).
+
+ CONTEXTO
+ - Este archivo contiene la landing y la app. Las landings por idioma son SOLO landing (sin el script de la app), así que
+   conservan sus propias copias de las 15 funciones que aquí la landing toma del script de la app: bindIconPreview, escapeHtml,
+   getAppURLParts, getDecodedHashString, ioBuildModel, ioMakeRow, isValidAppURL, normalize, openSvgApiSearch, parseHash,
+   safeDecode, safeEncode, selectIconOptionFor, stripProtocol, suggestAppName. Esas copias deben quedar IDÉNTICAS a las de
+   este archivo (en index es hoy lo son, 15 de 15).
+ - NO unificar: I18N, PAGE_LANG, textos, hreflang, JSON-LD, ownLangPath ni nada propio del idioma.
+
+ CAMBIOS A APLICAR (líneas medidas en index es; en fr, it, ... pueden variar)
+  1. SL_CONFIG: copiar el bloque "CONFIG GLOBAL" de este <head> justo antes del script de tema. Cambiar
+     const THEME_KEY = "slTheme" (es, línea 810) por SL_CONFIG.themeKey, y el literal "slTheme" del script de tema del
+     <head> (es, línea 91) por SL_CONFIG.themeKey. Si el <head> usa "sluglauncher:lastHash", por SL_CONFIG.lastHashKey.
+  2. Título del launcher en el hash: globalPartString debe usar safeEncode(pageTitle) en lugar de encodeURIComponent (es, línea 918).
+     Con codificación simple, un título con # se corta y uno con %41 se corrompe.
+  3. FOLDER_MAX = 36 (es, línea 893: 35). Folder 6x6 = 36; escritorio 8x8 = 64.
+  4. normalize: añadir tras el trim   if (!str) return "";   (es, línea 899). Con solo espacios devolvía "https://".
+  5. safeEncode: copiar la versión de este archivo, con el guard de toWellFormed (es, línea 915). Evita URIError con un emoji partido.
+  6. t(): usar la versión defensiva de este archivo (cae a la propia clave, no a otro idioma). En es (línea 880) cae a I18N.es.
+  7. Quitar isValidDomain (es, línea 905): código muerto; ya se eliminó de la app (FIX #6).
+  8. Selector de idioma: añadir languageSelect / ownLangPath / syncLanguageSelect y el listener pageshow (bloque al final del
+     script de la landing de este archivo). index es solo tiene changeLanguage(url).
+  9. Al terminar: node landing_cmp.js (todo ✔) y node landing_smoke.js sobre la landing; su salida debe coincidir con la de este archivo.
+ ==== -->
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta content="index,follow,max-image-preview:large" name="robots"/>
 <title>SlugLauncher — Private web app launcher</title>
@@ -67,11 +112,21 @@
     }
   ]
 }</script>
-<!-- Tema: sin elección guardada sigue al sistema; si la persona eligió, se respeta (localStorage "slTheme"). -->
+<!-- ==== CONFIG GLOBAL (único sitio para claves de almacenamiento; las landings por idioma deben copiar este bloque: ver CAMBIOS PARA LAS LANDINGS POR IDIOMA, arriba) ====
+     Se define antes de cualquier otro script: lo usan el tema y el modo (aquí abajo),
+     la app (setTheme, persistLastHash) y la landing (THEME_KEY).
+     Las landings por idioma (/launcher/<lang>/) llevan su propia copia: mantener las claves iguales. -->
+<script>
+const SL_CONFIG = Object.freeze({
+    themeKey: "slTheme",                    /* localStorage: "light" | "dark"; sin valor = seguir al sistema */
+    lastHashKey: "sluglauncher:lastHash"    /* localStorage: último #SLUG (restaura la app instalada sin hash) */
+});
+</script>
+<!-- Tema: sin elección guardada sigue al sistema; si la persona eligió, se respeta (localStorage, clave SL_CONFIG.themeKey). -->
 <script>
 (function () {
     var t = null;
-    try { t = localStorage.getItem("slTheme"); } catch (e) {}
+    try { t = localStorage.getItem(SL_CONFIG.themeKey); } catch (e) {}
     if (t !== "light" && t !== "dark") {
         t = (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
     }
@@ -86,7 +141,7 @@
     try {
         if (!/^#SLUG/i.test(location.hash || "")) {
             var standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
-            var last = standalone ? localStorage.getItem("sluglauncher:lastHash") : null;
+            var last = standalone ? localStorage.getItem(SL_CONFIG.lastHashKey) : null;
             if (last && /^#SLUG/i.test(last)) location.replace(location.pathname + location.search + last);
         }
     } catch (e) {}
@@ -94,6 +149,10 @@
 })();
 </script>
 <style id="landingStyles">
+/* ==== CSS DE LA LANDING (activo en data-mode="landing") ====
+   Orden actual (NO reordenar: la cascada depende de él): variables :root · base · header · toggle de tema · hero ·
+   mockup · trust strip · secciones · tarjeta de preview · "Pruébalo" · modal Añadir · demo de búsqueda · FAQ · CTA ·
+   footer · modo oscuro (:where(html[data-theme="dark"])) · responsive (860px, 620px). ==== */
 :root{
     --bg-light:#fffef7;
     --bg-dark:#0c0c0c;
@@ -488,6 +547,11 @@ html[data-theme="dark"]{color-scheme:dark}
 }
 </style>
 <style data-app-style="" disabled="" id="appStyles1">
+/* ==== CSS DE LA APP (se activa en data-mode="app"; disabled en la landing) ====
+   Orden actual (NO reordenar): animaciones · color-scheme · variables :root · header · footer · contenido · borde rojo
+   (no salvado) · estado vacío · grid · iconos · scrollbars · estilo iOS · modal de carpeta · modales generales ·
+   toggle App/Folder · lista con checks · opciones de icono · side panel · modal de carga de iconos ·
+   modal Salvar/Instalar · buscador rápido. ==== */
 
 /* ---------- Animaciones ---------- */
 @keyframes animotion-fade-in { from { opacity:0; } to { opacity:1; } }
@@ -1243,6 +1307,7 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
 body.theme-dark .fieldNote.warn { color:#ffb454; }
 
 </style>
+<!-- Modo híbrido: muestra solo el shell que corresponde a data-mode ("app" o "landing"). -->
 <style id="hybridModeStyle">#slugAppShell[hidden],#landingShell[hidden]{display:none!important;}html[data-mode="app"] #landingShell{display:none!important;}html[data-mode="landing"] #slugAppShell{display:none!important;}</style>
 </head>
 <body>
@@ -1708,9 +1773,76 @@ body.theme-dark .fieldNote.warn { color:#ffb454; }
 </div>
 
 <script>
+/* ÍNDICE DE SECCIONES DEL JS DE LA APP (en el orden del archivo; sin números de línea para que no caduquen)
+   0 · CONFIGURACIÓN Y CONSTANTES
+   1 · ESTADO GLOBAL
+   2 · MODO RAÍZ HÍBRIDO (HYBRID ROOT MODE)
+   3 · DICCIONARIO i18n
+   4 · SVG INTERNOS (folder y respaldo de icono)
+   5 · HELPERS
+   6 · APLICAR I18N
+   7 · INDICADOR DE GUARDADO
+   8 · ESTADO VACÍO
+   9 · TEMA (aplicar)
+   10 · HASH: CÓDEC (formato, codificación, lectura y escritura)
+   11 · TEMPORIZADOR DE INACTIVIDAD
+   12 · MODOS (ver / editar)
+   13 · SIDE PANEL
+   14 · RENDER: ITEMS DEL GRID
+   15 · MODO MOVER
+   16 · FOLDER: abrir / cerrar
+   17 · ICONOS: LÍMITES, DETECCIÓN Y VISTA PREVIA
+   18 · RENDER: LAUNCHER PRINCIPAL
+   19 · MODAL: AÑADIR (app y nombre de la página)
+   20 · BUSCADOR RÁPIDO
+   21 · MODAL: AÑADIR FOLDER
+   22 · MODAL: EDITAR APP
+   23 · MODAL: EDITAR FOLDER
+   24 · EXPORT / IMPORT
+   25 · AJUSTES: TEMA E IDIOMA (setters)
+   26 · SALVAR Y COMPARTIR (plataforma, URLs, modal Salvar/Instalar y Compartir)
+   27 · ICONOS EMBEBIDOS PARA EL MOCKUP COMPARTIDO
+   28 · MOCKUP ESTÁTICO DEL LAUNCHER (HTML + CSS puro, sin JS)
+   29 · LISTENERS GLOBALES (scroll de scrollbars, Escape unificado)
+   30 · INIT
+   ------------------------------------------------------------------------------------
+   Estado propio de cada sección (let/const junto a sus funciones): 5 _bodyLockCount · 14 _iconBgCache ·
+   19 addAppTargetFolder, addAppTargetFolderIndex, addType, _iconCandidates, addIconCtx, editIconCtx, appNameAuto ·
+   24 urlIOMode, ioModel, ioRefs · 27 _mockupIconCache, _mockupIconFailAt, _mockupIconDomainOf, _iconsRun */
 
 /* =========================================================
-   ESTADO GLOBAL
+   0 · CONFIGURACIÓN Y CONSTANTES
+   Único sitio con valores fijos de la app (solo literales: mover/ordenar aquí es seguro).
+   Claves de almacenamiento: SL_CONFIG (definido en <head>).
+   ========================================================= */
+
+/* Límites del launcher: elementos en el escritorio y apps por carpeta */
+const DESKTOP_MAX = 64;
+const FOLDER_MAX = 36;
+const DESKTOP_OVERFLOW = DESKTOP_MAX + 1;
+
+/* Tiempos y avisos */
+const MODE_TIMEOUT_MS = 10000;      /* inactividad en modo edición/mover */
+const URL_WARN_LENGTH = 2000;       /* avisa cuando el hash supera estos caracteres */
+
+/* URLs públicas */
+const CANONICAL_LAUNCHER_URL = "https://git.inriris.com/launcher/";
+const LAUNCHER_PUBLIC_BASE = "https://git.inriris.com/launcher/";
+const LIVE_LANDING_LANGS = ["en", "es", "fr", "de", "pt", "it", "ru", "zh", "ja", "hi", "ar"];
+
+/* Preview de Compartir/Guardar: iconos vía proxy propio */
+const MOCKUP_ICON_SOURCE = "/launcher/icon-proxy?u=";   /* Cloudflare Worker, mismo origen */
+const MOCKUP_ICON_S2 = "https://www.google.com/s2/favicons?sz=128&domain=";   /* respaldo y valor por defecto */
+const MOCKUP_ICON_PX = 96;
+const MOCKUP_ICON_TIMEOUT_MS = 5000;     /* por icono; todos se piden en paralelo */
+const MOCKUP_ICON_RETRY_MS = 60000;      /* un fallo no se reintenta antes de 1 min */
+const MOCKUP_MOBILE_COUNT  = 16;         /* cuadrícula móvil 4×4 */
+const MOCKUP_DESKTOP_COUNT = 18;         /* cuadrícula escritorio 6×3 */
+const MOCKUP_MAX_DATA_ICON = 20000;      /* máx. caracteres por icono embebido (PNG 96px ≈ 5-15 KB) */
+const MOCKUP_MAX_TOTAL_ICONS = 260000;   /* presupuesto total de iconos embebidos por archivo */
+
+/* =========================================================
+   1 · ESTADO GLOBAL
    ========================================================= */
 let appsState = [];
 let workingState = null;
@@ -1728,20 +1860,16 @@ let openFolderRootIndex = null;
 
 let inactivityTimer = null;
 let timerSuspended = false;
-const MODE_TIMEOUT_MS = 10000;
-const DESKTOP_MAX = 64;
-const FOLDER_MAX = 35;
-const DESKTOP_OVERFLOW = DESKTOP_MAX + 1;
 
 
 /* =========================================================
-   HYBRID ROOT MODE
+   2 · MODO RAÍZ HÍBRIDO (HYBRID ROOT MODE)
    ========================================================= */
 function isSlugAppMode(){ return /^#SLUG/i.test(window.location.hash || ""); }
 function goToLocalizedLanding(event){
     if (event) event.preventDefault();
     var lang = (typeof globalLang === "string" ? globalLang : "en").toLowerCase();
-    var supported = ["en","es","fr","de","pt","it","ru","zh","ja","hi","ar"];
+    var supported = LIVE_LANDING_LANGS;   /* lista única: ver bloque 0 */
     if (!supported.includes(lang)) lang = "en";
     closeSlugModal();
     closeSidePanel();
@@ -1750,7 +1878,7 @@ function goToLocalizedLanding(event){
 }
 
 /* =========================================================
-   DICCIONARIO i18n
+   3 · DICCIONARIO i18n
    FIX #2 — Añadidas claves limit* para enforceIconLimits traducido.
    ========================================================= */
 const i18n = {
@@ -2226,7 +2354,7 @@ const nativeLangNames = {
 };
 
 /* =========================================================
-   SVG INTERNO DE FOLDER
+   4 · SVG INTERNOS (folder y respaldo de icono)
    ========================================================= */
 const FOLDER_SVG = '<svg class="folderSvgIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#4A90E2"><path d="M10 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V8C22 6.9 21.1 6 20 6H12L10 4Z"/></svg>';
 
@@ -2235,19 +2363,12 @@ const FALLBACK_ICON = 'data:image/svg+xml;utf8,' + encodeURIComponent(
 );
 
 /* =========================================================
-   HELPERS
+   5 · HELPERS
    ========================================================= */
-function normalize(str) {
-    if (!str) return "";
-    str = str.trim();
-    return /^https?:\/\//i.test(str) ? str : "https://" + str;
-}
-function stripProtocol(str){ return (str||"").replace(/^https:\/\//i,''); }
 /* FIX #6 — isValidDomain() eliminado: no se usaba en ningún sitio. */
 function escapeHtml(str){
     return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-const URL_WARN_LENGTH = 2000;
 function attachIconFallback(img){
     if (!img) return;
     img.addEventListener("error", ()=>{
@@ -2269,8 +2390,50 @@ function unlockBodyScroll(){
     if (_bodyLockCount === 0) document.body.style.overflow = "";
 }
 
+/* ---- Validación y nombre sugerido de apps (compartido por Añadir y Editar) ---- */
+function suggestAppName(value){
+    try {
+        let raw = (value || "").trim();
+        if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) raw = "https://" + raw;
+        const host = new URL(raw).hostname.toLowerCase().replace(/^\.+|\.+$/g, "");
+        const ignored = new Set(["www","www2","www3","www4","ww1","ww2","m","mobile"]);
+        const labels = host.split(".").filter(Boolean);
+        const multiTlds = new Set(["co.uk","org.uk","com.au","net.au","co.nz","com.br","com.mx","co.jp","co.in"]);
+        let suffixCount = 1;
+        if (labels.length >= 3 && multiTlds.has(labels.slice(-2).join("."))) suffixCount = 2;
+        const domainIndex = Math.max(0, labels.length - suffixCount - 1);
+        const brand = labels[domainIndex] || labels[0] || host;
+        const subdomains = labels.slice(0, domainIndex).filter(part => !ignored.has(part));
+        const meaningful = subdomains.length ? subdomains[subdomains.length-1] : "";
+        const titleCase = str => str.split(/[-_]+/).filter(Boolean).map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(" ");
+        return [titleCase(brand), meaningful ? titleCase(meaningful) : ""].filter(Boolean).join(" ");
+    } catch(e) { return ""; }
+}
+
+function isValidAppURL(value){
+    let raw = (value || "").trim();
+    if (!raw) return false;
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) raw = "https://" + raw;
+    try{
+        const u = new URL(raw);
+        if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+        const domainPattern = /^[a-z0-9.-]+\.[a-z]{2,}$/i;
+        const ipv4Pattern = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/;
+        return domainPattern.test(u.hostname) || ipv4Pattern.test(u.hostname);
+    }catch(e){
+        return false;
+    }
+}
+
+function getAppURLParts(value){
+    let raw = (value || "").trim();
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) raw = "https://" + raw;
+    const u = new URL(raw);
+    return { url: u.href, domain: u.hostname };
+}
+
 /* =========================================================
-   APLICAR I18N
+   6 · APLICAR I18N
    FIX #6 — Eliminadas las dos líneas duplicadas de renamePageLink/slugRenameBtn
    (applyI18n ya las aplica).
    ========================================================= */
@@ -2376,7 +2539,7 @@ function applyI18n() {
 }
 
 /* =========================================================
-   INDICADOR DE GUARDADO
+   7 · INDICADOR DE GUARDADO
    ========================================================= */
 function updateSavedIndicator(){
     const savedSpan = document.getElementById("footerSaved");
@@ -2389,8 +2552,15 @@ function updateSavedIndicator(){
     document.body.classList.toggle("unsavedBorder", globalSaved === 0 && !isEmpty);
 }
 
+function markSavedAndRewriteHash(){
+    globalSaved = 1;
+    const rest = getRawRestParts();
+    location.hash = "#" + [globalPartString(), ...rest].join("#");
+    updateSavedIndicator();
+}
+
 /* =========================================================
-   ESTADO VACÍO
+   8 · ESTADO VACÍO
    ========================================================= */
 function updateEmptyState(){
     const isEmpty = getActiveState().length === 0;
@@ -2399,7 +2569,7 @@ function updateEmptyState(){
 }
 
 /* =========================================================
-   TEMA
+   9 · TEMA (aplicar)
    FIX #3 — applyTheme() sincroniza data-theme para que la landing lo vea.
    FIX #3b — setTheme() escribe localStorage.slTheme para la landing.
    ========================================================= */
@@ -2419,10 +2589,64 @@ function applyTheme() {
 }
 
 /* =========================================================
-   HASH: GLOBAL + ITEMS
+   10 · HASH: CÓDEC (formato, codificación, lectura y escritura)
    FIX #1 — pageTitle se codifica/decodifica con safeEncode/safeDecode.
    ========================================================= */
-function globalPartString(){ return `SLUG:${globalTheme},${globalLang},${globalSaved},${safeEncode(pageTitle || "")}`; }
+
+/* FORMATO DEL HASH (el estado completo del launcher vive en la URL)
+
+   #SLUG:<tema>,<idioma>,<guardado>,<título>#<item>#<item>...
+
+     tema      0 = oscuro, 1 = claro, 2 = sistema (ver applyTheme)
+     idioma    código de 2 letras que exista en i18n (en, es, ...); si no existe se ignora
+     guardado  1 = el usuario ya salvó este launcher, 0 = no salvado (indicador y borde rojo)
+     título    nombre de la página (pageTitle)
+
+   item de app       <nombre>,<url>,<icono>
+   item de carpeta   FOLDER:<nombre>[::<icono>][|<app>|<app>...]     con <app> = <nombre>,<url>,<icono>
+
+   Reglas del códec:
+   - Todo texto de usuario (título, nombre, url, icono) se guarda con safeEncode, que es encodeURIComponent
+     aplicado DOS veces. Leer decodifica el hash completo una vez (getDecodedHashString) y cada campo otra
+     vez (safeDecode). Así los separadores  ,  #  |  :  ::  nunca aparecen crudos dentro de un campo.
+   - build quita solo "https://" (stripProtocol); parse lo devuelve con normalize. "http://" se conserva.
+   - normalize recorta espacios y antepone "https://"; con un valor de solo espacios devuelve "https://"
+     (la UI siempre hace trim antes, solo se alcanza con un hash escrito a mano).
+   - Un hash roto no lanza excepción (safeDecode/getDecodedHashString capturan URIError).
+   - Límite conocido: encodeURIComponent lanza URIError con un sustituto UTF-16 suelto (emoji partido).
+   - Las pruebas de ida y vuelta de este códec están en codec_tests.js (fuera de este archivo). */
+
+/* ---- 10.1 Codificación de campos ---- */
+function safeEncode(str){
+    str = String(str || "");
+    if (typeof str.toWellFormed === "function") str = str.toWellFormed();   /* emoji partido → U+FFFD en vez de URIError */
+    return encodeURIComponent(encodeURIComponent(str));
+}
+
+function safeDecode(str){
+    if (!str) return str;
+    try { return decodeURIComponent(str); } catch(e){ return str; }
+}
+
+function normalize(str) {
+    if (!str) return "";
+    str = str.trim();
+    if (!str) return "";   /* solo espacios: devuelve vacío (antes devolvía "https://") */
+    return /^https?:\/\//i.test(str) ? str : "https://" + str;
+}
+
+function stripProtocol(str){ return (str||"").replace(/^https:\/\//i,''); }
+
+/* ---- 10.2 Lectura: hash → estado ---- */
+function getDecodedHashString(h){
+    const hashOriginal = (h !== undefined) ? h : window.location.hash;
+    if (!hashOriginal) return "";
+    try {
+        return decodeURIComponent(hashOriginal);
+    } catch(e) {
+        return hashOriginal;
+    }
+}
 
 function parseGlobal() {
     const hash = getDecodedHashString().substring(1);
@@ -2440,34 +2664,7 @@ function parseGlobal() {
         globalSaved = (savedStr === "1") ? 1 : 0;
     }
 }
-function getDecodedHashString(h){
-    const hashOriginal = (h !== undefined) ? h : window.location.hash;
-    if (!hashOriginal) return "";
-    try {
-        return decodeURIComponent(hashOriginal);
-    } catch(e) {
-        return hashOriginal;
-    }
-}
-function getRawRestParts(){
-    const raw = window.location.hash.startsWith("#") ? window.location.hash.substring(1) : window.location.hash;
-    if (!raw) return [];
-    return raw.split("#").filter(Boolean).filter(p => {
-        const decoded = safeDecode(p);
-        return !p.startsWith("SLUG:") && !decoded.startsWith("SLUG:");
-    });
-}
-function updateGlobalInHash() {
-    const rest = getRawRestParts();
-    location.hash = "#" + [globalPartString(), ...rest].join("#");
-}
-function safeDecode(str){
-    if (!str) return str;
-    try { return decodeURIComponent(str); } catch(e){ return str; }
-}
-function safeEncode(str){
-    return encodeURIComponent(encodeURIComponent(str||""));
-}
+
 function parseHash(h){
     const hash = getDecodedHashString(h).substring(1);
     if (!hash) return [];
@@ -2502,9 +2699,19 @@ function parseHash(h){
     });
     return result;
 }
-function serializeHash(state){
-    location.hash = buildHashFromState(state);
+
+function getRawRestParts(){
+    const raw = window.location.hash.startsWith("#") ? window.location.hash.substring(1) : window.location.hash;
+    if (!raw) return [];
+    return raw.split("#").filter(Boolean).filter(p => {
+        const decoded = safeDecode(p);
+        return !p.startsWith("SLUG:") && !decoded.startsWith("SLUG:");
+    });
 }
+
+/* ---- 10.3 Escritura: estado → hash ---- */
+function globalPartString(){ return `SLUG:${globalTheme},${globalLang},${globalSaved},${safeEncode(pageTitle || "")}`; }
+
 function buildHashFromState(state){
     const parts=[];
     parts.push(globalPartString());
@@ -2526,8 +2733,17 @@ function buildHashFromState(state){
     return "#" + parts.join("#");
 }
 
+function serializeHash(state){
+    location.hash = buildHashFromState(state);
+}
+
+function updateGlobalInHash() {
+    const rest = getRawRestParts();
+    location.hash = "#" + [globalPartString(), ...rest].join("#");
+}
+
 /* =========================================================
-   TEMPORIZADOR DE INACTIVIDAD
+   11 · TEMPORIZADOR DE INACTIVIDAD
    ========================================================= */
 function resetInactivityTimer(){
     if (currentMode === "normal" || timerSuspended) return;
@@ -2542,7 +2758,7 @@ function resumeInactivityTimer(){ timerSuspended = false; resetInactivityTimer()
 });
 
 /* =========================================================
-   MODOS
+   12 · MODOS (ver / editar)
    ========================================================= */
 function getActiveState(){ return currentMode === "normal" ? appsState : workingState; }
 
@@ -2616,7 +2832,7 @@ document.getElementById("editBtn").addEventListener("click", ()=>{
 });
 
 /* =========================================================
-   SIDE PANEL
+   13 · SIDE PANEL
    ========================================================= */
 function openSidePanel(){
     const overlay = document.getElementById("sidePanelOverlay");
@@ -2662,7 +2878,7 @@ function closeSidePanel(e){
 }
 
 /* =========================================================
-   RENDER: ITEMS DEL GRID
+   14 · RENDER: ITEMS DEL GRID
    ========================================================= */
 const _iconBgCache = new Map();
 function pickEdgeColor(data, w, h){
@@ -2774,8 +2990,48 @@ function attachItemInteraction(el, item, path, isFolder){
     }
 }
 
+function renderDesktopAddAppTile(parent){
+    const div = document.createElement("div");
+    div.className = "appIcon addAppTile";
+    div.dataset.itemType = "add-app";
+    div.setAttribute("role","button");
+    div.setAttribute("tabindex","0");
+    div.setAttribute("aria-label", t("addApp"));
+    div.innerHTML = `<div class="addAppPlus"><svg class="addAppPlusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></div>`;
+    const open = (e)=>{
+        e.preventDefault();
+        openAddModal();
+        resetInactivityTimer();
+    };
+    div.addEventListener("click", open);
+    div.addEventListener("keydown", e=>{
+        if (e.key==="Enter" || e.key===" ") open(e);
+    });
+    parent.appendChild(div);
+}
+
+function renderFolderAddAppTile(folder, parent){
+    const div = document.createElement("div");
+    div.className = "appIcon addAppTile";
+    div.dataset.itemType = "add-app";
+    div.setAttribute("role","button");
+    div.setAttribute("tabindex","0");
+    div.setAttribute("aria-label", t("addApp"));
+    div.innerHTML = `<div class="addAppPlus"><svg class="addAppPlusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></div>`;
+    const open = (e)=>{
+        e.preventDefault();
+        openAddModal(folder);
+        resetInactivityTimer();
+    };
+    div.addEventListener("click", open);
+    div.addEventListener("keydown", e=>{
+        if (e.key==="Enter" || e.key===" ") open(e);
+    });
+    parent.appendChild(div);
+}
+
 /* =========================================================
-   MODO MOVER
+   15 · MODO MOVER
    ========================================================= */
 function attachMoveHandlers(el, item, path, isFolder){
     let pointerId=null, startX=0, startY=0, dragging=false;
@@ -2928,60 +3184,8 @@ function performDrop(x,y,path,isFolder,draggedEl){
     arr.splice(insertAt,0,moved);
 }
 
-function renderDesktopAddAppTile(parent){
-    const div = document.createElement("div");
-    div.className = "appIcon addAppTile";
-    div.dataset.itemType = "add-app";
-    div.setAttribute("role","button");
-    div.setAttribute("tabindex","0");
-    div.setAttribute("aria-label", t("addApp"));
-    div.innerHTML = `<div class="addAppPlus"><svg class="addAppPlusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></div>`;
-    const open = (e)=>{
-        e.preventDefault();
-        openAddModal();
-        resetInactivityTimer();
-    };
-    div.addEventListener("click", open);
-    div.addEventListener("keydown", e=>{
-        if (e.key==="Enter" || e.key===" ") open(e);
-    });
-    parent.appendChild(div);
-}
-
-function renderFolderAddAppTile(folder, parent){
-    const div = document.createElement("div");
-    div.className = "appIcon addAppTile";
-    div.dataset.itemType = "add-app";
-    div.setAttribute("role","button");
-    div.setAttribute("tabindex","0");
-    div.setAttribute("aria-label", t("addApp"));
-    div.innerHTML = `<div class="addAppPlus"><svg class="addAppPlusIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></div>`;
-    const open = (e)=>{
-        e.preventDefault();
-        openAddModal(folder);
-        resetInactivityTimer();
-    };
-    div.addEventListener("click", open);
-    div.addEventListener("keydown", e=>{
-        if (e.key==="Enter" || e.key===" ") open(e);
-    });
-    parent.appendChild(div);
-}
-
-function refreshFolderModalGrid(modalEl, appsArray){
-    const grid = modalEl.querySelector(".folderGrid");
-    if (!grid) return;
-    grid.innerHTML="";
-    grid.classList.toggle("wiggleMode", currentMode==="move");
-    appsArray.slice(0,FOLDER_MAX).forEach((app,idx)=>{
-        renderApp(app, grid, {array:appsArray, index:idx});
-    });
-    const folder = getActiveState().find(item=>item.type==="folder" && item.apps===appsArray);
-    if (folder && currentMode === "edit" && appsArray.length < FOLDER_MAX) renderFolderAddAppTile(folder, grid);
-}
-
 /* =========================================================
-   FOLDER: abrir / cerrar
+   16 · FOLDER: abrir / cerrar
    ========================================================= */
 function openFolder(folder, path){
     const maxIcons=FOLDER_MAX;
@@ -3096,8 +3300,20 @@ function refreshOpenFolderModal(){
     refreshFolderModalGrid(modal, folder.apps || []);
 }
 
+function refreshFolderModalGrid(modalEl, appsArray){
+    const grid = modalEl.querySelector(".folderGrid");
+    if (!grid) return;
+    grid.innerHTML="";
+    grid.classList.toggle("wiggleMode", currentMode==="move");
+    appsArray.slice(0,FOLDER_MAX).forEach((app,idx)=>{
+        renderApp(app, grid, {array:appsArray, index:idx});
+    });
+    const folder = getActiveState().find(item=>item.type==="folder" && item.apps===appsArray);
+    if (folder && currentMode === "edit" && appsArray.length < FOLDER_MAX) renderFolderAddAppTile(folder, grid);
+}
+
 /* =========================================================
-   LÍMITES DE ÍCONOS
+   17 · ICONOS: LÍMITES, DETECCIÓN Y VISTA PREVIA
    FIX #2 — enforceIconLimits traducido vía t().
    ========================================================= */
 function enforceIconLimits(state){
@@ -3127,8 +3343,98 @@ function enforceIconLimits(state){
     return {state, messages, changed};
 }
 
+/* ---- Detección de iconos y vista previa (usadas por Añadir y Editar) ---- */
+function detectIconsFor(domain, ctx, options = {}){
+    const preserveCurrent = !!options.preserveCurrent;
+    if (!preserveCurrent){
+        ctx.candidates.length = 0;
+    }
+    const s2 = `https://www.google.com/s2/favicons?sz=128&domain=${encodeURIComponent(domain)}`;
+    if (!ctx.candidates.find(c=>c.url===s2)){
+        ctx.candidates.push({url:s2, label:"S2"});
+    }
+    if (!preserveCurrent){
+        selectIconOptionFor(s2, ctx);
+    }
+    renderIconOptionsFor(ctx);
+
+    const guesses = [ `https://${domain}/favicon.ico`, `https://${domain}/apple-touch-icon.png` ];
+    guesses.forEach(u=>{
+        const img = new Image();
+        img.onload = () => {
+            if (img.naturalWidth > 0 && !ctx.candidates.find(c=>c.url===u)){
+                ctx.candidates.push({url:u, label:"favicon"});
+                renderIconOptionsFor(ctx);
+            }
+        };
+        img.onerror = () => {};
+        img.src = u;
+    });
+
+    const ogCtl = new AbortController();
+    const ogTimer = setTimeout(()=>ogCtl.abort(), 5000);
+    fetch(`https://${domain}`, {mode:"cors", signal: ogCtl.signal, credentials:"omit", referrerPolicy:"no-referrer"}).then(r=>r.text()).then(html=>{
+        html = html.slice(0, 200000);
+        let m = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+             || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+        if (m && m[1]){
+            let og = m[1];
+            if (og.startsWith("//")) og = "https:"+og;
+            else if (og.startsWith("/")) og = `https://${domain}${og}`;
+            if (!ctx.candidates.find(c=>c.url===og)){
+                ctx.candidates.push({url:og, label:"OG"});
+                renderIconOptionsFor(ctx);
+            }
+        }
+    }).catch(()=>{}).finally(()=>clearTimeout(ogTimer));
+}
+
+function renderIconOptionsFor(ctx){
+    const row = document.getElementById(ctx.rowId);
+    if (!row) return;
+    row.innerHTML="";
+    const current = stripProtocol(document.getElementById(ctx.iconInputId).value.trim());
+    ctx.candidates.forEach(c=>{
+        const img=document.createElement("img");
+        img.src=c.url;
+        img.title=c.label;
+        img.className="iconOption" + (stripProtocol(c.url)===current ? " selectedIcon":"");
+        img.onclick=()=>selectIconOptionFor(c.url, ctx);
+        row.appendChild(img);
+    });
+}
+
+function selectIconOptionFor(url, ctx){
+    document.getElementById(ctx.iconInputId).value = stripProtocol(url);
+    const preview = document.getElementById(ctx.previewId);
+    preview.src = normalize(url);
+    preview.style.display="block";
+    document.querySelectorAll(`#${ctx.rowId} .iconOption`).forEach(el=>{
+        el.classList.toggle("selectedIcon", stripProtocol(el.src)===stripProtocol(url));
+    });
+}
+
+function bindIconPreview(inputId, previewId){
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+    if (!input || !preview) return;
+    input.addEventListener("input", () => {
+        const icon = input.value.trim();
+        if (!icon){ preview.style.display="none"; return; }
+        preview.src = normalize(icon);
+        preview.style.display = "block";
+    });
+}
+
+function openSvgApiSearch(nameFieldId){
+    const field = document.getElementById(nameFieldId);
+    const query = field ? field.value.trim() : "";
+    const url = query ? `https://svgapi.com/?q=${encodeURIComponent(query)}` : "https://svgapi.com/";
+    window.open(url, "_blank", "noopener");
+}
+
 /* =========================================================
-   RENDER: LAUNCHER PRINCIPAL
+   18 · RENDER: LAUNCHER PRINCIPAL
    FIX #2 — alerta traducida vía t("limitDesktopBody").
    ========================================================= */
 function renderLauncher(){
@@ -3167,13 +3473,14 @@ function renderLauncher(){
 }
 
 /* =========================================================
-   MODAL: AÑADIR
+   19 · MODAL: AÑADIR (app y nombre de la página)
    FIX #5 — lockBodyScroll/unlockBodyScroll.
    ========================================================= */
 let addAppTargetFolder = null;
 let addAppTargetFolderIndex = -1;
 let addType = "app";
 
+/* ---- 19.1 Añadir app o carpeta: tipo, abrir y cerrar ---- */
 function setAddType(type){
     addType = type;
     document.getElementById("addTypeAppBtn").classList.toggle("active", type==="app");
@@ -3238,6 +3545,7 @@ function closeAddModal(){
     unlockBodyScroll();  /* FIX #5 */
 }
 
+/* ---- 19.2 Nombre de la página ---- */
 function updatePageTitleDisplay(){
     const suffix = document.getElementById("pageTitleSuffix");
     const suffixText = document.getElementById("pageTitleSuffixText");
@@ -3280,67 +3588,6 @@ function savePageName(){
     updateGlobalInHash();
     updateSavedIndicator();
     closeRenamePageModal();
-}
-
-function openSlugModal(){
-    closeSidePanel();
-    document.getElementById("slugInfoModal").style.display="block";
-    lockBodyScroll();  /* FIX #5 */
-}
-function closeSlugModal(){
-    document.getElementById("slugInfoModal").style.display="none";
-    unlockBodyScroll();  /* FIX #5 */
-}
-async function shareLauncher(){
-    closeSidePanel();
-    const url = getCurrentSlugLauncherURL();
-    /* Carga los iconos (vía proxy) con modal de progreso; si no hay nada que cargar, sigue directo. */
-    const pre = await prepareMockupIcons();
-    if (!pre.proceed) { closeSlugModal(); return; }   /* cancelado por el usuario */
-    const {filename, html} = shortcutFileInfo(url);
-
-    /* Respaldo de siempre: descargar el archivo o, si no se puede, copiar la URL. */
-    const fallbackShare = async () => {
-        try {
-            downloadTextFile(filename, html, "text/html;charset=utf-8");
-            alert(t("shareDownloaded"));
-        } catch(_) {
-            try {
-                await navigator.clipboard.writeText(getShareableSlugURL());
-                alert(t("urlCopied"));
-            } catch(__) { /* silencioso */ }
-        }
-    };
-
-    let shareData = null;
-    try {
-        const file = new File([html], filename, { type:"text/html" });
-        shareData = { files:[file], title: pageTitle || "SlugLauncher", text: t("shareText") };
-        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-            await navigator.share(shareData);
-            closeIconsLoadingModal();
-        } else {
-            closeIconsLoadingModal();
-            downloadTextFile(filename, html, "text/html;charset=utf-8");
-            alert(t("shareDownloaded"));
-        }
-    } catch (err) {
-        if (err && err.name === "AbortError") {
-            closeIconsLoadingModal();
-        } else if (err && err.name === "NotAllowedError" && pre.waited && shareData) {
-            /* Tras la espera el navegador (p. ej. Safari/iOS) pide un toque nuevo: botón "Compartir" en el modal. */
-            showIconsReadyStep(async () => {
-                try { await navigator.share(shareData); }
-                catch (e2) { if (!(e2 && e2.name === "AbortError")) { closeIconsLoadingModal(); await fallbackShare(); } }
-                finally { closeIconsLoadingModal(); }
-            });
-        } else {
-            closeIconsLoadingModal();
-            await fallbackShare();
-        }
-    } finally {
-        closeSlugModal();
-    }
 }
 
 let _iconCandidates = [];
@@ -3407,29 +3654,71 @@ document.getElementById("editAppIcon").addEventListener("input", () => {
     renderIconOptionsFor(editIconCtx);
 });
 
-function bindIconPreview(inputId, previewId){
-    const input = document.getElementById(inputId);
-    const preview = document.getElementById(previewId);
-    if (!input || !preview) return;
-    input.addEventListener("input", () => {
-        const icon = input.value.trim();
-        if (!icon){ preview.style.display="none"; return; }
-        preview.src = normalize(icon);
-        preview.style.display = "block";
-    });
-}
 bindIconPreview("folderIcon","folderIconPreview");
 bindIconPreview("editFolderIcon","editFolderIconPreview");
 
-function openSvgApiSearch(nameFieldId){
-    const field = document.getElementById(nameFieldId);
-    const query = field ? field.value.trim() : "";
-    const url = query ? `https://svgapi.com/?q=${encodeURIComponent(query)}` : "https://svgapi.com/";
-    window.open(url, "_blank", "noopener");
+/* ---- 19.3 Guardar app (usado por Añadir) ---- */
+function persistActiveState(state){
+    globalSaved = 0;
+    if (currentMode === "normal"){
+        serializeHash(state);
+        appsState = parseHash();
+    }
+}
+
+function refreshOpenFolderForIndex(folderIndex){
+    if (folderIndex < 0) return;
+    const state = getActiveState();
+    const folder = state[folderIndex];
+    if (!folder || folder.type !== "folder") return;
+    const modal = document.querySelector(".folderModal");
+    if (modal) refreshFolderModalGrid(modal, folder.apps || []);
+}
+
+function saveApp(){
+    const name = document.getElementById("appName").value.trim();
+    const urlRaw = document.getElementById("appURL").value.trim();
+    let iconRaw = document.getElementById("appIcon").value.trim();
+
+    if (!name || !urlRaw) { alert(t("invalidData")); return; }
+    if (!isValidAppURL(urlRaw)) { alert(t("invalidDomain")); return; }
+    const {url:fullURL, domain} = getAppURLParts(urlRaw);
+    if (!iconRaw){ iconRaw = stripProtocol(`https://www.google.com/s2/favicons?sz=128&domain=${domain}`); }
+
+    const newApp = {
+        type:"app",
+        name,
+        url:normalize(fullURL),
+        icon:normalize(iconRaw)
+    };
+
+    const state = getActiveState();
+
+    if (addAppTargetFolder){
+        const folderIndex = addAppTargetFolderIndex;
+        const currentFolder = state[folderIndex];
+        if (!currentFolder || currentFolder.type !== "folder"){
+            alert(t("invalidData"));
+            closeAddModal();
+            return;
+        }
+        currentFolder.apps = currentFolder.apps || [];
+        currentFolder.apps.push(newApp);
+        persistActiveState(state);
+        closeAddModal();
+        renderLauncher();
+        refreshOpenFolderForIndex(folderIndex);
+        return;
+    }
+
+    state.push(newApp);
+    persistActiveState(state);
+    closeAddModal();
+    renderLauncher();
 }
 
 /* =========================================================
-   BUSCADOR RÁPIDO
+   20 · BUSCADOR RÁPIDO
    ========================================================= */
 function flattenSearchIndex(){
     const state = getActiveState();
@@ -3495,136 +3784,8 @@ document.getElementById("searchModalOverlay").addEventListener("click",(e)=>{
     if (e.target.id === "searchModalOverlay") closeSearchModal();
 });
 
-function detectIconsFor(domain, ctx, options = {}){
-    const preserveCurrent = !!options.preserveCurrent;
-    if (!preserveCurrent){
-        ctx.candidates.length = 0;
-    }
-    const s2 = `https://www.google.com/s2/favicons?sz=128&domain=${encodeURIComponent(domain)}`;
-    if (!ctx.candidates.find(c=>c.url===s2)){
-        ctx.candidates.push({url:s2, label:"S2"});
-    }
-    if (!preserveCurrent){
-        selectIconOptionFor(s2, ctx);
-    }
-    renderIconOptionsFor(ctx);
-
-    const guesses = [ `https://${domain}/favicon.ico`, `https://${domain}/apple-touch-icon.png` ];
-    guesses.forEach(u=>{
-        const img = new Image();
-        img.onload = () => {
-            if (img.naturalWidth > 0 && !ctx.candidates.find(c=>c.url===u)){
-                ctx.candidates.push({url:u, label:"favicon"});
-                renderIconOptionsFor(ctx);
-            }
-        };
-        img.onerror = () => {};
-        img.src = u;
-    });
-
-    const ogCtl = new AbortController();
-    const ogTimer = setTimeout(()=>ogCtl.abort(), 5000);
-    fetch(`https://${domain}`, {mode:"cors", signal: ogCtl.signal, credentials:"omit", referrerPolicy:"no-referrer"}).then(r=>r.text()).then(html=>{
-        html = html.slice(0, 200000);
-        let m = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
-             || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
-        if (m && m[1]){
-            let og = m[1];
-            if (og.startsWith("//")) og = "https:"+og;
-            else if (og.startsWith("/")) og = `https://${domain}${og}`;
-            if (!ctx.candidates.find(c=>c.url===og)){
-                ctx.candidates.push({url:og, label:"OG"});
-                renderIconOptionsFor(ctx);
-            }
-        }
-    }).catch(()=>{}).finally(()=>clearTimeout(ogTimer));
-}
-
-function renderIconOptionsFor(ctx){
-    const row = document.getElementById(ctx.rowId);
-    if (!row) return;
-    row.innerHTML="";
-    const current = stripProtocol(document.getElementById(ctx.iconInputId).value.trim());
-    ctx.candidates.forEach(c=>{
-        const img=document.createElement("img");
-        img.src=c.url;
-        img.title=c.label;
-        img.className="iconOption" + (stripProtocol(c.url)===current ? " selectedIcon":"");
-        img.onclick=()=>selectIconOptionFor(c.url, ctx);
-        row.appendChild(img);
-    });
-}
-function selectIconOptionFor(url, ctx){
-    document.getElementById(ctx.iconInputId).value = stripProtocol(url);
-    const preview = document.getElementById(ctx.previewId);
-    preview.src = normalize(url);
-    preview.style.display="block";
-    document.querySelectorAll(`#${ctx.rowId} .iconOption`).forEach(el=>{
-        el.classList.toggle("selectedIcon", stripProtocol(el.src)===stripProtocol(url));
-    });
-}
-
-function persistActiveState(state){
-    globalSaved = 0;
-    if (currentMode === "normal"){
-        serializeHash(state);
-        appsState = parseHash();
-    }
-}
-
-function refreshOpenFolderForIndex(folderIndex){
-    if (folderIndex < 0) return;
-    const state = getActiveState();
-    const folder = state[folderIndex];
-    if (!folder || folder.type !== "folder") return;
-    const modal = document.querySelector(".folderModal");
-    if (modal) refreshFolderModalGrid(modal, folder.apps || []);
-}
-
-function saveApp(){
-    const name = document.getElementById("appName").value.trim();
-    const urlRaw = document.getElementById("appURL").value.trim();
-    let iconRaw = document.getElementById("appIcon").value.trim();
-
-    if (!name || !urlRaw) { alert(t("invalidData")); return; }
-    if (!isValidAppURL(urlRaw)) { alert(t("invalidDomain")); return; }
-    const {url:fullURL, domain} = getAppURLParts(urlRaw);
-    if (!iconRaw){ iconRaw = stripProtocol(`https://www.google.com/s2/favicons?sz=128&domain=${domain}`); }
-
-    const newApp = {
-        type:"app",
-        name,
-        url:normalize(fullURL),
-        icon:normalize(iconRaw)
-    };
-
-    const state = getActiveState();
-
-    if (addAppTargetFolder){
-        const folderIndex = addAppTargetFolderIndex;
-        const currentFolder = state[folderIndex];
-        if (!currentFolder || currentFolder.type !== "folder"){
-            alert(t("invalidData"));
-            closeAddModal();
-            return;
-        }
-        currentFolder.apps = currentFolder.apps || [];
-        currentFolder.apps.push(newApp);
-        persistActiveState(state);
-        closeAddModal();
-        renderLauncher();
-        refreshOpenFolderForIndex(folderIndex);
-        return;
-    }
-
-    state.push(newApp);
-    persistActiveState(state);
-    closeAddModal();
-    renderLauncher();
-}
-
 /* =========================================================
-   MODAL: AÑADIR FOLDER
+   21 · MODAL: AÑADIR FOLDER
    ========================================================= */
 function saveFolder(){
     const name = document.getElementById("folderName").value.trim();
@@ -3664,7 +3825,7 @@ function saveFolder(){
 }
 
 /* =========================================================
-   MODAL: EDITAR APP
+   22 · MODAL: EDITAR APP
    FIX #5 — lock/unlock body scroll.
    ========================================================= */
 function openEditApp(path){
@@ -3703,46 +3864,6 @@ function moveFromEditApp(){
     enterMoveModeForPath(path);
 }
 
-function suggestAppName(value){
-    try {
-        let raw = (value || "").trim();
-        if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) raw = "https://" + raw;
-        const host = new URL(raw).hostname.toLowerCase().replace(/^\.+|\.+$/g, "");
-        const ignored = new Set(["www","www2","www3","www4","ww1","ww2","m","mobile"]);
-        const labels = host.split(".").filter(Boolean);
-        const multiTlds = new Set(["co.uk","org.uk","com.au","net.au","co.nz","com.br","com.mx","co.jp","co.in"]);
-        let suffixCount = 1;
-        if (labels.length >= 3 && multiTlds.has(labels.slice(-2).join("."))) suffixCount = 2;
-        const domainIndex = Math.max(0, labels.length - suffixCount - 1);
-        const brand = labels[domainIndex] || labels[0] || host;
-        const subdomains = labels.slice(0, domainIndex).filter(part => !ignored.has(part));
-        const meaningful = subdomains.length ? subdomains[subdomains.length-1] : "";
-        const titleCase = str => str.split(/[-_]+/).filter(Boolean).map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(" ");
-        return [titleCase(brand), meaningful ? titleCase(meaningful) : ""].filter(Boolean).join(" ");
-    } catch(e) { return ""; }
-}
-
-function isValidAppURL(value){
-    let raw = (value || "").trim();
-    if (!raw) return false;
-    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) raw = "https://" + raw;
-    try{
-        const u = new URL(raw);
-        if (u.protocol !== "http:" && u.protocol !== "https:") return false;
-        const domainPattern = /^[a-z0-9.-]+\.[a-z]{2,}$/i;
-        const ipv4Pattern = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/;
-        return domainPattern.test(u.hostname) || ipv4Pattern.test(u.hostname);
-    }catch(e){
-        return false;
-    }
-}
-function getAppURLParts(value){
-    let raw = (value || "").trim();
-    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) raw = "https://" + raw;
-    const u = new URL(raw);
-    return { url: u.href, domain: u.hostname };
-}
-
 function saveEditedApp(){
     if (!editingPath) return;
     const app = editingPath.array[editingPath.index];
@@ -3770,7 +3891,7 @@ function deleteApp(){
 }
 
 /* =========================================================
-   MODAL: EDITAR FOLDER
+   23 · MODAL: EDITAR FOLDER
    FIX #5 — lock/unlock body scroll.
    ========================================================= */
 function openEditFolder(path){
@@ -3864,14 +3985,8 @@ function deleteFolder(){
 }
 
 /* =========================================================
-   EXPORT / IMPORT
+   24 · EXPORT / IMPORT
    ========================================================= */
-function markSavedAndRewriteHash(){
-    globalSaved = 1;
-    const rest = getRawRestParts();
-    location.hash = "#" + [globalPartString(), ...rest].join("#");
-    updateSavedIndicator();
-}
 let urlIOMode = "export";
 
 let ioModel = [];
@@ -4160,15 +4275,15 @@ async function confirmUrlIOModal(){
 }
 
 /* =========================================================
-   THEME / LANGUAGE SETTERS
+   25 · AJUSTES: TEMA E IDIOMA (setters)
    FIX #3b — setTheme escribe localStorage.slTheme.
    ========================================================= */
 function setTheme(tval){
     globalTheme = tval;
     try {
-        if (tval === 0) localStorage.setItem("slTheme", "dark");
-        else if (tval === 1) localStorage.setItem("slTheme", "light");
-        else localStorage.removeItem("slTheme");
+        if (tval === 0) localStorage.setItem(SL_CONFIG.themeKey, "dark");
+        else if (tval === 1) localStorage.setItem(SL_CONFIG.themeKey, "light");
+        else localStorage.removeItem(SL_CONFIG.themeKey);
     } catch(e){}
     globalSaved = 0;
     updateGlobalInHash();
@@ -4200,8 +4315,9 @@ function setLanguage(lang){
 }
 
 /* =========================================================
-   SALVAR TU SLUGLAUNCHER
+   26 · SALVAR Y COMPARTIR (plataforma, URLs, modal Salvar/Instalar y Compartir)
    ========================================================= */
+/* ---- 26.1 Plataforma y descarga ---- */
 function detectPlatform(){
     const ua = navigator.userAgent || navigator.vendor || "";
     const platform = navigator.platform || "";
@@ -4240,8 +4356,287 @@ function shortcutFileInfo(url){
     };
 }
 
+/* ---- 26.2 URLs y archivo de acceso directo ---- */
+function redirectShortcutHTML(url, title){
+    const escAttr = v => String(v).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const jsUrl = JSON.stringify(String(url)).replace(/</g,"\\u003c");
+    const lang = escAttr(globalLang || "en");
+    const dir = (globalLang === "ar") ? "rtl" : "ltr";
+
+    /* Mockup estático del launcher (HTML/CSS puro). Se ve solo si el visor no
+       ejecuta JS ni sigue el redirect. Si algo falla, se usa la página simple de antes. */
+    let mk = null;
+    try {
+        mk = buildMockupParts(
+            (typeof appsState !== "undefined" && Array.isArray(appsState)) ? appsState : [],
+            {
+                title: pageTitle || "",
+                theme: globalTheme,
+                previewLabel: t("previewLabel"),
+                previewHint: t("previewHint"),
+                footerText: t("footer"),
+                resolveIcon: resolveMockupIcon
+            }
+        );
+    } catch (e) { mk = null; }
+
+    /* Diagnóstico para saber por qué un icono no se embebió (CORS/timeout vs. precarga pendiente). */
+    let diag = "";
+    try {
+        const st = mockupIconStats();
+        diag = `<!-- slug-mockup v8 | iconos solicitados al proxy: ${st.total} | embebidos: ${st.ok} | fallidos: ${st.failed} | pendientes: ${st.pending} -->`;
+    } catch (e) {}
+
+    const css = mk
+        ? mk.css + "\n.mkCover{position:fixed;top:0;right:0;bottom:0;left:0;z-index:9;display:block;background:transparent;-webkit-tap-highlight-color:transparent}"
+        : `html,body{height:100%;margin:0}
+body{background:#fffef7;color:#1c1c1e;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+a{display:flex;align-items:center;justify-content:center;width:100%;height:100%;box-sizing:border-box;padding:24px;text-align:center;font-size:clamp(32px,10vw,80px);font-weight:700;line-height:1.15;color:inherit;text-decoration:none;overflow-wrap:anywhere}
+@media (prefers-color-scheme:dark){body{background:#0c0c0c;color:#f2f2f7}}`;
+    const themeAttr = mk ? ` data-theme="${mk.theme}"` : "";
+    const bodyHtml = mk
+        ? `${mk.html}<a class="mkCover" href="${escAttr(url)}" aria-label="${escAttr(title)}"></a>`
+        : `<a href="${escAttr(url)}">${escAttr(title)}</a>`;
+
+    return `<!DOCTYPE html>
+<html lang="${lang}" dir="${dir}"${themeAttr}><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escAttr(title)}</title>
+<meta http-equiv="refresh" content="0;url=${escAttr(url)}">
+<style>
+${css}
+</style>
+</head><body>
+<script>location.replace(${jsUrl});<\/script>
+${bodyHtml}
+${diag}
+</body></html>`;
+}
+
+function sanitizeShortcutName(value){
+    const base = String(value || "SlugLauncher")
+        .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    return base || "SlugLauncher";
+}
+
+function getCurrentSlugLauncherURL(){
+    if (window.location.protocol === "file:") {
+        return CANONICAL_LAUNCHER_URL + window.location.hash;
+    }
+    return window.location.href;
+}
+
+function getShareableSlugURL(hash){
+    const lang = (typeof globalLang === "string" ? globalLang : "en").toLowerCase();
+    const folder = (lang !== "en" && LIVE_LANDING_LANGS.indexOf(lang) !== -1) ? lang + "/" : "";
+    const origin = (window.location.protocol === "file:" || !window.location.origin || window.location.origin === "null")
+        ? LAUNCHER_PUBLIC_BASE.replace(/launcher\/$/, "")
+        : window.location.origin;
+    return origin + "/launcher/" + folder + (hash != null ? hash : window.location.hash);
+}
+
+/* ---- 26.3 Modal Salvar / Instalar ---- */
+function getSaveInstructions(platform, filename){
+    const commonUpdate = {
+        title: t("savedTitle"),
+        update: t("savedUpdateBody")
+    };
+    const downloadedIntro = t("savedIntroDownloaded").replace("{file}", filename);
+
+    if (platform === "windows") {
+        return { ...commonUpdate, intro: downloadedIntro, steps: [[t("stepNext"), t("stepOpenDownloaded")],[t("stepQuickAccess"), t("stepWinQuickAccess")]] };
+    }
+    if (platform === "mac") {
+        return { ...commonUpdate, intro: downloadedIntro, steps: [[t("stepNext"), t("stepOpenDownloaded")],[t("stepQuickAccess"), t("stepMacQuickAccess")]] };
+    }
+    if (platform === "linux") {
+        return { ...commonUpdate, intro: downloadedIntro, steps: [[t("stepNext"), t("stepLinuxMove")],[t("stepQuickAccess"), t("stepLinuxQuickAccess")]] };
+    }
+    if (platform === "chromebook") {
+        return { ...commonUpdate, intro: t("savedIntroReadyChromebook"), steps: [[t("stepNext"), t("stepChromebookNext")],[t("stepAfter"), t("stepChromebookAfter")]] };
+    }
+    if (platform === "android") {
+        return { ...commonUpdate, intro: t("savedIntroReady"), steps: [[t("stepNext"), t("stepAndroidNext")]] };
+    }
+    if (platform === "ios") {
+        return { ...commonUpdate, intro: t("savedIntroReady"), steps: [[t("stepNext"), t("stepIosNext")]] };
+    }
+    return { ...commonUpdate, intro: t("savedIntroReady"), steps: [[t("stepNext"), t("stepDefaultNext")]] };
+}
+
+function openSaveLauncherModal(instructions, url){
+    const modal = document.getElementById("saveLauncherModal");
+    const title = document.getElementById("saveLauncherTitle");
+    const intro = document.getElementById("saveLauncherIntro");
+    const steps = document.getElementById("saveLauncherSteps");
+    const copyBtn = document.getElementById("saveLauncherCopyBtn");
+    const doneBtn = document.getElementById("saveLauncherDoneBtn");
+
+    title.textContent = instructions.title;
+    intro.textContent = instructions.intro;
+    steps.innerHTML = "";
+    instructions.steps.forEach(([heading, body])=>{
+        const div = document.createElement("div");
+        div.className = "saveLauncherStep";
+        const strong = document.createElement("strong");
+        strong.textContent = heading;
+        const span = document.createElement("span");
+        span.textContent = body;
+        div.appendChild(strong);
+        div.appendChild(span);
+        steps.appendChild(div);
+    });
+
+    const update = document.createElement("div");
+    update.className = "saveLauncherStep";
+    const strong = document.createElement("strong");
+    strong.textContent = t("savedUpdateHeading");
+    const span = document.createElement("span");
+    span.textContent = instructions.update;
+    update.appendChild(strong);
+    update.appendChild(span);
+    steps.appendChild(update);
+
+    copyBtn.textContent = t("copyUrl");
+    doneBtn.textContent = t("closeBtn");
+
+    copyBtn.onclick = async ()=>{
+        try{
+            await navigator.clipboard.writeText(url);
+            copyBtn.textContent = t("copiedShort");
+            setTimeout(()=>{ copyBtn.textContent = t("copyUrl"); }, 1600);
+        }catch(e){
+            const ta = document.createElement("textarea");
+            ta.value = url;
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand("copy"); copyBtn.textContent = t("copiedShort"); }
+            catch(err) { copyBtn.textContent = t("copyManually"); }
+            ta.remove();
+            setTimeout(()=>{ copyBtn.textContent = t("copyUrl"); }, 1800);
+        }
+    };
+
+    const close = ()=>closeSaveLauncherModal();
+    doneBtn.onclick = close;
+    document.getElementById("saveLauncherClose").onclick = close;
+    modal.onclick = e=>{ if (e.target === modal) close(); };
+
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden","false");
+    lockBodyScroll();  /* FIX #5 */
+}
+
+function closeSaveLauncherModal(){
+    const modal = document.getElementById("saveLauncherModal");
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden","true");
+    unlockBodyScroll();  /* FIX #5 */
+}
+
+async function saveSlugLauncher(){
+    closeSidePanel();
+    const platform = detectPlatform();
+    const isDesktop = (platform === "windows" || platform === "mac" || platform === "linux");
+    /* Solo en escritorio se genera y descarga el HTML: ahí se cargan los iconos (modal con progreso). */
+    if (isDesktop) {
+        const pre = await prepareMockupIcons();
+        if (!pre.proceed) return;            /* cancelado: no se marca como guardado */
+        closeIconsLoadingModal();
+    }
+    markSavedAndRewriteHash();
+
+    const url = getCurrentSlugLauncherURL();
+    const name = sanitizeShortcutName("SlugLauncher");
+    let filename = "";
+
+    try{
+        if (isDesktop){
+            const info = shortcutFileInfo(url);
+            filename = info.filename;
+            downloadTextFile(filename, info.html, "text/html;charset=utf-8");
+        }
+
+        const instructions = getSaveInstructions(platform, filename);
+        openSaveLauncherModal(instructions, getShareableSlugURL());
+    }catch(err){
+        const instructions = getSaveInstructions(platform, filename);
+        instructions.intro = "El SlugLauncher está actualizado, pero no se pudo completar la descarga automática.";
+        instructions.steps.unshift(["Siguiente paso", "Puedes copiar la URL actual y utilizar la función de acceso directo o instalación disponible en tu navegador o sistema."]);
+        openSaveLauncherModal(instructions, getShareableSlugURL());
+    }
+}
+
+/* ---- 26.4 Compartir (modal del slug y Web Share) ---- */
+function openSlugModal(){
+    closeSidePanel();
+    document.getElementById("slugInfoModal").style.display="block";
+    lockBodyScroll();  /* FIX #5 */
+}
+
+function closeSlugModal(){
+    document.getElementById("slugInfoModal").style.display="none";
+    unlockBodyScroll();  /* FIX #5 */
+}
+
+async function shareLauncher(){
+    closeSidePanel();
+    const url = getCurrentSlugLauncherURL();
+    /* Carga los iconos (vía proxy) con modal de progreso; si no hay nada que cargar, sigue directo. */
+    const pre = await prepareMockupIcons();
+    if (!pre.proceed) { closeSlugModal(); return; }   /* cancelado por el usuario */
+    const {filename, html} = shortcutFileInfo(url);
+
+    /* Respaldo de siempre: descargar el archivo o, si no se puede, copiar la URL. */
+    const fallbackShare = async () => {
+        try {
+            downloadTextFile(filename, html, "text/html;charset=utf-8");
+            alert(t("shareDownloaded"));
+        } catch(_) {
+            try {
+                await navigator.clipboard.writeText(getShareableSlugURL());
+                alert(t("urlCopied"));
+            } catch(__) { /* silencioso */ }
+        }
+    };
+
+    let shareData = null;
+    try {
+        const file = new File([html], filename, { type:"text/html" });
+        shareData = { files:[file], title: pageTitle || "SlugLauncher", text: t("shareText") };
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+            await navigator.share(shareData);
+            closeIconsLoadingModal();
+        } else {
+            closeIconsLoadingModal();
+            downloadTextFile(filename, html, "text/html;charset=utf-8");
+            alert(t("shareDownloaded"));
+        }
+    } catch (err) {
+        if (err && err.name === "AbortError") {
+            closeIconsLoadingModal();
+        } else if (err && err.name === "NotAllowedError" && pre.waited && shareData) {
+            /* Tras la espera el navegador (p. ej. Safari/iOS) pide un toque nuevo: botón "Compartir" en el modal. */
+            showIconsReadyStep(async () => {
+                try { await navigator.share(shareData); }
+                catch (e2) { if (!(e2 && e2.name === "AbortError")) { closeIconsLoadingModal(); await fallbackShare(); } }
+                finally { closeIconsLoadingModal(); }
+            });
+        } else {
+            closeIconsLoadingModal();
+            await fallbackShare();
+        }
+    } finally {
+        closeSlugModal();
+    }
+}
+
 /* =========================================================
-   ICONOS EMBEBIDOS PARA EL MOCKUP COMPARTIDO (vía proxy propio /launcher/icon-proxy)
+   27 · ICONOS EMBEBIDOS PARA EL MOCKUP COMPARTIDO (vía proxy propio /launcher/icon-proxy)
    Los visores de WhatsApp/iOS no cargan imágenes externas, así que al tocar
    Compartir/Salvar se convierten a data: URI (PNG pequeño) mostrando un modal
    de carga con progreso circular. Si un icono falla, queda la inicial de color.
@@ -4249,11 +4644,6 @@ function shortcutFileInfo(url){
    cuando el usuario toca Compartir/Salvar (nunca al mostrar el launcher). Si el icono
    elegido falla, se pide al proxy el favicon de S2 del dominio del enlace.
    ========================================================= */
-const MOCKUP_ICON_SOURCE = "/launcher/icon-proxy?u=";   /* Cloudflare Worker, mismo origen */
-const MOCKUP_ICON_S2 = "https://www.google.com/s2/favicons?sz=128&domain=";   /* respaldo y valor por defecto */
-const MOCKUP_ICON_PX = 96;
-const MOCKUP_ICON_TIMEOUT_MS = 5000;     /* por icono; todos se piden en paralelo */
-const MOCKUP_ICON_RETRY_MS = 60000;      /* un fallo no se reintenta antes de 1 min */
 const _mockupIconCache  = new Map();     /* clave (URL del icono) -> data URI */
 const _mockupIconFailAt = new Map();     /* clave -> timestamp del fallo */
 const _mockupIconDomainOf = new Map();   /* clave -> dominio del enlace (para el respaldo S2) */
@@ -4416,7 +4806,7 @@ async function prepareMockupIcons(){
 })();
 
 /* =========================================================
-   MOCKUP ESTÁTICO DEL LAUNCHER (HTML + CSS puro, sin JS)
+   28 · MOCKUP ESTÁTICO DEL LAUNCHER (HTML + CSS puro, sin JS)
    Se incrusta en el archivo .html que genera Save / Share.
    - Móvil (<=650px): 4 columnas, 16 elementos.
    - Desktop (>650px): 6 columnas, 18 elementos (3 filas completas).
@@ -4424,10 +4814,6 @@ async function prepareMockupIcons(){
    Devuelve {css, html, total, shownMobile, shownDesktop} para que
    el Paso 3 (degradado) y el Paso 4 (integración) puedan usarlos.
    ========================================================= */
-const MOCKUP_MOBILE_COUNT  = 16;
-const MOCKUP_DESKTOP_COUNT = 18;
-const MOCKUP_MAX_DATA_ICON = 20000;  /* máx. caracteres por icono embebido (PNG 96px ≈ 5-15 KB) */
-const MOCKUP_MAX_TOTAL_ICONS = 260000; /* presupuesto total de iconos embebidos por archivo */
 
 function buildMockupParts(items, opts){
     opts = opts || {};
@@ -4572,223 +4958,11 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
     };
 }
 
-function redirectShortcutHTML(url, title){
-    const escAttr = v => String(v).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-    const jsUrl = JSON.stringify(String(url)).replace(/</g,"\\u003c");
-    const lang = escAttr(globalLang || "en");
-    const dir = (globalLang === "ar") ? "rtl" : "ltr";
 
-    /* Mockup estático del launcher (HTML/CSS puro). Se ve solo si el visor no
-       ejecuta JS ni sigue el redirect. Si algo falla, se usa la página simple de antes. */
-    let mk = null;
-    try {
-        mk = buildMockupParts(
-            (typeof appsState !== "undefined" && Array.isArray(appsState)) ? appsState : [],
-            {
-                title: pageTitle || "",
-                theme: globalTheme,
-                previewLabel: t("previewLabel"),
-                previewHint: t("previewHint"),
-                footerText: t("footer"),
-                resolveIcon: resolveMockupIcon
-            }
-        );
-    } catch (e) { mk = null; }
 
-    /* Diagnóstico para saber por qué un icono no se embebió (CORS/timeout vs. precarga pendiente). */
-    let diag = "";
-    try {
-        const st = mockupIconStats();
-        diag = `<!-- slug-mockup v8 | iconos solicitados al proxy: ${st.total} | embebidos: ${st.ok} | fallidos: ${st.failed} | pendientes: ${st.pending} -->`;
-    } catch (e) {}
-
-    const css = mk
-        ? mk.css + "\n.mkCover{position:fixed;top:0;right:0;bottom:0;left:0;z-index:9;display:block;background:transparent;-webkit-tap-highlight-color:transparent}"
-        : `html,body{height:100%;margin:0}
-body{background:#fffef7;color:#1c1c1e;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
-a{display:flex;align-items:center;justify-content:center;width:100%;height:100%;box-sizing:border-box;padding:24px;text-align:center;font-size:clamp(32px,10vw,80px);font-weight:700;line-height:1.15;color:inherit;text-decoration:none;overflow-wrap:anywhere}
-@media (prefers-color-scheme:dark){body{background:#0c0c0c;color:#f2f2f7}}`;
-    const themeAttr = mk ? ` data-theme="${mk.theme}"` : "";
-    const bodyHtml = mk
-        ? `${mk.html}<a class="mkCover" href="${escAttr(url)}" aria-label="${escAttr(title)}"></a>`
-        : `<a href="${escAttr(url)}">${escAttr(title)}</a>`;
-
-    return `<!DOCTYPE html>
-<html lang="${lang}" dir="${dir}"${themeAttr}><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${escAttr(title)}</title>
-<meta http-equiv="refresh" content="0;url=${escAttr(url)}">
-<style>
-${css}
-</style>
-</head><body>
-<script>location.replace(${jsUrl});<\/script>
-${bodyHtml}
-${diag}
-</body></html>`;
-}
-
-function sanitizeShortcutName(value){
-    const base = String(value || "SlugLauncher")
-        .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
-        .replace(/\s+/g, " ")
-        .trim();
-    return base || "SlugLauncher";
-}
-
-const CANONICAL_LAUNCHER_URL = "https://git.inriris.com/launcher/";
-
-function getCurrentSlugLauncherURL(){
-    if (window.location.protocol === "file:") {
-        return CANONICAL_LAUNCHER_URL + window.location.hash;
-    }
-    return window.location.href;
-}
-
-const LIVE_LANDING_LANGS = ["en", "es", "fr", "de", "pt", "it", "ru", "zh", "ja", "hi", "ar"];
-const LAUNCHER_PUBLIC_BASE = "https://git.inriris.com/launcher/";
-
-function getShareableSlugURL(hash){
-    const lang = (typeof globalLang === "string" ? globalLang : "en").toLowerCase();
-    const folder = (lang !== "en" && LIVE_LANDING_LANGS.indexOf(lang) !== -1) ? lang + "/" : "";
-    const origin = (window.location.protocol === "file:" || !window.location.origin || window.location.origin === "null")
-        ? LAUNCHER_PUBLIC_BASE.replace(/launcher\/$/, "")
-        : window.location.origin;
-    return origin + "/launcher/" + folder + (hash != null ? hash : window.location.hash);
-}
-
-function getSaveInstructions(platform, filename){
-    const commonUpdate = {
-        title: t("savedTitle"),
-        update: t("savedUpdateBody")
-    };
-    const downloadedIntro = t("savedIntroDownloaded").replace("{file}", filename);
-
-    if (platform === "windows") {
-        return { ...commonUpdate, intro: downloadedIntro, steps: [[t("stepNext"), t("stepOpenDownloaded")],[t("stepQuickAccess"), t("stepWinQuickAccess")]] };
-    }
-    if (platform === "mac") {
-        return { ...commonUpdate, intro: downloadedIntro, steps: [[t("stepNext"), t("stepOpenDownloaded")],[t("stepQuickAccess"), t("stepMacQuickAccess")]] };
-    }
-    if (platform === "linux") {
-        return { ...commonUpdate, intro: downloadedIntro, steps: [[t("stepNext"), t("stepLinuxMove")],[t("stepQuickAccess"), t("stepLinuxQuickAccess")]] };
-    }
-    if (platform === "chromebook") {
-        return { ...commonUpdate, intro: t("savedIntroReadyChromebook"), steps: [[t("stepNext"), t("stepChromebookNext")],[t("stepAfter"), t("stepChromebookAfter")]] };
-    }
-    if (platform === "android") {
-        return { ...commonUpdate, intro: t("savedIntroReady"), steps: [[t("stepNext"), t("stepAndroidNext")]] };
-    }
-    if (platform === "ios") {
-        return { ...commonUpdate, intro: t("savedIntroReady"), steps: [[t("stepNext"), t("stepIosNext")]] };
-    }
-    return { ...commonUpdate, intro: t("savedIntroReady"), steps: [[t("stepNext"), t("stepDefaultNext")]] };
-}
-
-function openSaveLauncherModal(instructions, url){
-    const modal = document.getElementById("saveLauncherModal");
-    const title = document.getElementById("saveLauncherTitle");
-    const intro = document.getElementById("saveLauncherIntro");
-    const steps = document.getElementById("saveLauncherSteps");
-    const copyBtn = document.getElementById("saveLauncherCopyBtn");
-    const doneBtn = document.getElementById("saveLauncherDoneBtn");
-
-    title.textContent = instructions.title;
-    intro.textContent = instructions.intro;
-    steps.innerHTML = "";
-    instructions.steps.forEach(([heading, body])=>{
-        const div = document.createElement("div");
-        div.className = "saveLauncherStep";
-        const strong = document.createElement("strong");
-        strong.textContent = heading;
-        const span = document.createElement("span");
-        span.textContent = body;
-        div.appendChild(strong);
-        div.appendChild(span);
-        steps.appendChild(div);
-    });
-
-    const update = document.createElement("div");
-    update.className = "saveLauncherStep";
-    const strong = document.createElement("strong");
-    strong.textContent = t("savedUpdateHeading");
-    const span = document.createElement("span");
-    span.textContent = instructions.update;
-    update.appendChild(strong);
-    update.appendChild(span);
-    steps.appendChild(update);
-
-    copyBtn.textContent = t("copyUrl");
-    doneBtn.textContent = t("closeBtn");
-
-    copyBtn.onclick = async ()=>{
-        try{
-            await navigator.clipboard.writeText(url);
-            copyBtn.textContent = t("copiedShort");
-            setTimeout(()=>{ copyBtn.textContent = t("copyUrl"); }, 1600);
-        }catch(e){
-            const ta = document.createElement("textarea");
-            ta.value = url;
-            ta.style.position = "fixed";
-            ta.style.opacity = "0";
-            document.body.appendChild(ta);
-            ta.select();
-            try { document.execCommand("copy"); copyBtn.textContent = t("copiedShort"); }
-            catch(err) { copyBtn.textContent = t("copyManually"); }
-            ta.remove();
-            setTimeout(()=>{ copyBtn.textContent = t("copyUrl"); }, 1800);
-        }
-    };
-
-    const close = ()=>closeSaveLauncherModal();
-    doneBtn.onclick = close;
-    document.getElementById("saveLauncherClose").onclick = close;
-    modal.onclick = e=>{ if (e.target === modal) close(); };
-
-    modal.classList.add("open");
-    modal.setAttribute("aria-hidden","false");
-    lockBodyScroll();  /* FIX #5 */
-}
-
-function closeSaveLauncherModal(){
-    const modal = document.getElementById("saveLauncherModal");
-    modal.classList.remove("open");
-    modal.setAttribute("aria-hidden","true");
-    unlockBodyScroll();  /* FIX #5 */
-}
-
-async function saveSlugLauncher(){
-    closeSidePanel();
-    const platform = detectPlatform();
-    const isDesktop = (platform === "windows" || platform === "mac" || platform === "linux");
-    /* Solo en escritorio se genera y descarga el HTML: ahí se cargan los iconos (modal con progreso). */
-    if (isDesktop) {
-        const pre = await prepareMockupIcons();
-        if (!pre.proceed) return;            /* cancelado: no se marca como guardado */
-        closeIconsLoadingModal();
-    }
-    markSavedAndRewriteHash();
-
-    const url = getCurrentSlugLauncherURL();
-    const name = sanitizeShortcutName("SlugLauncher");
-    let filename = "";
-
-    try{
-        if (isDesktop){
-            const info = shortcutFileInfo(url);
-            filename = info.filename;
-            downloadTextFile(filename, info.html, "text/html;charset=utf-8");
-        }
-
-        const instructions = getSaveInstructions(platform, filename);
-        openSaveLauncherModal(instructions, getShareableSlugURL());
-    }catch(err){
-        const instructions = getSaveInstructions(platform, filename);
-        instructions.intro = "El SlugLauncher está actualizado, pero no se pudo completar la descarga automática.";
-        instructions.steps.unshift(["Siguiente paso", "Puedes copiar la URL actual y utilizar la función de acceso directo o instalación disponible en tu navegador o sistema."]);
-        openSaveLauncherModal(instructions, getShareableSlugURL());
-    }
-}
+/* =========================================================
+   29 · LISTENERS GLOBALES (scroll de scrollbars, Escape unificado)
+   ========================================================= */
 
 document.addEventListener("scroll", e=>{
     const el = e.target;
@@ -4823,9 +4997,8 @@ document.addEventListener("keydown", e=>{
 });
 
 /* =========================================================
-   INIT
+   30 · INIT
    ========================================================= */
-const LAST_HASH_KEY = "sluglauncher:lastHash";
 
 function isStandaloneApp(){
     try{
@@ -4835,7 +5008,7 @@ function isStandaloneApp(){
 }
 function persistLastHash(){
     try{
-        if (location.hash && location.hash.length > 1) localStorage.setItem(LAST_HASH_KEY, location.hash);
+        if (location.hash && location.hash.length > 1) localStorage.setItem(SL_CONFIG.lastHashKey, location.hash);
     }catch(e){ /* almacenamiento bloqueado o lleno: se ignora */ }
 }
 if (isSlugAppMode()) {
@@ -4871,6 +5044,10 @@ window.addEventListener("hashchange", ()=>{
 </script>
 <script>
 (function initEnglishLanding(){
+    /* FUNCIONES COMPARTIDAS CON LA APP (Paso 7). Ya no se duplican aquí; se usan las del script de la app (arriba):
+       bindIconPreview, escapeHtml, getAppURLParts, getDecodedHashString, ioBuildModel, ioMakeRow, isValidAppURL, normalize, openSvgApiSearch, parseHash, safeDecode, safeEncode, selectIconOptionFor, stripProtocol, suggestAppName.
+       Son idénticas y no dependen de variables de esta IIFE (las landings por idioma, sin script de app, conservan sus copias: ver checklist al inicio del archivo). Las demás duplicadas se quedan porque usan t, I18N,
+       estado o goToLauncher propios de la landing. */
     var template = document.getElementById("landingModalsTemplate");
     var landingShell = document.getElementById("landingShell");
     if (!template || !landingShell || isSlugAppMode()) return;
@@ -4878,7 +5055,7 @@ window.addEventListener("hashchange", ()=>{
 
 /* Configuración de idioma de ESTA landing. */
 const PAGE_LANG = "en";
-const THEME_KEY = "slTheme";
+const THEME_KEY = SL_CONFIG.themeKey;   /* definida en <head> */
 function currentTheme(){ return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light"; }
 function getStoredTheme(){ try { const t = localStorage.getItem(THEME_KEY); return (t === "light" || t === "dark") ? t : null; } catch (e) { return null; } }
 function paintTheme(t){
@@ -4966,73 +5143,14 @@ function t(key, vars){
    NÚCLEO SLUG — copia de index.html.
    ========================================================= */
 const DESKTOP_MAX = 64;
-const FOLDER_MAX = 35;
+const FOLDER_MAX = 36;
 let globalTheme = 2;
 const globalLang = PAGE_LANG;
 let globalSaved = 0;
 let pageTitle = "";
 
-function normalize(str) {
-    if (!str) return "";
-    str = str.trim();
-    return /^https?:\/\//i.test(str) ? str : "https://" + str;
-}
-function stripProtocol(str){ return (str||"").replace(/^https:\/\//i,''); }
-function escapeHtml(str){
-    return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-function safeDecode(str){
-    if (!str) return str;
-    try { return decodeURIComponent(str); } catch(e){ return str; }
-}
-function safeEncode(str){
-    return encodeURIComponent(encodeURIComponent(str||""));
-}
 /* FIX #1 (landing) — pageTitle con safeEncode para sobrevivir al decode global. */
 function globalPartString(){ return `SLUG:${globalTheme},${globalLang},${globalSaved},${safeEncode(pageTitle || "")}`; }
-function getDecodedHashString(h){
-    const hashOriginal = (h !== undefined) ? h : window.location.hash;
-    if (!hashOriginal) return "";
-    try {
-        return decodeURIComponent(hashOriginal);
-    } catch(e) {
-        return hashOriginal;
-    }
-}
-function parseHash(h){
-    const hash = getDecodedHashString(h).substring(1);
-    if (!hash) return [];
-    const items = hash.split("#").filter(Boolean).filter(p=>!p.startsWith("SLUG:"));
-    const result=[];
-    items.forEach(item=>{
-        if (item.startsWith("FOLDER:")){
-            const parts = item.split("|");
-            let header = parts[0].replace("FOLDER:","");
-            let folderIcon = "";
-            const headerSplit = header.split("::");
-            if (headerSplit.length > 1){
-                folderIcon = safeDecode(headerSplit.pop());
-                header = headerSplit.join("::");
-            }
-            const folderName = safeDecode(header);
-            const apps = parts.slice(1).filter(Boolean).map(slug=>{
-                const fields = slug.split(",");
-                const name = fields.shift() || "";
-                const url = fields.shift() || "";
-                const icon = fields.join(",");
-                return {type:"app", name:safeDecode(name), url:normalize(safeDecode(url)), icon:normalize(safeDecode(icon)) };
-            });
-            result.push({type:"folder", name:folderName, icon: folderIcon ? normalize(folderIcon) : "", apps});
-        }else{
-            const fields = item.split(",");
-            const name = fields.shift() || "";
-            const url = fields.shift() || "";
-            const icon = fields.join(",");
-            result.push({type:"app", name:safeDecode(name), url:normalize(safeDecode(url)), icon:normalize(safeDecode(icon)) });
-        }
-    });
-    return result;
-}
 function buildHashFromState(state){
     const parts=[];
     parts.push(globalPartString());
@@ -5219,71 +5337,6 @@ function renderIconOptionsFor(ctx){
         row.appendChild(img);
     });
 }
-function selectIconOptionFor(url, ctx){
-    document.getElementById(ctx.iconInputId).value = stripProtocol(url);
-    const preview = document.getElementById(ctx.previewId);
-    preview.src = normalize(url);
-    preview.style.display="block";
-    document.querySelectorAll(`#${ctx.rowId} .iconOption`).forEach(el=>{
-        el.classList.toggle("selectedIcon", stripProtocol(el.src)===stripProtocol(url));
-    });
-}
-function bindIconPreview(inputId, previewId){
-    const input = document.getElementById(inputId);
-    const preview = document.getElementById(previewId);
-    if (!input || !preview) return;
-    input.addEventListener("input", () => {
-        const icon = input.value.trim();
-        if (!icon){ preview.style.display="none"; return; }
-        preview.src = normalize(icon);
-        preview.style.display = "block";
-    });
-}
-function openSvgApiSearch(nameFieldId){
-    const field = document.getElementById(nameFieldId);
-    const query = field ? field.value.trim() : "";
-    const url = query ? `https://svgapi.com/?q=${encodeURIComponent(query)}` : "https://svgapi.com/";
-    window.open(url, "_blank", "noopener");
-}
-
-function suggestAppName(value){
-    try {
-        let raw = (value || "").trim();
-        if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) raw = "https://" + raw;
-        const host = new URL(raw).hostname.toLowerCase().replace(/^\.+|\.+$/g, "");
-        const ignored = new Set(["www","www2","www3","www4","ww1","ww2","m","mobile"]);
-        const labels = host.split(".").filter(Boolean);
-        const multiTlds = new Set(["co.uk","org.uk","com.au","net.au","co.nz","com.br","com.mx","co.jp","co.in"]);
-        let suffixCount = 1;
-        if (labels.length >= 3 && multiTlds.has(labels.slice(-2).join("."))) suffixCount = 2;
-        const domainIndex = Math.max(0, labels.length - suffixCount - 1);
-        const brand = labels[domainIndex] || labels[0] || host;
-        const subdomains = labels.slice(0, domainIndex).filter(part => !ignored.has(part));
-        const meaningful = subdomains.length ? subdomains[subdomains.length-1] : "";
-        const titleCase = str => str.split(/[-_]+/).filter(Boolean).map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(" ");
-        return [titleCase(brand), meaningful ? titleCase(meaningful) : ""].filter(Boolean).join(" ");
-    } catch(e) { return ""; }
-}
-function isValidAppURL(value){
-    let raw = (value || "").trim();
-    if (!raw) return false;
-    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) raw = "https://" + raw;
-    try{
-        const u = new URL(raw);
-        if (u.protocol !== "http:" && u.protocol !== "https:") return false;
-        const domainPattern = /^[a-z0-9.-]+\.[a-z]{2,}$/i;
-        const ipv4Pattern = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/;
-        return domainPattern.test(u.hostname) || ipv4Pattern.test(u.hostname);
-    }catch(e){
-        return false;
-    }
-}
-function getAppURLParts(value){
-    let raw = (value || "").trim();
-    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) raw = "https://" + raw;
-    const u = new URL(raw);
-    return { url: u.href, domain: u.hostname };
-}
 
 function saveApp(){
     const name = document.getElementById("appName").value.trim();
@@ -5460,12 +5513,6 @@ function attachIconFallback(img){
 let ioModel = [];
 let ioRefs = {};
 
-function ioBuildModel(items){
-    return items.map(it => it.type === "folder"
-        ? { type:"folder", name:it.name, icon:it.icon, on:true,
-            apps:(it.apps || []).map(a => ({ app:a, on:true })) }
-        : { type:"app", app:it, on:true });
-}
 function ioCounts(){
     let sel = 0, total = 0;
     ioModel.forEach(m=>{
@@ -5482,18 +5529,6 @@ function ioSelectedState(){
         if (apps.length || (!m.apps.length && m.on)) out.push({type:"folder", name:m.name, icon:m.icon, apps});
     });
     return out;
-}
-function ioMakeRow(cls, labelText, iconNode){
-    const row = document.createElement("label");
-    row.className = "ioRow " + cls;
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    row.appendChild(cb);
-    if (iconNode) row.appendChild(iconNode);
-    const span = document.createElement("span");
-    span.textContent = labelText;
-    row.appendChild(span);
-    return {row, cb};
 }
 function ioAppIcon(app){
     const img = document.createElement("img");
