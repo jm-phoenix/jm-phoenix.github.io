@@ -1808,7 +1808,7 @@ body.theme-dark .fieldNote.warn { color:#ffb454; }
    ------------------------------------------------------------------------------------
    Estado propio de cada sección (let/const junto a sus funciones): 5 _bodyLockCount · 14 _iconBgCache ·
    19 addAppTargetFolder, addAppTargetFolderIndex, addType, _iconCandidates, addIconCtx, editIconCtx, appNameAuto ·
-   24 urlIOMode, ioModel, ioRefs · 27 _mockupIconCache, _mockupIconFailAt, _mockupIconDomainOf, _iconsRun */
+   24 urlIOMode, ioModel, ioRefs · 27 _mockupIconCache, _mockupIconFailAt, _mockupIconDomainOf, _iconsRun, _iconMem, _iconDBPromise, _iconOpenBusy */
 
 /* =========================================================
    0 · CONFIGURACIÓN Y CONSTANTES
@@ -1840,6 +1840,13 @@ const MOCKUP_MOBILE_COUNT  = 16;         /* cuadrícula móvil 4×4 */
 const MOCKUP_DESKTOP_COUNT = 18;         /* cuadrícula escritorio 6×3 */
 const MOCKUP_MAX_DATA_ICON = 20000;      /* máx. caracteres por icono embebido (PNG 96px ≈ 5-15 KB) */
 const MOCKUP_MAX_TOTAL_ICONS = 260000;   /* presupuesto total de iconos embebidos por archivo */
+
+/* Caché persistente de iconos (IndexedDB): se llena al abrir una app y al Compartir/Salvar */
+const ICON_DB_NAME = "sluglauncher-icons";
+const ICON_DB_STORE = "icons";
+const ICON_DB_VERSION = 1;
+const ICON_TTL_MS = 30 * 24 * 3600 * 1000;   /* vigencia del icono guardado; caducado se sigue mostrando */
+const ICON_DB_WAIT_MS = 400;                 /* espera máx. de la BD antes del primer pintado */
 
 /* =========================================================
    1 · ESTADO GLOBAL
@@ -2941,7 +2948,7 @@ function renderApp(app, parent, path){
     const div=document.createElement("div");
     div.className="appIcon";
     div.dataset.itemType="app";
-    const iconSrc = app.icon || FALLBACK_ICON;
+    const iconSrc = iconStoreGet(app.icon) || app.icon || FALLBACK_ICON;
     div.innerHTML = `<img draggable="false" src="${escapeHtml(iconSrc)}"><div class="appLabelClip"><span class="appNameLabel" title="${escapeHtml(app.name)}">${escapeHtml(app.name)}</span></div>`;
     attachIconFallback(div.querySelector("img"));
     attachIconFill(div.querySelector("img"));
@@ -2976,7 +2983,7 @@ function attachItemInteraction(el, item, path, isFolder){
     if (currentMode === "normal"){
         el.addEventListener("click", ()=>{
             if (isFolder) openFolder(item, path);
-            else window.open(item.url, "_blank", "noopener,noreferrer");
+            else { window.open(item.url, "_blank", "noopener,noreferrer"); cacheIconOnOpen(item); }
         });
     } else if (currentMode === "edit"){
         el.classList.add("editModeItem");
@@ -3752,13 +3759,14 @@ function renderSearchResults(query){
     filtered.slice(0,60).forEach(item=>{
         const row = document.createElement("div");
         row.className = "searchResultItem";
-        const iconSrc = item.icon || FALLBACK_ICON;
+        const iconSrc = iconStoreGet(item.icon) || item.icon || FALLBACK_ICON;
         row.innerHTML = `<img src="${escapeHtml(iconSrc)}">` +
             `<span class="searchResultName">${escapeHtml(item.name)}</span>` +
             (item.folder ? `<span class="searchResultFolder">${escapeHtml(item.folder)}</span>` : "");
         attachIconFallback(row.querySelector("img"));
         row.addEventListener("click", ()=>{
             window.open(item.url, "_blank", "noopener,noreferrer");
+            cacheIconOnOpen(item);
             closeSearchModal();
         });
         list.appendChild(row);
@@ -3849,6 +3857,7 @@ function openEditApp(path){
     }
     document.getElementById("editAppModal").style.display="block";
     lockBodyScroll();  /* FIX #5 */
+    verifyIconOnEdit(app);
     resetInactivityTimer();
 }
 function closeEditAppModal(){
@@ -4641,13 +4650,22 @@ async function shareLauncher(){
    Compartir/Salvar se convierten a data: URI (PNG pequeño) mostrando un modal
    de carga con progreso circular. Si un icono falla, queda la inicial de color.
    PRIVACIDAD: el proxy (Cloudflare Worker de inriris) recibe la URL de cada icono, y solo
-   cuando el usuario toca Compartir/Salvar (nunca al mostrar el launcher). Si el icono
-   elegido falla, se pide al proxy el favicon de S2 del dominio del enlace.
+   cuando el usuario toca Compartir/Salvar, abre una app por primera vez (o con el icono
+   caducado) o abre el modal de edición (nunca al mostrar el launcher). Si el icono
+   elegido falla en Compartir/Salvar, se pide al proxy el favicon de S2 del dominio del enlace.
+   CACHÉ PERSISTENTE (IndexedDB "sluglauncher-icons"): cada icono pedido al proxy se guarda
+   como PNG de 96px con 30 días de vigencia. Se sirve siempre desde ahí (aunque haya caducado);
+   al abrir la app se renueva si caducó, y si el proxy falla se conserva el viejo 30 días más.
+   Al abrir el modal de edición se compara con la web: si cambió se actualiza, y si el servidor
+   dice que ya no existe se borra. El respaldo S2 nunca se guarda (taparía un icono muerto).
    ========================================================= */
 const _mockupIconCache  = new Map();     /* clave (URL del icono) -> data URI */
 const _mockupIconFailAt = new Map();     /* clave -> timestamp del fallo */
 const _mockupIconDomainOf = new Map();   /* clave -> dominio del enlace (para el respaldo S2) */
 let _iconsRun = null;
+const _iconMem = new Map();              /* URL del icono -> {url, d (data URI 96px), exp (caducidad)}; copia en memoria porque el render es síncrono */
+let _iconDBPromise = null;               /* conexión a IndexedDB (null si el navegador no la permite) */
+const _iconOpenBusy = new Set();         /* iconos que se están pidiendo al abrir una app */
 
 /* Dominio del enlace de un elemento; "" si no hay, o si es una IP/host local (S2 no sirve para eso). */
 function mockupIconDomain(it){
@@ -4713,12 +4731,13 @@ function mockupIconToDataURI(src, ms){
     });
 }
 
-async function loadMockupIcons(keys, onProgress){
+async function loadMockupIcons(keys, onProgress, noFallback){
     let done = 0;
     await Promise.all(keys.map(async k => {
         const t0 = Date.now();
         let v = await mockupIconToDataURI(MOCKUP_ICON_SOURCE + encodeURIComponent(k));
-        if (!v) {
+        if (v) iconDBPut({url:k, d:v, exp:Date.now() + ICON_TTL_MS});   /* solo el icono elegido, nunca el respaldo S2 */
+        else if (!noFallback) {
             /* Respaldo: favicon de S2 del dominio del enlace, también servido por el proxy.
                Comparte el límite de 5 s por icono; si ya no queda tiempo, se queda la inicial. */
             const d = _mockupIconDomainOf.get(k), fb = d ? MOCKUP_ICON_S2 + encodeURIComponent(d) : "";
@@ -4730,6 +4749,108 @@ async function loadMockupIcons(keys, onProgress){
         done++; onProgress(done, keys.length);
     }));
 }
+/* ---------- Caché persistente de iconos (IndexedDB) ---------- */
+function iconDBOpen(){
+    if (_iconDBPromise) return _iconDBPromise;
+    _iconDBPromise = new Promise(function(resolve){
+        try {
+            const rq = indexedDB.open(ICON_DB_NAME, ICON_DB_VERSION);
+            rq.onupgradeneeded = function(){ rq.result.createObjectStore(ICON_DB_STORE, {keyPath:"url"}); };
+            rq.onsuccess = function(){ resolve(rq.result); };
+            rq.onerror = rq.onblocked = function(){ resolve(null); };
+        } catch (e) { resolve(null); }   /* sin IndexedDB (modo privado, etc.): la app sigue con los iconos de la web */
+    });
+    return _iconDBPromise;
+}
+/* Carga todos los iconos guardados en memoria y los deja listos para Compartir/Salvar. */
+function iconDBLoadAll(){
+    return iconDBOpen().then(function(db){
+        if (!db) return;
+        return new Promise(function(resolve){
+            try {
+                const rq = db.transaction(ICON_DB_STORE, "readonly").objectStore(ICON_DB_STORE).getAll();
+                rq.onsuccess = function(){
+                    (rq.result || []).forEach(function(r){
+                        if (!r || !r.url || !r.d) return;
+                        _iconMem.set(r.url, r);
+                        _mockupIconCache.set(r.url, r.d);
+                    });
+                    resolve();
+                };
+                rq.onerror = function(){ resolve(); };
+            } catch (e) { resolve(); }
+        });
+    });
+}
+/* Espera a la BD (máx. ms) para que el primer pintado ya use los iconos guardados. */
+function iconDBReady(ms){
+    return Promise.race([iconDBLoadAll(), new Promise(function(r){ setTimeout(r, ms || ICON_DB_WAIT_MS); })]).catch(function(){});
+}
+/* Icono guardado (data URI) para esa URL, o "". Lo usan renderApp y la búsqueda. */
+function iconStoreGet(url){
+    const r = url ? _iconMem.get(url) : null;
+    return r ? r.d : "";
+}
+function iconDBPut(rec){
+    _iconMem.set(rec.url, rec);
+    iconDBOpen().then(function(db){
+        if (!db) return;
+        try { db.transaction(ICON_DB_STORE, "readwrite").objectStore(ICON_DB_STORE).put(rec); } catch (e) {}
+    });
+}
+function iconDBDelete(url){
+    _iconMem.delete(url);
+    _mockupIconCache.delete(url);
+    iconDBOpen().then(function(db){
+        if (!db) return;
+        try { db.transaction(ICON_DB_STORE, "readwrite").objectStore(ICON_DB_STORE).delete(url); } catch (e) {}
+    });
+}
+/* Al abrir una app: guarda el icono la primera vez; si caducó lo renueva, y si falla conserva el viejo 30 días más.
+   Se llama después del window.open, sin esperar. Sin conexión no hace nada. */
+function cacheIconOnOpen(item){
+    try {
+        const k = mockupIconHost(item);
+        if (!k || _iconOpenBusy.has(k) || navigator.onLine === false) return;
+        const cur = _iconMem.get(k);
+        if (cur && cur.exp > Date.now()) return;                  /* vigente: no se pide nada */
+        const f = _mockupIconFailAt.get(k);
+        if (f && Date.now() - f < MOCKUP_ICON_RETRY_MS) return;
+        _iconOpenBusy.add(k);
+        loadMockupIcons([k], function(){}, true).then(function(){
+            /* mismo objeto = la carga falló: se mantiene el icono viejo y se extiende su vigencia */
+            if (cur && _iconMem.get(k) === cur) iconDBPut({url:cur.url, d:cur.d, exp:Date.now() + ICON_TTL_MS});
+        }).catch(function(){}).then(function(){ _iconOpenBusy.delete(k); });
+    } catch (e) {}
+}
+/* ¿El servidor de origen ya no tiene el icono? Solo los casos definitivos devuelven true.
+   El Worker avisa con 502 "Upstream 404|410" o con 415 "Not an image"; red, timeout, 403, 5xx o 413 no cuentan. */
+async function iconIsGone(k){
+    const ctl = new AbortController(), tm = setTimeout(function(){ ctl.abort(); }, MOCKUP_ICON_TIMEOUT_MS);
+    try {
+        const r = await fetch(MOCKUP_ICON_SOURCE + encodeURIComponent(k), {signal: ctl.signal});
+        if (r.status === 415) return true;
+        if (r.status === 502) return /^Upstream (404|410)\b/.test((await r.text()).trim());
+        return false;
+    } catch (e) { return false; }
+    finally { clearTimeout(tm); }
+}
+/* Al abrir el modal de edición: compara el icono de la web con el guardado. Distinto = actualiza,
+   igual = renueva la vigencia, ya no existe = se borra para que la persona elija otro. */
+async function verifyIconOnEdit(app){
+    try {
+        const k = mockupIconHost(app), cur = k ? _iconMem.get(k) : null;
+        if (!cur || navigator.onLine === false) return;
+        const v = await mockupIconToDataURI(MOCKUP_ICON_SOURCE + encodeURIComponent(k));
+        if (v) {
+            iconDBPut({url:k, d:v, exp:Date.now() + ICON_TTL_MS});
+            _mockupIconCache.set(k, v);
+        } else if (await iconIsGone(k)) {
+            iconDBDelete(k);
+        }
+    } catch (e) {}
+}
+
 /* Lo usa buildMockupParts: data URI ya cargado para ese elemento, o "". */
 function resolveMockupIcon(it){
     const h = mockupIconHost(it);
@@ -5016,8 +5137,8 @@ if (isSlugAppMode()) {
     applyTheme();
     applyI18n();
     updatePageTitleDisplay();
-    renderLauncher();
     persistLastHash();
+    iconDBReady(ICON_DB_WAIT_MS).then(function(){ renderLauncher(); });   /* el primer pintado espera (máx. 0,4 s) a los iconos guardados */
 }
 
 window.addEventListener("hashchange", ()=>{

@@ -1,31 +1,36 @@
 # SlugLauncher — guía para agentes LLM
 
 > SlugLauncher es un app launcher de una sola página (sin cuenta, sin base de datos).
-> Todo su estado —tema, idioma, apps y folders— vive codificado en el `#hash` de la URL.
-> Este archivo enseña a cualquier LLM a generar/editar ese hash a mano y entregarle
+> Todo su estado —tema, idioma, título de la página, apps y folders— vive codificado en el `#hash`
+> de la URL. Este archivo enseña a cualquier LLM a generar/editar ese hash a mano y entregarle
 > al usuario un link final listo para abrir, sin necesidad de ejecutar la página.
 
 URL del archivo: https://git.inriris.com/launcher/index.html
+(la dirección canónica del launcher es https://git.inriris.com/launcher/ ; ambas aceptan el mismo #hash)
 Código fuente: index.html en este mismo repo (git.inriris.com/launcher)
 
 ## 1. Estructura general de la URL
 
 ```
-https://git.inriris.com/launcher/index.html#SLUG:<tema>,<idioma>,<salvado>#<item1>#<item2>#...
+https://git.inriris.com/launcher/index.html#SLUG:<tema>,<idioma>,<salvado>,<título>#<item1>#<item2>#...
 ```
 
 - Cada segmento va separado por `#`.
-- El primer segmento SIEMPRE es `SLUG:` con 3 valores separados por coma.
+- El primer segmento SIEMPRE es `SLUG:` con 4 valores separados por coma.
 - Los siguientes segmentos son, en orden, los items del escritorio (apps y/o folders).
   El orden de los segmentos = el orden en que se ven los iconos.
 
 ### Segmento SLUG
-`SLUG:<tema>,<idioma>,<salvado>`
+`SLUG:<tema>,<idioma>,<salvado>,<título>`
 
 - `<tema>`: `0` = oscuro, `1` = claro, `2` = seguir al sistema.
 - `<idioma>`: código de 2 letras (ver sección 4).
 - `<salvado>`: `1` = no muestra el borde rojo de "cambios sin guardar" al abrir; `0` = sí lo muestra.
   Al entregar un link final y listo al usuario, usa siempre `1`.
+- `<título>`: nombre de la página (el que aparece en el header del launcher). Es opcional: si el
+  usuario no pide uno, déjalo vacío y termina el segmento con la coma: `SLUG:1,es,1,`.
+  Si lo hay, se codifica igual que el resto de campos de texto (ver sección 3).
+  (Un segmento con solo 3 valores, sin la coma final, también se lee bien, pero usa siempre 4.)
 
 ### Segmento de una app
 `<nombre>,<url>,<icono>`
@@ -33,7 +38,8 @@ https://git.inriris.com/launcher/index.html#SLUG:<tema>,<idioma>,<salvado>#<item
 - Los 3 campos van codificados con doble `encodeURIComponent` (ver sección 3).
 - `<url>` e `<icono>` se guardan SIN el prefijo `https://` (se le quita antes de codificar;
   al cargar la página se lo vuelve a anteponer automáticamente). Si la URL es `http://`
-  explícito, o de otro protocolo, ese prefijo si se conserva.
+  explícito, ese prefijo sí se conserva. Cualquier otro protocolo (`ftp://`, `mailto:`, etc.) no
+  es válido: al cargar se le antepone `https://` y queda rota. La interfaz solo acepta http y https.
 - `<nombre>` no se le quita ningún prefijo, solo se codifica tal cual.
 
 ### Segmento de un folder
@@ -50,8 +56,8 @@ https://git.inriris.com/launcher/index.html#SLUG:<tema>,<idioma>,<salvado>#<item
 Para cada app que el usuario pida agregar:
 
 1. Pide o infiere: nombre visible, URL de destino, y (opcional) ícono.
-2. Valida la URL: debe resolver a un dominio (`ejemplo.com`) o IPv4 válido. Si el usuario
-   solo da un dominio sin protocolo (`notion.so`), asume `https://`.
+2. Valida la URL: debe resolver a un dominio (`ejemplo.com`) o IPv4 válido, con protocolo http o
+   https. Si el usuario solo da un dominio sin protocolo (`notion.so`), asume `https://`.
 3. Ícono — para que NUNCA quede roto:
    - Si el usuario no da un ícono explícito, usa siempre el servicio de favicons de Google:
      `www.google.com/s2/favicons?sz=128&domain=<dominio>` (sin `https://`, se agrega solo).
@@ -69,12 +75,13 @@ Para cada app que el usuario pida agregar:
 
 ## 3. Codificación de campos (obligatoria)
 
-Cada campo (`nombre`, `url`, `icono`) se codifica con **doble** `encodeURIComponent`, es decir:
-`encodeURIComponent(encodeURIComponent(texto))`. Esto es necesario para que comas, `#`, `|` y
-otros caracteres especiales dentro de nombres o URLs no rompan el parseo del hash.
+Cada campo de texto (`título`, `nombre`, `url`, `icono`) se codifica con **doble**
+`encodeURIComponent`, es decir: `encodeURIComponent(encodeURIComponent(texto))`. Esto es necesario
+para que comas, `#`, `|` y otros caracteres especiales dentro de nombres o URLs no rompan el
+parseo del hash.
 
 Antes de codificar `url` e `icono`, quítales el prefijo `https://` si lo tienen (ver sección 1).
-`nombre` se codifica directo, sin tocar prefijos.
+`título` y `nombre` se codifican directo, sin tocar prefijos.
 
 ## 4. Idiomas soportados e inferencia
 
@@ -91,10 +98,14 @@ Idiomas disponibles: `en, es, fr, de, pt, it, ru, zh, ja, hi, ar`.
 ## 5. Máximos y mínimos a vigilar
 
 - **Escritorio (raíz):** máximo **64** items en total (apps + folders juntos). Constante: `DESKTOP_MAX`.
-- **Dentro de un folder:** máximo **35** apps por folder. Constante: `FOLDER_MAX`.
+- **Dentro de un folder:** máximo **36** apps por folder. Constante: `FOLDER_MAX`.
+- **Longitud del link:** la propia app avisa cuando el hash supera unos **2000 caracteres**
+  (`URL_WARN_LENGTH`), porque algunos navegadores y apps de mensajería cortan los links largos.
+  Si el link que vas a entregar se acerca a ese tamaño, avísale al usuario y sugiere quitar apps
+  o usar URLs de ícono más cortas (el favicon de Google por defecto es de los más cortos).
 - No hay mínimo técnico (el launcher puede estar vacío), pero si vas a entregar un link
   vacío avísale al usuario que verá la pantalla de ayuda inicial en vez de sus apps.
-- Si un pedido excede alguno de estos máximos:
+- Si un pedido excede alguno de los máximos de items:
   1. No generes un link que los exceda — el propio SlugLauncher los recorta solo al cargar
      (y elimina lo que sobra desde el final), pero es mejor prevenir que el usuario pierda
      apps sin darse cuenta.
@@ -108,6 +119,7 @@ Antes de generar el link final, si el pedido es ambiguo pregunta por:
 - **Organización:** ¿todas las apps sueltas en el escritorio, o agrupar algunas en folders?
   Si el usuario menciona una categoría (ej. "mis apps de trabajo"), es una buena señal para
   crear un folder con ese nombre.
+- **Título de la página:** es opcional; si el usuario no lo menciona, déjalo vacío.
 - **Nombres poco claros:** si una URL no deja claro qué nombre visible debería llevar el ícono,
   pregunta o usa el nombre del dominio como fallback razonable.
 - **Orden:** si el usuario no indica un orden, usa el orden en que fue mencionando las apps.
@@ -121,13 +133,21 @@ cada app, no vuelvas a preguntar eso).
    un `#` por cada item (app o folder), en ese orden.
 2. Entrégasela como un link listo para hacer clic (que abra directo la página nueva con
    los apps/folders ya instalados, sin pasos extra).
-3. Explícale al usuario, brevemente, cómo reordenar o editar los iconos una vez adentro:
-   - Tocar el ícono de **lápiz/editar** en el header entra a modo Editar: desde ahí se puede
-     arrastrar cada ícono para reordenarlo, arrastrar un ícono sobre otro para crear un folder,
-     y tocar un ícono para editarlo (nombre, URL, ícono) o borrarlo.
-   - El modo Editar se cierra solo tras un rato de inactividad, o tocando el mismo botón de
-     nuevo para confirmar los cambios.
-   - Desde el menú (ícono de hamburguesa) puede cambiar tema e idioma, y usar "Guardar
-     SlugLauncher" para descargar un acceso directo del launcher actualizado.
+3. Explícale al usuario, brevemente, cómo editar o reordenar los iconos una vez adentro. Hay dos
+   modos distintos:
+   - **Editar:** el botón de **lápiz** del header (o "Editar iconos" en el menú ☰). Ahí, tocar una
+     app abre su edición (nombre, URL, ícono) y permite borrarla; tocar un folder lo abre. También
+     aparecen los botones para añadir apps.
+   - **Mover:** solo desde el menú ☰ → "Mover iconos". Ahí se arrastra cada ícono para
+     reordenarlo, y soltarlo sobre un folder existente lo mete dentro de ese folder. Arrastrar una
+     app sobre otra app NO crea un folder.
+   - **Crear un folder nuevo:** menú ☰ → "Añadir Folder" (y "Añadir App" para apps nuevas).
+   - **Salir de un modo:** en cualquier modo, el botón ☰ del header se convierte en ✕ ("Salir del
+     modo"); tocarlo confirma los cambios. El modo también se cierra solo tras unos 10 segundos de
+     inactividad.
+   - Desde el menú ☰ también puede cambiar tema e idioma, cambiar el nombre de la página
+     ("Cambiar nombre de la página"), compartir el launcher ("Compartir tu launcher") y usar
+     "Salvar tu SlugLauncher" (el texto varía según el idioma) para guardar un acceso directo: en
+     escritorio se descarga un archivo, y en móvil se guía para añadirlo a la pantalla de inicio.
    - Cualquier cambio que haga genera una URL nueva (el hash cambia) — si quiere conservar
      los cambios para la próxima vez, debe guardar/copiar esa URL actualizada.
