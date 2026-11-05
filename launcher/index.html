@@ -1,23 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-version="1.1.0">
 <head>
 <meta charset="utf-8"/>
+<!-- ==== SLUGLAUNCHER · VERSIÓN 1.1.0 Deepseak 2026/11/05====
+     Cambios de esta versión (resumen):
+       - Parche 2026/11/05 (post 1.1.0):
+         · Labels visibles sobre cada campo de los modales (i18n en los 11 idiomas).
+         · Selector de iconos: solo Iconify (SVGL eliminado, no funcionaba).
+         · Iconify: máximo 10 resultados y búsqueda con pausa de 1 s (debounce) para
+           evitar bloqueos por sobreuso de la API.
+         · Modal Edit App: "Find an SVG icon on svgapi.com" movido DENTRO del modal
+           que abre "Search an icon" (usa el nombre del campo de la app en edición).
+       - Parche 2 (modos): en Editar/Mover el header muestra ✏️ ◀▶ ✕ (la 🔍 se oculta).
+         El botón del modo activo queda resaltado; el lápiz y las flechas ◀▶ alternan
+         entre ambos modos; la ✕ (antes ☰) siempre vuelve al modo normal.
+       - Accesibilidad de campos: aria-label, enterkeyhint, Enter avanza.
+       - Acento #0070e0 y :focus-visible unificado.
+       - Botones Cancelar legibles (texto oscuro sobre #aaa).
+       - Claves i18n nuevas: close, privacy, terms, contact, shortcutSearch, shortcutMenu,
+         iconPicker*, slugVersion.
+       - Modales: foco devuelto al disparador, trampa de Tab, Escape en cadena.
+       - Atajos Alt+Q (buscar) y Alt+W (menú).
+       - Sección Legal en el menú lateral (Privacy, Terms, Contact) + versión al pie.
+       - Textos "no servers"/"no database" eliminados de la landing (no era cierto
+         a nivel técnico: hay un Worker de iconos y Google S2). Legal lo explica.
+       - Selector de iconos (Iconify; límite 10 resultados, búsqueda con pausa de 1 s) integrado en Añadir/Editar app.
+       - Corrección de codificación de pageTitle en el hash (safeEncode).
+     El archivo sigue siendo único (app + landing) y el modo se decide por #SLUG.
+     ==== -->
 <!-- ==== ÍNDICE DEL ARCHIVO (línea de inicio de cada bloque; se regenera al reorganizar) ====
-        3  <head>
-       22  CHECKLIST: cambios para las landings por idioma (es, fr, it, ...)
-       52  SEO: título, Open Graph, hreflang
-       92  JSON-LD (datos estructurados)
-      120  SL_CONFIG (claves de almacenamiento)
-      125  Script de tema (antes de pintar)
-      136  Script de modo app/landing (antes de pintar)
-      151  CSS landing (#landingStyles)
-      549  CSS app (#appStyles1)
-     1310  CSS modo híbrido (#hybridModeStyle)
-     1314  HTML shell de la landing (#landingShell)
-     1602  HTML shell de la app (#slugAppShell)
-     1775  JS de la app (índice de secciones 0–30)
-     5045  JS de la landing (IIFE de la landing en inglés)
-     5715  JS final (modo híbrido)
+        1  <head> (incluye VERSIÓN 1.1.0 y este índice)
+       23  CHECKLIST: cambios para las landings por idioma (es, fr, it, ...)
+       53  SEO: título, Open Graph, hreflang
+       93  JSON-LD (datos estructurados)
+      121  SL_CONFIG (claves de almacenamiento)
+      126  Script de tema (antes de pintar)
+      137  Script de modo app/landing (antes de pintar)
+      152  CSS landing (#landingStyles)
+      550  CSS app (#appStyles1)
+     1311  CSS modo híbrido (#hybridModeStyle)
      ==== -->
 <!-- ==== CAMBIOS PARA LAS LANDINGS POR IDIOMA (index es, fr, it, de, pt, ru, zh, ja, hi, ar) ====
  Objetivo: que todas queden unificadas con este archivo. Verificado contra index (es) en el Paso 8. Para las demás
@@ -49,8 +70,9 @@
  ==== -->
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta content="index,follow,max-image-preview:large" name="robots"/>
-<title>SlugLauncher — Private web app launcher</title>
-<meta content="SlugLauncher is a customizable web app launcher for organizing your favorite apps and websites in one place. No account or database: share your launcher with one link." name="description"/>
+<meta content="no-referrer" name="referrer"/>
+<title>SlugLauncher — Web app launcher with the config in the link</title>
+<meta content="SlugLauncher is a customizable web app launcher for organizing your favorite apps and websites in one place. No account needed: your configuration travels in the link, so you can share your launcher with one URL." name="description"/>
 <link href="https://git.inriris.com/launcher/" rel="canonical"/>
 <link href="favicon.ico" rel="icon" type="image/x-icon"/>
 <link href="favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
@@ -75,14 +97,14 @@
 <meta content="https://git.inriris.com/launcher/" property="og:url"/>
 <meta content="en_US" property="og:locale"/>
 <meta content="SlugLauncher" property="og:site_name"/>
-<meta content="SlugLauncher — Private web app launcher" property="og:title"/>
-<meta content="Organize your favorite apps and websites in a customizable launcher. No account, no database, and shareable with one link." property="og:description"/>
+<meta content="SlugLauncher — Web app launcher with the config in the link" property="og:title"/>
+<meta content="Organize your favorite apps and websites in a customizable launcher. Your configuration travels in the link; no account needed." property="og:description"/>
 <meta content="https://git.inriris.com/launcher/og-image-light.png" property="og:image"/>
 <meta content="1200" property="og:image:width"/>
 <meta content="630" property="og:image:height"/>
 <!-- X / Twitter -->
 <meta content="summary_large_image" name="twitter:card"/>
-<meta content="SlugLauncher — Private web app launcher" name="twitter:title"/>
+<meta content="SlugLauncher — Web app launcher with the config in the link" name="twitter:title"/>
 <meta content="Organize your favorite apps and websites in a customizable launcher and share it with one link." name="twitter:description"/>
 <meta content="https://git.inriris.com/launcher/og-image-light.png" name="twitter:image"/>
 <!-- Esta página (/launcher/) es a la vez la landing en inglés y la app: con #SLUG... abre la app aquí mismo.
@@ -98,14 +120,15 @@
       "url": "https://git.inriris.com/launcher/",
       "name": "SlugLauncher",
       "inLanguage": "en",
-      "description": "Customizable web app launcher for organizing apps and favorite websites in one place."
+      "description": "Customizable web app launcher for organizing apps and favorite websites in one place. The configuration travels in the link."
     },
     {
       "@type": "SoftwareApplication",
       "@id": "https://git.inriris.com/launcher/#software",
       "name": "SlugLauncher",
+      "softwareVersion": "1.1.0",
       "url": "https://git.inriris.com/launcher/",
-      "description": "Private, customizable web app launcher that lets you organize favorite apps and websites and share a launcher with a link.",
+      "description": "Customizable web app launcher that lets you organize favorite apps and websites and share a launcher with a link. No account needed: the configuration is encoded in the URL.",
       "applicationCategory": "UtilitiesApplication",
       "operatingSystem": "Web",
       "inLanguage": "en"
@@ -162,7 +185,7 @@ const SL_CONFIG = Object.freeze({
     --text-dark:#f2f2f7;
     --muted-light:#5e5e66;
     --muted-dark:#b9b9c2;
-    --accent:#007aff;
+    --accent:#0070e0;
     --accent-dark:#0a84ff;
     --line-light:rgba(0,0,0,.08);
     --line-dark:rgba(255,255,255,.10);
@@ -182,9 +205,9 @@ body:before{
     content:"";
     position:fixed; inset:0; pointer-events:none; z-index:-1;
     background:
-      radial-gradient(circle at 15% -10%,rgba(0,122,255,.08),transparent 42%),
+      radial-gradient(circle at 15% -10%,rgba(0,112,224,.08),transparent 42%),
       radial-gradient(circle at 100% 0%,rgba(74,144,226,.07),transparent 38%),
-      radial-gradient(circle at 50% 100%,rgba(0,122,255,.05),transparent 46%);
+      radial-gradient(circle at 50% 100%,rgba(0,112,224,.05),transparent 46%);
 }
 a{color:inherit}
 button,.langSelect{font:inherit}
@@ -219,10 +242,10 @@ button,.langSelect{font:inherit}
 .themeOpt{display:grid;place-items:center;width:28px;height:26px;padding:0;border:0;border-radius:9px;background:transparent;color:inherit;opacity:.62;cursor:pointer;transition:background .15s ease,opacity .15s ease,color .15s ease}
 .themeOpt svg{width:16px;height:16px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .themeOpt:hover{opacity:1}
-.themeOpt[aria-checked="true"]{opacity:1;background:rgba(0,122,255,.14);color:var(--accent)}
+.themeOpt[aria-checked="true"]{opacity:1;background:rgba(0,112,224,.14);color:var(--accent)}
 .themeOpt:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .headerCta{padding:9px 14px;border-radius:12px;background:var(--accent);color:#fff;text-decoration:none;font-size:13.5px;font-weight:700;transition:transform .15s ease,box-shadow .2s ease,background .15s ease}
-.headerCta:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,122,255,.25);background:var(--accent-dark)}
+.headerCta:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,112,224,.25);background:var(--accent-dark)}
 
 /* Hero */
 .hero{padding:82px 0 52px}
@@ -232,7 +255,7 @@ button,.langSelect{font:inherit}
     font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
     color:var(--accent);margin-bottom:15px;
 }
-.eyebrowDot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 6px rgba(0,122,255,.10)}
+.eyebrowDot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 6px rgba(0,112,224,.10)}
 h1{font-size:clamp(38px,6vw,66px);line-height:1.02;letter-spacing:-.045em;margin:0 0 22px;max-width:800px}
 .heroLead{font-size:clamp(18px,2.3vw,22px);line-height:1.5;color:var(--muted-light);max-width:720px;margin:0 0 28px}
 .heroActions{display:flex;flex-wrap:wrap;gap:11px;align-items:center}
@@ -241,15 +264,15 @@ h1{font-size:clamp(38px,6vw,66px);line-height:1.02;letter-spacing:-.045em;margin
     padding:13px 18px;border-radius:15px;text-decoration:none;font-size:14.5px;font-weight:750;
     transition:transform .18s ease,box-shadow .2s ease,background .15s ease,border-color .15s ease;
 }
-.primaryCta{background:var(--accent);color:#fff;box-shadow:0 12px 30px rgba(0,122,255,.20)}
-.primaryCta:hover{transform:translateY(-2px);box-shadow:0 16px 35px rgba(0,122,255,.28);background:var(--accent-dark)}
+.primaryCta{background:var(--accent);color:#fff;box-shadow:0 12px 30px rgba(0,112,224,.20)}
+.primaryCta:hover{transform:translateY(-2px);box-shadow:0 16px 35px rgba(0,112,224,.28);background:var(--accent-dark)}
 .secondaryCta{border:1px solid rgba(127,127,127,.24);background:rgba(255,255,255,.55)}
 .secondaryCta:hover{transform:translateY(-1px);background:rgba(127,127,127,.10)}
 .heroNote{font-size:12.5px;color:var(--muted-light);margin-top:13px}
 
 /* Visual mockup */
 .mockupWrap{position:relative}
-.mockupGlow{position:absolute;inset:7% -4% -5%;background:radial-gradient(circle,rgba(0,122,255,.20),transparent 68%);filter:blur(18px);z-index:-1}
+.mockupGlow{position:absolute;inset:7% -4% -5%;background:radial-gradient(circle,rgba(0,112,224,.20),transparent 68%);filter:blur(18px);z-index:-1}
 .mockup{
     background:rgba(255,255,255,.72);border:1px solid rgba(0,0,0,.10);
     border-radius:30px;padding:17px;box-shadow:var(--shadow-light);
@@ -285,7 +308,7 @@ h1{font-size:clamp(38px,6vw,66px);line-height:1.02;letter-spacing:-.045em;margin
     background:rgba(255,255,255,.78);border:1px solid rgba(0,0,0,.08);
     border-radius:23px;padding:23px;box-shadow:0 9px 26px rgba(0,0,0,.055);
 }
-.featureIcon{width:42px;height:42px;border-radius:13px;background:rgba(0,122,255,.10);color:var(--accent);display:grid;place-items:center;font-size:19px;margin-bottom:14px}
+.featureIcon{width:42px;height:42px;border-radius:13px;background:rgba(0,112,224,.10);color:var(--accent);display:grid;place-items:center;font-size:19px;margin-bottom:14px}
 .featureCard h3{margin:0 0 7px;font-size:18px;letter-spacing:-.015em}
 .featureCard p{margin:0;color:var(--muted-light);font-size:14px;line-height:1.6}
 
@@ -308,7 +331,7 @@ html,body{overflow-x:clip}
 .checkList{display:grid;gap:9px;padding:0;margin:0;list-style:none}
 .checkList li{font-size:13.5px;display:flex;gap:9px;align-items:flex-start}
 .checkList span{color:var(--accent);font-weight:900}
-.urlCard{padding:18px;border-radius:22px;background:linear-gradient(145deg,rgba(0,122,255,.08),rgba(127,127,127,.05));border:1px solid rgba(0,122,255,.15)}
+.urlCard{padding:18px;border-radius:22px;background:linear-gradient(145deg,rgba(0,112,224,.08),rgba(127,127,127,.05));border:1px solid rgba(0,112,224,.15)}
 .urlBar{background:rgba(255,255,255,.90);border:1px solid rgba(0,0,0,.08);padding:11px 12px;border-radius:13px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .urlCaption{font-size:11px;color:var(--muted-light);margin-top:11px;line-height:1.5}
 
@@ -324,11 +347,11 @@ html,body{overflow-x:clip}
 .tryCard p{margin:0;color:var(--muted-light);font-size:14px;line-height:1.6}
 .tryBtn{
     margin-top:auto;align-self:flex-start;cursor:pointer;
-    padding:11px 16px;border-radius:13px;border:1px solid rgba(0,122,255,.25);
-    background:rgba(0,122,255,.10);color:var(--accent);font-size:14px;font-weight:750;
+    padding:11px 16px;border-radius:13px;border:1px solid rgba(0,112,224,.25);
+    background:rgba(0,112,224,.10);color:var(--accent);font-size:14px;font-weight:750;
     transition:transform .15s ease,background .15s ease;
 }
-.tryBtn:hover{transform:translateY(-1px);background:rgba(0,122,255,.16)}
+.tryBtn:hover{transform:translateY(-1px);background:rgba(0,112,224,.16)}
 
 /* Modal Añadir — estilos copiados de index.html */
 @keyframes animotion-fade-in { from { opacity:0; } to { opacity:1; } }
@@ -363,7 +386,7 @@ html,body{overflow-x:clip}
     transition:background .2s ease,color .2s ease,border-color .15s ease,box-shadow .15s ease;
 }
 .modalBox input::placeholder{color:inherit;opacity:.45}
-.modalBox input:not([type="checkbox"]):not([type="radio"]):focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,122,255,.18)}
+.modalBox input:not([type="checkbox"]):not([type="radio"]):focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,112,224,.18)}
 .modalBox input[type="checkbox"]{width:auto;margin:0;accent-color:var(--accent);flex-shrink:0}
 .modalBox button{
     width:100%;padding:11px;border:none;border-radius:16px;
@@ -375,7 +398,7 @@ html,body{overflow-x:clip}
 .modalBox button:disabled,.modalBox button:disabled:hover{opacity:.45;cursor:not-allowed;background:var(--accent)}
 .modalBox .fieldLabel{font-size:13px;font-weight:600;margin-bottom:6px;opacity:.75}
 .modalBox .fieldNote{font-size:12px;opacity:.65;margin:2px 2px 8px;line-height:1.35}
-.modalBox .helperLink{display:inline-block;font-size:13px;color:var(--accent);text-decoration:none;margin:-4px 0 12px;cursor:pointer}
+.modalBox .helperLink{display:inline-block;font-size:13px;color:var(--accent);text-decoration:none;margin:-4px 0 12px;cursor:pointer;background:none;border:0;padding:0;font-family:inherit;text-align:left}
 #iconPreview,#folderIconPreview{width:64px;height:64px;border-radius:16px;display:none;margin-bottom:10px}
 .segmentedControl{display:flex;background:rgba(127,127,127,.15);border-radius:13px;padding:3px;margin-bottom:14px}
 .modalBox .segmentedControl button.segmentBtn{
@@ -407,9 +430,9 @@ html,body{overflow-x:clip}
     transition:background .2s ease,color .2s ease,border-color .15s ease,box-shadow .15s ease;
 }
 .modalBox textarea::placeholder{color:inherit;opacity:.45}
-.modalBox textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,122,255,.18)}
+.modalBox textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,112,224,.18)}
 .modalBox button.ioPasteBtn{background:#8e8e93}
-.modalBox button.ioCancelBtn{background:#aaa}
+.modalBox button.ioCancelBtn{background:#aaa;color:#1c1c1e}
 .ioListBox,#urlIOList{margin:4px 0 12px;border-radius:14px;background:#f2f2f5;padding:4px}
 #urlIOList{max-height:min(38vh,320px);overflow-y:auto;overscroll-behavior:contain}
 .ioRow{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;user-select:none;-webkit-user-select:none}
@@ -447,7 +470,7 @@ html,body{overflow-x:clip}
 @media (max-width:400px){.searchDemo{height:300px}.searchChip{font-size:12px;padding:2px 8px 2px 2px;gap:5px}.searchChip .searchResultIcon{flex:0 0 18px;width:18px;height:18px;font-size:10px;border-radius:6px}}
 .searchList{flex:1;display:flex;flex-direction:column;gap:4px;overflow:hidden}
 .searchRow{flex:0 0 48px;display:flex;align-items:center;gap:12px;padding:0 10px;border-radius:14px;animation:animotion-fade-in .16s ease both}
-.searchRow:first-child{background:rgba(0,122,255,.12)}
+.searchRow:first-child{background:rgba(0,112,224,.12)}
 .searchResultIcon{flex:0 0 34px;width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-weight:800;font-size:15px;color:#fff}
 .searchResultName{font-size:14.5px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (prefers-reduced-motion:reduce){.searchCaret,.searchRow{animation:none}}
@@ -466,9 +489,9 @@ details p{margin:0 0 17px;color:var(--muted-light);font-size:14px;line-height:1.
 .ctaBox{
     position:relative;overflow:hidden;text-align:center;
     background:linear-gradient(145deg,#f9fbff,#ffffff);
-    border:1px solid rgba(0,122,255,.12);border-radius:32px;padding:48px 28px;box-shadow:var(--shadow-light)
+    border:1px solid rgba(0,112,224,.12);border-radius:32px;padding:48px 28px;box-shadow:var(--shadow-light)
 }
-.ctaBox:before{content:"";position:absolute;width:340px;height:340px;border-radius:50%;background:rgba(0,122,255,.08);filter:blur(14px);top:-230px;right:-110px}
+.ctaBox:before{content:"";position:absolute;width:340px;height:340px;border-radius:50%;background:rgba(0,112,224,.08);filter:blur(14px);top:-230px;right:-110px}
 .ctaBox h2{position:relative;margin:0 0 10px;font-size:clamp(28px,4vw,44px);letter-spacing:-.035em}
 .ctaBox p{position:relative;max-width:660px;margin:0 auto 23px;color:var(--muted-light);font-size:15.5px}
 .ctaFine{position:relative;font-size:11.5px;color:var(--muted-light);margin-top:12px}
@@ -476,6 +499,13 @@ details p{margin:0 0 17px;color:var(--muted-light);font-size:14px;line-height:1.
 /* Footer */
 .footer{padding:22px 0 28px;font-size:12px;color:var(--muted-light);text-align:center;border-top:1px solid rgba(127,127,127,.10)}
 .footer a{color:var(--accent);text-decoration:none}
+
+/* Foco visible unificado (landing) */
+:where(a,button,summary,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+:where(html[data-theme="dark"]) :where(a,button,summary,[tabindex]):focus-visible{outline-color:var(--accent-dark)}
+
+/* Botón Cancelar reutilizable */
+.btnCancel{background:#aaa !important;color:#1c1c1e !important}
 
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.primaryCta,.secondaryCta,.headerCta,.themeOpt{transition:none}.mockup{transform:none}}
 html[data-theme="dark"]{color-scheme:dark}
@@ -551,7 +581,7 @@ html[data-theme="dark"]{color-scheme:dark}
    Orden actual (NO reordenar): animaciones · color-scheme · variables :root · header · footer · contenido · borde rojo
    (no salvado) · estado vacío · grid · iconos · scrollbars · estilo iOS · modal de carpeta · modales generales ·
    toggle App/Folder · lista con checks · opciones de icono · side panel · modal de carga de iconos ·
-   modal Salvar/Instalar · buscador rápido. ==== */
+   modal Salvar/Instalar · buscador rápido · selector de iconos (NUEVO en 1.1.0). ==== */
 
 /* ---------- Animaciones ---------- */
 @keyframes animotion-fade-in { from { opacity:0; } to { opacity:1; } }
@@ -576,7 +606,7 @@ html[data-theme="dark"]{color-scheme:dark}
     --folder-bg-dark: #2c2c2e;
     --text-light: #1c1c1e;
     --text-dark: #f2f2f7;
-    --accent: #007aff;
+    --accent: #0070e0;
     --accent-dark: #0a84ff;
 }
 
@@ -587,7 +617,7 @@ body.theme-dark  { color-scheme: dark; }
 body.theme-light {
     background-color: var(--bg-light);
     background-image:
-        radial-gradient(circle at 15% -10%, rgba(0,122,255,0.07), transparent 45%),
+        radial-gradient(circle at 15% -10%, rgba(0,112,224,0.07), transparent 45%),
         radial-gradient(circle at 100% 0%, rgba(74,144,226,0.06), transparent 40%);
     background-attachment: fixed;
     color: var(--text-light);
@@ -630,7 +660,7 @@ body.theme-dark #header {
     border-bottom: 1px solid rgba(255,255,255,0.08);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.07);
 }
-body.modeActive #header { box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 2px 10px rgba(0,122,255,0.35); }
+body.modeActive #header { box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 2px 10px rgba(0,112,224,0.35); }
 body.theme-dark.modeActive #header { box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 2px 14px rgba(10,132,255,0.4); }
 #header h1 { margin:0; font-size:19px; font-weight:700; display:flex; align-items:center; gap:8px; flex:1 1 auto; min-width:0; overflow:hidden; }
 #titleLabel { cursor:pointer; transition:opacity .15s ease, transform .15s ease; border-radius:10px; min-width:0; max-width:none; white-space:nowrap; }
@@ -645,22 +675,34 @@ body.theme-dark.modeActive #header { box-shadow: inset 0 1px 0 rgba(255,255,255,
 #titleLabel:active { transform:scale(.97); }
 .titleIcon { width:18px; height:30px; flex:0 0 18px; display:block; overflow:visible; transform:none; }
 #headerActions { display:flex; align-items:center; gap:4px; }
-#searchBtn, #editBtn, #burgerBtn {
+#searchBtn, #editBtn, #moveBtn, #burgerBtn {
     border:none; background:transparent; color:inherit; font-size:22px; cursor:pointer;
     width:36px; height:36px; border-radius:10px;
     transition:background .15s ease, transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease;
     display:flex; align-items:center; justify-content:center;
     box-shadow:0 0 0 0 rgba(74,144,226,0);
 }
-#searchBtn svg, #editBtn svg { width:19px; height:19px; }
-#searchBtn:hover, #editBtn:hover, #burgerBtn:hover {
+#searchBtn svg, #editBtn svg, #moveBtn svg { width:19px; height:19px; }
+#searchBtn:hover, #editBtn:hover, #moveBtn:hover, #burgerBtn:hover {
     background: rgba(127,127,127,0.15); transform:scale(1.1);
     box-shadow:0 0 14px 2px rgba(74,144,226,0.35);
 }
-body.theme-dark #searchBtn:hover, body.theme-dark #editBtn:hover, body.theme-dark #burgerBtn:hover {
+body.theme-dark #searchBtn:hover, body.theme-dark #editBtn:hover, body.theme-dark #moveBtn:hover, body.theme-dark #burgerBtn:hover {
     box-shadow:0 0 16px 3px rgba(10,132,255,0.45);
 }
-#searchBtn:active, #editBtn:active, #burgerBtn:active { transform:scale(.9); }
+#searchBtn:active, #editBtn:active, #moveBtn:active, #burgerBtn:active { transform:scale(.9); }
+/* Resaltado del botón del modo activo (lápiz = editar, flechas = mover) */
+#editBtn.modeOn, #moveBtn.modeOn {
+    background: rgba(0,112,224,0.14);
+    color: var(--accent);
+    box-shadow: 0 0 12px 2px rgba(0,112,224,0.30);
+    opacity: 1;
+}
+body.theme-dark #editBtn.modeOn, body.theme-dark #moveBtn.modeOn {
+    background: rgba(10,132,255,0.20);
+    color: var(--accent-dark);
+    box-shadow: 0 0 14px 3px rgba(10,132,255,0.40);
+}
 
 /* ---------- FOOTER ---------- */
 #footer {
@@ -805,7 +847,7 @@ body.theme-dark .appIcon span { color:var(--text-dark); }
 }
 body.theme-dark .appIcon .folderBadge { box-shadow:0 1px 4px rgba(0,0,0,0.8); border:1px solid rgba(255,255,255,0.15); }
 
-.editModeItem { outline:2px dashed rgba(0,122,255,0.55); outline-offset:3px; }
+.editModeItem { outline:2px dashed rgba(0,112,224,0.55); outline-offset:3px; }
 
 @keyframes wiggle {
     0%,100% { transform:rotate(-2deg); }
@@ -817,17 +859,26 @@ body.theme-dark .appIcon .folderBadge { box-shadow:0 1px 4px rgba(0,0,0,0.8); bo
     -webkit-touch-callout: none;
 }
 .appIcon.dragActive { animation:none !important; box-shadow:0 14px 30px rgba(0,0,0,0.35); opacity:0.92; z-index:500; }
-.appIcon.dropTargetHighlight { outline:3px solid var(--accent); outline-offset:3px; background:rgba(0,122,255,0.12); }
+.appIcon.dropTargetHighlight { outline:3px solid var(--accent); outline-offset:3px; background:rgba(0,112,224,0.12); }
+
+/* ---------- FOCO VISIBLE UNIFICADO (APP) ---------- */
+:where(#headerActions button, .sideMenuLink, .appIcon, .addAppTile, .folderModal button, .modalBox button, .modalBox input, .modalBox textarea, .modalBox select, .searchResultItem, .ioRow, #searchInput, .iconCell, .segmentBtn, #langSelect):focus-visible {
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+}
+body.theme-dark :where(#headerActions button, .sideMenuLink, .appIcon, .addAppTile, .folderModal button, .modalBox button, .modalBox input, .modalBox textarea, .modalBox select, .searchResultItem, .ioRow, #searchInput, .iconCell, .segmentBtn, #langSelect):focus-visible {
+    outline-color: var(--accent-dark);
+}
 
 /* ---------- SCROLLBARS ---------- */
-:root { --sb-thumb:rgba(127,127,127,.45); --sb-thumb-hover:rgba(0,122,255,.65); }
+:root { --sb-thumb:rgba(127,127,127,.45); --sb-thumb-hover:rgba(0,112,224,.65); }
 body.theme-dark { --sb-thumb:rgba(255,255,255,.28); --sb-thumb-hover:rgba(10,132,255,.75); }
 html { scrollbar-width:thin; scrollbar-color:var(--sb-thumb) transparent; }
-.folderContent, .modalBox, #sidePanel, #saveLauncherBox, #urlIOList, .searchResultsList, #folderAppList, #editFolderAppList {
+.folderContent, .modalBox, #sidePanel, #saveLauncherBox, #urlIOList, .searchResultsList, #folderAppList, #editFolderAppList, #iconPickerResults {
     scrollbar-width:thin; scrollbar-color:transparent transparent;
 }
-.folderContent:hover, .modalBox:hover, #sidePanel:hover, #saveLauncherBox:hover, #urlIOList:hover, .searchResultsList:hover, #folderAppList:hover, #editFolderAppList:hover,
-.folderContent.isScrolling, .modalBox.isScrolling, #sidePanel.isScrolling, #saveLauncherBox.isScrolling, #urlIOList.isScrolling, .searchResultsList.isScrolling, #folderAppList.isScrolling, #editFolderAppList.isScrolling {
+.folderContent:hover, .modalBox:hover, #sidePanel:hover, #saveLauncherBox:hover, #urlIOList:hover, .searchResultsList:hover, #folderAppList:hover, #editFolderAppList:hover, #iconPickerResults:hover,
+.folderContent.isScrolling, .modalBox.isScrolling, #sidePanel.isScrolling, #saveLauncherBox.isScrolling, #urlIOList.isScrolling, .searchResultsList.isScrolling, #folderAppList.isScrolling, #editFolderAppList.isScrolling, #iconPickerResults.isScrolling {
     scrollbar-color:var(--sb-thumb) transparent;
 }
 ::-webkit-scrollbar { width:8px; height:8px; background:transparent; }
@@ -836,17 +887,17 @@ html { scrollbar-width:thin; scrollbar-color:var(--sb-thumb) transparent; }
 ::-webkit-scrollbar-thumb { background:var(--sb-thumb); border-radius:999px; border:2px solid transparent; background-clip:padding-box; }
 ::-webkit-scrollbar-thumb:hover { background:var(--sb-thumb-hover); background-clip:padding-box; }
 .folderContent::-webkit-scrollbar-thumb, .modalBox::-webkit-scrollbar-thumb, #sidePanel::-webkit-scrollbar-thumb, #saveLauncherBox::-webkit-scrollbar-thumb,
-#urlIOList::-webkit-scrollbar-thumb, .searchResultsList::-webkit-scrollbar-thumb, #folderAppList::-webkit-scrollbar-thumb, #editFolderAppList::-webkit-scrollbar-thumb {
+#urlIOList::-webkit-scrollbar-thumb, .searchResultsList::-webkit-scrollbar-thumb, #folderAppList::-webkit-scrollbar-thumb, #editFolderAppList::-webkit-scrollbar-thumb, #iconPickerResults::-webkit-scrollbar-thumb {
     background:transparent; background-clip:padding-box;
 }
 .folderContent:hover::-webkit-scrollbar-thumb, .modalBox:hover::-webkit-scrollbar-thumb, #sidePanel:hover::-webkit-scrollbar-thumb, #saveLauncherBox:hover::-webkit-scrollbar-thumb,
-#urlIOList:hover::-webkit-scrollbar-thumb, .searchResultsList:hover::-webkit-scrollbar-thumb, #folderAppList:hover::-webkit-scrollbar-thumb, #editFolderAppList:hover::-webkit-scrollbar-thumb,
+#urlIOList:hover::-webkit-scrollbar-thumb, .searchResultsList:hover::-webkit-scrollbar-thumb, #folderAppList:hover::-webkit-scrollbar-thumb, #editFolderAppList:hover::-webkit-scrollbar-thumb, #iconPickerResults:hover::-webkit-scrollbar-thumb,
 .folderContent.isScrolling::-webkit-scrollbar-thumb, .modalBox.isScrolling::-webkit-scrollbar-thumb, #sidePanel.isScrolling::-webkit-scrollbar-thumb, #saveLauncherBox.isScrolling::-webkit-scrollbar-thumb,
-#urlIOList.isScrolling::-webkit-scrollbar-thumb, .searchResultsList.isScrolling::-webkit-scrollbar-thumb, #folderAppList.isScrolling::-webkit-scrollbar-thumb, #editFolderAppList.isScrolling::-webkit-scrollbar-thumb {
+#urlIOList.isScrolling::-webkit-scrollbar-thumb, .searchResultsList.isScrolling::-webkit-scrollbar-thumb, #folderAppList.isScrolling::-webkit-scrollbar-thumb, #editFolderAppList.isScrolling::-webkit-scrollbar-thumb, #iconPickerResults.isScrolling::-webkit-scrollbar-thumb {
     background:var(--sb-thumb); background-clip:padding-box;
 }
 .folderContent::-webkit-scrollbar-thumb:hover, .modalBox::-webkit-scrollbar-thumb:hover, #sidePanel::-webkit-scrollbar-thumb:hover, #saveLauncherBox::-webkit-scrollbar-thumb:hover,
-#urlIOList::-webkit-scrollbar-thumb:hover, .searchResultsList::-webkit-scrollbar-thumb:hover, #folderAppList::-webkit-scrollbar-thumb:hover, #editFolderAppList::-webkit-scrollbar-thumb:hover {
+#urlIOList::-webkit-scrollbar-thumb:hover, .searchResultsList::-webkit-scrollbar-thumb:hover, #folderAppList::-webkit-scrollbar-thumb:hover, #editFolderAppList::-webkit-scrollbar-thumb:hover, #iconPickerResults::-webkit-scrollbar-thumb:hover {
     background:var(--sb-thumb-hover); background-clip:padding-box;
 }
 
@@ -895,7 +946,7 @@ body.theme-dark .appIcon:not(.addAppTile):hover > .folderIconWrap {
 .appLabelClip { width:100%; overflow:hidden; text-align:center; line-height:1.3; min-width:0; }
 .addAppTile {
     aspect-ratio: 1 / 1;
-    border:2px dashed rgba(0,122,255,0.45);
+    border:2px dashed rgba(0,112,224,0.45);
     background:transparent;
     box-shadow:none;
 }
@@ -1005,7 +1056,7 @@ body.theme-dark .folderContent {
 .folderModalEditBtn:active { transform:scale(.94); }
 
 /* ---------- MODALS GENERALES ---------- */
-#addModal, #folderModalAdd, #editAppModal, #editFolderModal, #sidePanelOverlay, #slugInfoModal, #urlIOModal {
+#addModal, #folderModalAdd, #editAppModal, #editFolderModal, #sidePanelOverlay, #slugInfoModal, #urlIOModal, #iconPickerModal {
     display:none; position:fixed; inset:0; z-index:1001;
     background:rgba(0,0,0,0.38);
     backdrop-filter:blur(22px) saturate(160%);
@@ -1063,7 +1114,7 @@ body.theme-dark .modalBox {
 }
 .modalBox input::placeholder, .modalBox textarea::placeholder { color:inherit; opacity:0.45; }
 .modalBox input:not([type="checkbox"]):not([type="radio"]):focus, .modalBox textarea:focus, .modalBox select:focus {
-    outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,122,255,0.18);
+    outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,112,224,0.18);
 }
 body.theme-dark .modalBox input:not([type="checkbox"]):not([type="radio"]), body.theme-dark .modalBox textarea, body.theme-dark .modalBox select {
     background:rgba(255,255,255,0.06); color:var(--text-dark); border-color:rgba(255,255,255,0.14);
@@ -1091,6 +1142,7 @@ body.theme-dark .modalBox input[type="checkbox"] { accent-color:var(--accent-dar
 .modalBox .helperLink {
     display:inline-block; font-size:13px; color:var(--accent); text-decoration:none;
     margin:-4px 0 12px; cursor:pointer;
+    background:none; border:0; padding:0; font-family:inherit; text-align:left;
 }
 body.theme-dark .modalBox .helperLink { color:var(--accent-dark); }
 #iconPreview, #editIconPreview, #folderIconPreview, #editFolderIconPreview { width:64px; height:64px; border-radius:16px; display:none; margin-bottom:10px; }
@@ -1114,8 +1166,8 @@ body.theme-dark .modalBox .segmentedControl button.segmentBtn.active {
 }
 
 @keyframes pendingMovePulse {
-    0%,100% { box-shadow:0 0 0 0 rgba(0,122,255,0.55); }
-    50%     { box-shadow:0 0 0 12px rgba(0,122,255,0); }
+    0%,100% { box-shadow:0 0 0 0 rgba(0,112,224,0.55); }
+    50%     { box-shadow:0 0 0 12px rgba(0,112,224,0); }
 }
 .pendingMoveHighlight { animation:pendingMovePulse .55s ease 3; }
 
@@ -1136,6 +1188,8 @@ body.theme-dark #urlIOList { background:var(--folder-bg-dark); }
 .ioFolderIco { display:flex; width:24px; height:24px; flex:0 0 24px; }
 .ioFolderIco svg { width:24px; height:24px; }
 .modalBox button:disabled, .modalBox button:disabled:hover { opacity:.45; cursor:not-allowed; background:var(--accent); }
+.modalBox button.btnCancel { background:#aaa !important; color:#1c1c1e !important; }
+.modalBox button.btnCancel:hover { background:#999 !important; }
 
 /* ---------- ICON OPTIONS ---------- */
 .iconOptionsRow { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
@@ -1157,11 +1211,11 @@ body.theme-dark .iconOption.selectedIcon { border-color:var(--accent-dark); }
     transition:background .15s ease;
 }
 body.theme-dark .sideMenuLink { color:var(--text-dark); }
-.sideMenuLink:hover { background:rgba(0,122,255,0.12); color:var(--accent); }
+.sideMenuLink:hover { background:rgba(0,112,224,0.12); color:var(--accent); }
 body.theme-dark .sideMenuLink:hover { background:rgba(10,132,255,0.18); color:var(--accent-dark); }
 .sideMenuSectionTitle {
     font-size:11.5px; font-weight:700; margin-top:20px; margin-bottom:8px;
-    opacity:0.85; text-transform:uppercase; letter-spacing:.08em;
+    text-transform:uppercase; letter-spacing:.08em;
     padding:0 10px; color:var(--accent);
 }
 body.theme-dark .sideMenuSectionTitle { color:var(--accent-dark); }
@@ -1171,7 +1225,7 @@ body.theme-dark .sideMenuSectionTitle { color:var(--accent-dark); }
     background:var(--card-light); color:var(--text-light);
     transition:background .2s ease, color .2s ease, border-color .15s ease;
 }
-#langSelect:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,122,255,0.18); }
+#langSelect:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,112,224,0.18); }
 #langSelect option { background:var(--card-light); color:var(--text-light); }
 body.theme-dark #langSelect {
     background:rgba(255,255,255,0.06); color:var(--text-dark); border-color:rgba(255,255,255,0.14);
@@ -1179,6 +1233,26 @@ body.theme-dark #langSelect {
 }
 body.theme-dark #langSelect option { background:var(--card-dark); color:var(--text-dark); }
 body.theme-dark #langSelect:focus { border-color:var(--accent-dark); box-shadow:0 0 0 3px rgba(10,132,255,0.22); }
+
+/* ---------- PISTA DE ATAJOS Y VERSIÓN (menú) ---------- */
+.sideShortcutHint {
+    margin: 2px 10px 8px; padding: 8px 10px; border-radius: 10px;
+    background: rgba(127,127,127,.10); font-size: 12px; line-height: 1.6;
+    color: var(--muted-light, #5e5e66);
+}
+body.theme-dark .sideShortcutHint { background: rgba(255,255,255,.06); color: var(--muted-dark, #b9b9c2); }
+.sideShortcutHint kbd {
+    display: inline-block; padding: 1px 6px; border-radius: 6px;
+    background: rgba(127,127,127,.18); border: 1px solid rgba(127,127,127,.30);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px;
+}
+body.theme-dark .sideShortcutHint kbd { background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.20); }
+.sideMenuVersion {
+    margin: 18px 10px 6px; padding-top: 12px;
+    border-top: 1px solid rgba(127,127,127,.20);
+    font-size: 11.5px; opacity: .65;
+}
+body.theme-dark .sideMenuVersion { border-top-color: rgba(255,255,255,.12); }
 
 /* ---------- MODAL: CARGANDO ICONOS (progreso circular) ---------- */
 #iconsLoadingModal {
@@ -1289,7 +1363,7 @@ body.theme-dark #searchModalBox { background:var(--card-dark); }
     padding:9px 10px; border-radius:14px; cursor:pointer;
     transition:background .12s ease;
 }
-.searchResultItem:hover, .searchResultItem:active { background:rgba(0,122,255,0.12); }
+.searchResultItem:hover, .searchResultItem:active { background:rgba(0,112,224,0.12); }
 body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:active { background:rgba(10,132,255,0.18); }
 .searchResultItem img { width:34px; height:34px; border-radius:9px; object-fit:contain; flex-shrink:0; }
 .searchResultName { font-size:14.5px; font-weight:500; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -1306,6 +1380,70 @@ body.theme-dark .searchResultItem:hover, body.theme-dark .searchResultItem:activ
 .fieldNote.warn { opacity:1; color:#b25e00; background:rgba(255,149,0,.12); border-radius:8px; padding:8px 10px; margin:8px 0; }
 body.theme-dark .fieldNote.warn { color:#ffb454; }
 
+/* ---------- SELECTOR DE ICONOS (1.1.0) ---------- */
+#iconPickerModal { z-index:1900; }
+#iconPickerBox {
+    width:100%; max-width:520px; max-height:84vh; overflow:auto;
+    background:var(--card-light); color:var(--text-light);
+    border-radius:28px; padding:22px; box-sizing:border-box; margin:auto;
+    box-shadow:0 24px 70px rgba(0,0,0,.3);
+    animation: animotion-bounce-in .5s both;
+    position:relative;
+}
+body.theme-dark #iconPickerBox { background:var(--card-dark); color:var(--text-dark); }
+#iconPickerBox h3 { margin:0 34px 10px 0; font-size:18px; }
+#iconPickerClose {
+    position:absolute; top:14px; right:14px;
+    width:34px; height:34px; border:0; border-radius:50%;
+    background:rgba(127,127,127,.12); color:inherit;
+    font-size:22px; line-height:34px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+}
+#iconPickerClose:hover { background:rgba(127,127,127,.22); }
+#iconPickerSearchRow {
+    display:flex; align-items:center; gap:10px;
+    padding:9px 12px; border-radius:14px;
+    background:rgba(127,127,127,.12); margin-bottom:12px;
+}
+#iconPickerSearchRow svg { width:18px; height:18px; opacity:.55; flex:0 0 18px; }
+#iconPickerSearch {
+    flex:1; border:none; outline:none; background:transparent;
+    font-size:16px; color:inherit; min-width:0;
+}
+#iconPickerSearch::placeholder { color:inherit; opacity:.5; }
+#iconPickerResults {
+    display:grid; grid-template-columns:repeat(3, minmax(0,1fr));
+    gap:10px; min-height:180px; max-height:48vh; overflow:auto;
+    padding:4px; margin-bottom:12px;
+}
+.iconCell {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:6px; padding:10px 6px; border-radius:14px; cursor:pointer;
+    border:1px solid rgba(127,127,127,.18); background:rgba(127,127,127,.05);
+    transition: background .15s ease, border-color .15s ease, transform .15s ease;
+    min-width:0;
+}
+.iconCell:hover { background:rgba(0,112,224,.10); border-color:rgba(0,112,224,.35); transform:translateY(-1px); }
+.iconCell img { width:44px; height:44px; object-fit:contain; }
+.iconCell span { font-size:11px; opacity:.75; text-align:center; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+body.theme-dark .iconCell { background:rgba(255,255,255,.04); border-color:rgba(255,255,255,.12); }
+body.theme-dark .iconCell:hover { background:rgba(10,132,255,.15); border-color:rgba(10,132,255,.40); }
+.iconPickerNote { font-size:12px; opacity:.65; margin:0 0 10px; line-height:1.4; }
+.iconPickerFooter { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+.iconPickerFooter a, .iconPickerFooter button {
+    flex:1; text-align:center; text-decoration:none;
+    padding:9px 10px; border-radius:12px; font-size:13px; font-weight:600;
+    border:1px solid rgba(0,112,224,.25); background:rgba(0,112,224,.10);
+    color:var(--accent); cursor:pointer;
+    transition: background .15s ease, transform .15s ease;
+}
+.iconPickerFooter a:hover, .iconPickerFooter button:hover { background:rgba(0,112,224,.18); transform:translateY(-1px); }
+body.theme-dark .iconPickerFooter a, body.theme-dark .iconPickerFooter button {
+    color:var(--accent-dark); background:rgba(10,132,255,.13); border-color:rgba(10,132,255,.30);
+}
+.iconPickerStatus { font-size:13px; opacity:.7; text-align:center; padding:16px 8px; grid-column:1 / -1; }
+.iconPickerStatus.error { color:#b25e00; opacity:1; }
+body.theme-dark .iconPickerStatus.error { color:#ffb454; }
 </style>
 <!-- Modo híbrido: muestra solo el shell que corresponde a data-mode ("app" o "landing"). -->
 <style id="hybridModeStyle">#slugAppShell[hidden],#landingShell[hidden]{display:none!important;}html[data-mode="app"] #landingShell{display:none!important;}html[data-mode="landing"] #slugAppShell{display:none!important;}</style>
@@ -1320,7 +1458,7 @@ body.theme-dark .fieldNote.warn { color:#ffb454; }
 <span class="brandText">SlugLauncher</span>
 </a>
 <div class="headerSpacer"></div>
-<div aria-label="Tema" class="themeToggle" id="themeToggle" role="radiogroup">
+<div aria-label="Theme" class="themeToggle" id="themeToggle" role="radiogroup">
 <button aria-checked="false" aria-label="Light theme" class="themeOpt" data-theme-opt="light" role="radio" title="Light" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg></button>
 <button aria-checked="false" aria-label="Dark theme" class="themeOpt" data-theme-opt="dark" role="radio" title="Dark" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></button>
 </div>
@@ -1338,7 +1476,7 @@ body.theme-dark .fieldNote.warn { color:#ffb454; }
 <option value="/launcher/hi/">हिन्दी</option>
 <option value="/launcher/ar/">العربية</option>
 </select>
-<a aria-label="Crear tu SlugLauncher" class="headerCta" href="/launcher/#SLUG:2,en,0,">Create my launcher</a>
+<a aria-label="Create your SlugLauncher" class="headerCta" href="/launcher/#SLUG:2,en,0,">Create my launcher</a>
 </div>
 </header>
 <main>
@@ -1352,7 +1490,7 @@ body.theme-dark .fieldNote.warn { color:#ffb454; }
 <a class="primaryCta" href="/launcher/#SLUG:2,en,0,">Create my SlugLauncher <span aria-hidden="true">→</span></a>
 <a class="secondaryCta" href="#como-funciona">How it works</a>
 </div>
-<div class="heroNote">No account · No database for your configuration · Share your launcher with one link</div>
+<div class="heroNote">No account needed · Your configuration travels in the link · Share your launcher with one URL</div>
 <div aria-label="Key features" class="trustStrip">
 <span class="trustPill">Apps and websites</span>
 <span class="trustPill">Folders</span>
@@ -1401,8 +1539,8 @@ body.theme-dark .fieldNote.warn { color:#ffb454; }
 </article>
 <article class="featureCard">
 <div aria-hidden="true" class="featureIcon">◉</div>
-<h3>No account or server for your configuration</h3>
-<p>SlugLauncher is designed so you do not need an account or database to store your launcher structure.</p>
+<h3>No account needed</h3>
+<p>SlugLauncher does not require an account to store your launcher structure: the configuration is encoded in the URL. (See the Privacy Policy for details on what the browser and our icon service may still request.)</p>
 </article>
 </div>
 </div>
@@ -1449,8 +1587,8 @@ body.theme-dark .fieldNote.warn { color:#ffb454; }
 <button class="segmentBtn active" data-i18n="typeApp" data-try-type="app" type="button">App</button>
 <button class="segmentBtn" data-i18n="typeFolder" data-try-type="folder" type="button">Folder</button>
 </div>
-<input data-i18n-ph="placeholderURL" data-try-focus="appURL" placeholder="URL" readonly="" type="text"/>
-<input data-i18n-ph="placeholderName" data-try-focus="appName" placeholder="Name" readonly="" type="text"/>
+<input data-i18n-ph="placeholderURL" data-try-focus="appURL" placeholder="URL" aria-label="URL" readonly="" type="text"/>
+<input data-i18n-ph="placeholderName" data-try-focus="appName" placeholder="Name" aria-label="Name" readonly="" type="text"/>
 <div class="fieldLabel" data-i18n="iconOptionsLabel">Icon</div>
 <div aria-hidden="true" class="iconOptionsRow">
 <span class="tryIconTile selected">G</span><span class="tryIconTile">▣</span><span class="tryIconTile">★</span>
@@ -1475,7 +1613,7 @@ body.theme-dark .fieldNote.warn { color:#ffb454; }
 <h3>Import a SlugLauncher</h3>
 <p>Paste a launcher link, choose which apps and folders you want, and keep their structure.</p>
 <div class="modalBox tryForm" id="tryImportForm">
-<textarea data-i18n-ph="importPasteHint" data-try-focus="urlIOField" placeholder="Paste a SlugLauncher URL here" readonly="" rows="2"></textarea>
+<textarea data-i18n-ph="importPasteHint" data-try-focus="urlIOField" placeholder="Paste a SlugLauncher URL here" aria-label="Paste a SlugLauncher URL here" readonly="" rows="2"></textarea>
 <button class="ioPasteBtn" data-i18n="pasteAction" type="button">Paste</button>
 <div aria-hidden="true" class="ioListBox">
 <div class="ioRow ioAll"><span class="tryCheck">✓</span><span data-i18n="selectAll">Select all</span><em class="ioCount">4 / 4</em></div>
@@ -1501,11 +1639,12 @@ body.theme-dark .fieldNote.warn { color:#ffb454; }
 <li><span>✓</span> Use folders to separate work, personal, study, or any category.</li>
 <li><span>✓</span> Share a launcher through a link.</li>
 <li><span>✓</span> Switch between light, dark, and system themes.</li>
+<li><span>✓</span> Open the ☰ menu inside the launcher to reach the Privacy Policy, Terms and Contact.</li>
 </ul>
 </div>
-<div aria-label="Ejemplo de un enlace de SlugLauncher" class="urlCard">
+<div aria-label="Example of a SlugLauncher link" class="urlCard">
 <div class="urlBar">https://git.inriris.com/launcher/#SLUG:2,en,1,...</div>
-<div class="urlCaption">The <strong>#SLUG</strong> fragment contains the launcher state. When a shared link is opened, the app interprets it and rebuilds the configuration in the browser.</div>
+<div class="urlCaption">The <strong>#SLUG</strong> fragment contains the launcher state. When a shared link is opened, the app interprets it and rebuilds the configuration in the browser. The <a href="/launcher/privacy.html">Privacy Policy</a> explains what requests the browser and the icon service may still make.</div>
 </div>
 </div>
 </div>
@@ -1537,6 +1676,10 @@ body.theme-dark .fieldNote.warn { color:#ffb454; }
 <summary>Is SlugLauncher an installed app?</summary>
 <p>SlugLauncher works as a web app in the browser and can also use shortcut or installation features offered by the browser or operating system.</p>
 </details>
+<details>
+<summary>Where can I read the Privacy Policy and Terms?</summary>
+<p>Open your launcher, tap the ☰ menu, and choose <strong>Privacy Policy</strong> or <strong>Terms of Use</strong>. The English version at <a href="/launcher/privacy.html">/launcher/privacy.html</a> and <a href="/launcher/terms.html">/launcher/terms.html</a> is the master; the menu links to <a href="/launcher/es/privacy.html">/launcher/<em>&lt;lang&gt;</em>/privacy.html</a> and <a href="/launcher/es/terms.html">/launcher/<em>&lt;lang&gt;</em>/terms.html</a> in your language, following the menu language.</p>
+</details>
 </div>
 </div>
 </section>
@@ -1553,8 +1696,9 @@ body.theme-dark .fieldNote.warn { color:#ffb454; }
 </main>
 <footer class="footer">
 <div class="container">
-<div>SlugLauncher · Made with love by Inriris</div>
+<div>SlugLauncher · Made with love by <a href="https://inriris.com" target="_blank" rel="noopener">Inriris</a></div>
 <div style="margin-top:7px"><a href="/launcher/#como-funciona">How it works</a> · <a href="/launcher/#privacidad">Privacy</a> · <a href="/launcher/#faq">Frequently asked questions</a></div>
+<div style="margin-top:7px;font-size:11px;opacity:.75">Third-party trademarks (Google, YouTube, Gmail, and others) belong to their respective owners. SlugLauncher is not affiliated with them.</div>
 </div>
 </footer>
 <template id="landingModalsTemplate">
@@ -1566,35 +1710,40 @@ body.theme-dark .fieldNote.warn { color:#ffb454; }
 <button class="segmentBtn" id="addTypeFolderBtn" type="button">Folder</button>
 </div>
 <div id="addAppSection">
-<input autocapitalize="off" autocomplete="off" id="appURL" inputmode="url" placeholder="URL" spellcheck="false"/>
-<input autocomplete="off" id="appName" placeholder="Nombre"/>
-<div class="fieldLabel" id="iconOptionsLabel">Icon</div>
+<div class="fieldLabel" data-i18n="placeholderURL">URL</div>
+<input autocapitalize="off" autocomplete="off" id="appURL" inputmode="url" placeholder="URL" aria-label="URL" enterkeyhint="next" spellcheck="false"/>
+<div class="fieldLabel" data-i18n="placeholderName">Name</div>
+<input autocomplete="off" id="appName" placeholder="Name" aria-label="Name" enterkeyhint="next"/>
+<div class="fieldLabel" data-i18n="iconOptionsLabel" id="iconOptionsLabel">Icon</div>
 <div class="iconOptionsRow" id="appIconOptions"></div>
 <div class="fieldNote" id="iconPrivacyNote"></div>
-<input autocapitalize="off" autocomplete="off" id="appIcon" placeholder="Icon URL (opcional)" spellcheck="false"/>
+<div class="fieldLabel" data-i18n="placeholderIcon">Icon URL (optional)</div>
+<input autocapitalize="off" autocomplete="off" id="appIcon" placeholder="Icon URL (optional)" aria-label="Icon URL (optional)" enterkeyhint="done" spellcheck="false"/>
 <img alt="" id="iconPreview"/>
-<a class="helperLink" id="appSvgApiLink">🔍 Find an SVG icon on svgapi.com</a>
+<button type="button" class="helperLink" id="appSvgApiLink">🔍 Find an SVG icon on svgapi.com</button>
 </div>
 <div id="addFolderSection" style="display:none;">
-<input autocomplete="off" id="folderName" placeholder="Nombre del folder"/>
+<div class="fieldLabel" data-i18n="placeholderFolderName">Folder name</div>
+<input autocomplete="off" id="folderName" placeholder="Folder name" aria-label="Folder name" enterkeyhint="next"/>
 <div class="fieldLabel" id="folderIconLabel">Folder icon (optional, shown in black)</div>
-<input autocapitalize="off" autocomplete="off" id="folderIcon" placeholder="URL del icono (opcional)" spellcheck="false"/>
+<input autocapitalize="off" autocomplete="off" id="folderIcon" placeholder="Icon URL (optional)" aria-label="Icon URL (optional)" enterkeyhint="done" spellcheck="false"/>
 <img alt="" id="folderIconPreview"/>
-<a class="helperLink" id="folderSvgApiLink">🔍 Find an SVG icon on svgapi.com</a>
+<button type="button" class="helperLink" id="folderSvgApiLink">🔍 Find an SVG icon on svgapi.com</button>
 </div>
 <button id="saveAddBtn" type="button">Save</button>
-<button id="cancelAddBtn" style="background:#aaa;" type="button">Cancel</button>
+<button class="btnCancel" id="cancelAddBtn" type="button">Cancel</button>
 </div>
 </div>
 <div id="urlIOModal">
 <div aria-labelledby="urlIOTitle" aria-modal="true" class="modalBox" role="dialog">
 <h3 data-i18n="importUrl" id="urlIOTitle" style="margin-top:0;">Import URL</h3>
+<div class="fieldLabel" data-i18n="importPasteHint">Paste a SlugLauncher URL here</div>
 <textarea autocapitalize="off" autocomplete="off" data-i18n-ph="importPasteHint" id="urlIOField" placeholder="Paste a SlugLauncher URL here" rows="3" spellcheck="false"></textarea>
 <div class="fieldNote warn" id="urlIOWarn" role="status" style="display:none;"></div>
 <button class="ioPasteBtn" data-i18n="pasteAction" id="urlIOPasteBtn" style="display:none;" type="button">Paste</button>
 <div id="urlIOSelect" style="display:none;"><div id="urlIOList"></div></div>
 <button data-i18n="importAction" id="urlIOPrimaryBtn" type="button">Import</button>
-<button class="ioCancelBtn" data-i18n="cancel" id="urlIOCancelBtn" type="button">Cancel</button>
+<button class="ioCancelBtn btnCancel" data-i18n="cancel" id="urlIOCancelBtn" type="button">Cancel</button>
 </div>
 </div>
 </template>
@@ -1602,15 +1751,18 @@ body.theme-dark .fieldNote.warn { color:#ffb454; }
 <div hidden="" id="slugAppShell">
 
 <div id="header">
-<h1 id="titleLabel" onclick="openSlugModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSlugModal();}" role="button" tabindex="0"><svg aria-hidden="true" class="titleIcon" viewbox="45 0 160 264" xmlns="http://www.w3.org/2000/svg"><path d="m188.835,93.248c-6.319-10.976-13.982-18.705-18.862-22.973l17.009-40.097c7.051-0.929 12.529-7.305 12.529-15.022-2.84217e-14-8.357-6.415-15.156-14.301-15.156-7.888,0-14.305,6.799-14.305,15.155 0,3.18 0.934,6.13 2.52,8.57l-16.621,39.184-35.194-14.011c-1.115-7.186-7.002-12.691-14.095-12.691-7.888,0-14.305,6.798-14.305,15.153 0,8.355 6.417,15.152 14.305,15.152 3.448,0 6.615-1.3 9.088-3.462l36.296,14.449c-1.008,10.456-3.716,33.415-9.006,46.189-12.34,29.792-29.63,42.078-44.886,52.918-12.398,8.811-24.109,17.132-30.532,32.639-11.676,28.183 3.698,48.68 12.504,53.703 1.148,0.655 2.431,0.985 3.716,0.985 1.093,0 2.187-0.238 3.202-0.718 2.212-1.044 3.776-3.102 4.189-5.513 0.136-0.79 0.257-1.617 0.383-2.479 0.689-4.737 1.402-9.635 6.399-15.682 3.186-3.854 11.276-6.456 20.646-9.469 21.782-7.005 54.699-17.59 72.607-60.826 13.996-33.786 5.939-59.976-3.286-75.998zm-10.571,70.26c-15.252,36.821-41.917,45.396-63.342,52.286-11.61,3.734-21.637,6.958-27.616,14.194-2.808,3.398-4.75,6.664-6.123,9.708-2.275-5.955-3.152-14.324 1.149-24.71 4.771-11.52 13.859-17.977 25.364-26.152 16.067-11.417 36.063-25.627 50.054-59.405 4.72-11.395 7.541-28.744 9.069-41.188 2.947,3.324 6.143,7.499 9.017,12.491 10.972,19.057 11.788,40.177 2.428,62.776z" fill="#4A90E2"></path></svg><span id="titleLabelText">Launcher</span><span aria-label="Nombre de la página" id="pageTitleSuffix"><span id="pageTitleSuffixText"></span></span></h1>
+<h1 id="titleLabel" onclick="openSlugModal()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSlugModal();}" role="button" tabindex="0"><svg aria-hidden="true" class="titleIcon" viewbox="45 0 160 264" xmlns="http://www.w3.org/2000/svg"><path d="m188.835,93.248c-6.319-10.976-13.982-18.705-18.862-22.973l17.009-40.097c7.051-0.929 12.529-7.305 12.529-15.022-2.84217e-14-8.357-6.415-15.156-14.301-15.156-7.888,0-14.305,6.799-14.305,15.155 0,3.18 0.934,6.13 2.52,8.57l-16.621,39.184-35.194-14.011c-1.115-7.186-7.002-12.691-14.095-12.691-7.888,0-14.305,6.798-14.305,15.153 0,8.355 6.417,15.152 14.305,15.152 3.448,0 6.615-1.3 9.088-3.462l36.296,14.449c-1.008,10.456-3.716,33.415-9.006,46.189-12.34,29.792-29.63,42.078-44.886,52.918-12.398,8.811-24.109,17.132-30.532,32.639-11.676,28.183 3.698,48.68 12.504,53.703 1.148,0.655 2.431,0.985 3.716,0.985 1.093,0 2.187-0.238 3.202-0.718 2.212-1.044 3.776-3.102 4.189-5.513 0.136-0.79 0.257-1.617 0.383-2.479 0.689-4.737 1.402-9.635 6.399-15.682 3.186-3.854 11.276-6.456 20.646-9.469 21.782-7.005 54.699-17.59 72.607-60.826 13.996-33.786 5.939-59.976-3.286-75.998zm-10.571,70.26c-15.252,36.821-41.917,45.396-63.342,52.286-11.61,3.734-21.637,6.958-27.616,14.194-2.808,3.398-4.75,6.664-6.123,9.708-2.275-5.955-3.152-14.324 1.149-24.71 4.771-11.52 13.859-17.977 25.364-26.152 16.067-11.417 36.063-25.627 50.054-59.405 4.72-11.395 7.541-28.744 9.069-41.188 2.947,3.324 6.143,7.499 9.017,12.491 10.972,19.057 11.788,40.177 2.428,62.776z" fill="#4A90E2"></path></svg><span id="titleLabelText">Launcher</span><span aria-label="Page name" id="pageTitleSuffix"><span id="pageTitleSuffixText"></span></span></h1>
 <div id="headerActions">
-<button aria-label="Buscar" id="searchBtn" type="button">
+<button aria-label="Search" aria-keyshortcuts="Alt+Q" id="searchBtn" type="button">
 <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="7"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line></svg>
 </button>
-<button aria-label="Editar" id="editBtn" type="button">
+<button aria-label="Edit" id="editBtn" type="button">
 <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
 </button>
-<button id="burgerBtn" type="button">☰</button>
+<button aria-label="Move icons" id="moveBtn" type="button" style="display:none;">
+<svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><polyline points="18 8 22 12 18 16"></polyline><polyline points="6 8 2 12 6 16"></polyline><line x1="2" x2="22" y1="12" y2="12"></line></svg>
+</button>
+<button aria-label="Menu" aria-keyshortcuts="Alt+W" id="burgerBtn" type="button">☰</button>
 </div>
 </div>
 <div aria-hidden="true" id="iconsLoadingModal">
@@ -1622,13 +1774,13 @@ body.theme-dark .fieldNote.warn { color:#ffb454; }
 </div>
 <div aria-hidden="true" id="saveLauncherModal">
 <div aria-labelledby="saveLauncherTitle" aria-modal="true" class="modalBox" id="saveLauncherBox" role="dialog" style="position:relative;margin:0;">
-<button aria-label="Cerrar" id="saveLauncherClose" title="Cerrar" type="button">×</button>
+<button aria-label="Close" id="saveLauncherClose" title="Close" type="button">×</button>
 <h2 id="saveLauncherTitle">SlugLauncher</h2>
 <p id="saveLauncherIntro"></p>
 <div id="saveLauncherSteps"></div>
 <div id="saveLauncherActions">
 <button id="saveLauncherCopyBtn" type="button"></button>
-<button id="saveLauncherDoneBtn" type="button"></button>
+<button class="btnCancel" id="saveLauncherDoneBtn" type="button"></button>
 </div>
 </div>
 </div>
@@ -1656,122 +1808,156 @@ body.theme-dark .fieldNote.warn { color:#ffb454; }
 <div id="sidePanelOverlay" onclick="closeSidePanel(event)">
 <div id="sidePanel">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-<span id="menuTitleLabel" style="font-weight:700;">Menú</span>
-<button onclick="closeSidePanel()" style="border:none;background:transparent;font-size:18px;cursor:pointer;color:inherit;">✕</button>
+<span id="menuTitleLabel" style="font-weight:700;">Menu</span>
+<button onclick="closeSidePanel()" style="border:none;background:transparent;font-size:18px;cursor:pointer;color:inherit;" type="button" aria-label="Close menu">✕</button>
 </div>
-<div class="sideMenuSectionTitle" id="actionsSectionLabel">Acciones</div>
-<a class="sideMenuLink" id="editIconsLink" onclick="enterEditMode()">Editar iconos</a>
-<a class="sideMenuLink" id="moveIconsLink" onclick="enterMoveMode()">Mover iconos</a>
-<a class="sideMenuLink" id="saveLauncherLink" onclick="saveSlugLauncher()">Salvar tu SlugLauncher</a>
-<a class="sideMenuLink" id="renamePageLink" onclick="openRenamePageModal()">Cambiar nombre de la página</a>
+<div class="sideShortcutHint" id="sideShortcutHint"></div>
+<div class="sideMenuSectionTitle" id="actionsSectionLabel">Actions</div>
+<a class="sideMenuLink" id="editIconsLink" onclick="enterEditMode()" tabindex="0" role="button">Edit icons</a>
+<a class="sideMenuLink" id="moveIconsLink" onclick="enterMoveMode()" tabindex="0" role="button">Move icons</a>
+<a class="sideMenuLink" id="saveLauncherLink" onclick="saveSlugLauncher()" tabindex="0" role="button">Save your SlugLauncher</a>
+<a class="sideMenuLink" id="renamePageLink" onclick="openRenamePageModal()" tabindex="0" role="button">Change page name</a>
 <a class="sideMenuLink" href="/launcher/" id="slugCreateLink" onclick="goToLocalizedLanding(event)">Create your own SlugLauncher</a>
-<a class="sideMenuLink" id="slugShareLink" onclick="shareLauncher()">Compartir tu launcher</a>
-<div class="sideMenuSectionTitle" id="addSectionLabel">Añadir</div>
-<a class="sideMenuLink" id="addAppLink" onclick="openAddModal(null,'app')">Añadir App</a>
-<a class="sideMenuLink" id="addFolderLink" onclick="openAddModal(null,'folder')">Añadir Folder</a>
-<div class="sideMenuSectionTitle" id="configSectionLabel">Configuración</div>
-<a class="sideMenuLink" id="exportLink" onclick="exportConfig()">Exportar URL</a>
-<a class="sideMenuLink" id="importLink" onclick="importConfig()">Importar URL</a>
-<div class="sideMenuSectionTitle" id="themeLabel">Tema</div>
-<a class="sideMenuLink" id="themeDarkLink" onclick="setTheme(0)">Obscuro</a>
-<a class="sideMenuLink" id="themeLightLink" onclick="setTheme(1)">Claro</a>
-<a class="sideMenuLink" id="themeSystemLink" onclick="setTheme(2)">Sistema</a>
-<div class="sideMenuSectionTitle" id="langLabel">Idioma</div>
+<a class="sideMenuLink" id="slugShareLink" onclick="shareLauncher()" tabindex="0" role="button">Share your launcher</a>
+<div class="sideMenuSectionTitle" id="addSectionLabel">Add</div>
+<a class="sideMenuLink" id="addAppLink" onclick="openAddModal(null,'app')" tabindex="0" role="button">Add App</a>
+<a class="sideMenuLink" id="addFolderLink" onclick="openAddModal(null,'folder')" tabindex="0" role="button">Add Folder</a>
+<div class="sideMenuSectionTitle" id="configSectionLabel">Config</div>
+<a class="sideMenuLink" id="exportLink" onclick="exportConfig()" tabindex="0" role="button">Export URL</a>
+<a class="sideMenuLink" id="importLink" onclick="importConfig()" tabindex="0" role="button">Import URL</a>
+<div class="sideMenuSectionTitle" id="themeLabel">Theme</div>
+<a class="sideMenuLink" id="themeDarkLink" onclick="setTheme(0)" tabindex="0" role="button">Dark</a>
+<a class="sideMenuLink" id="themeLightLink" onclick="setTheme(1)" tabindex="0" role="button">Light</a>
+<a class="sideMenuLink" id="themeSystemLink" onclick="setTheme(2)" tabindex="0" role="button">System</a>
+<div class="sideMenuSectionTitle" id="langLabel">Language</div>
 <select id="langSelect" onchange="setLanguage(this.value)"></select>
+<div class="sideMenuSectionTitle" id="legalSectionLabel">Legal</div>
+<a class="sideMenuLink" href="/launcher/privacy.html" id="legalPrivacyLink" target="_blank" rel="noopener">Privacy Policy</a>
+<a class="sideMenuLink" href="/launcher/terms.html" id="legalTermsLink" target="_blank" rel="noopener">Terms of Use</a>
+<a class="sideMenuLink" href="mailto:webmaster@inriris.com" id="legalContactLink">Contact</a>
+<div class="sideMenuVersion" id="sideMenuVersion">SlugLauncher Ver: 1.1.0</div>
 </div>
 </div>
 <!-- MODAL AÑADIR (APP / FOLDER, con toggle) -->
 <div id="addModal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
 <div class="modalBox">
-<h3 id="addModalTitle" style="margin-top:0;">Añadir App</h3>
+<h3 id="addModalTitle" style="margin-top:0;">Add App</h3>
 <div class="segmentedControl" id="addTypeToggle">
 <button class="segmentBtn" id="addTypeAppBtn" onclick="setAddType('app')" type="button">App</button>
 <button class="segmentBtn" id="addTypeFolderBtn" onclick="setAddType('folder')" type="button">Folder</button>
 </div>
 <div id="addAppSection">
-<input id="appURL" placeholder="URL"/>
-<input id="appName" placeholder="Nombre"/>
-<div class="fieldLabel" id="iconOptionsLabel">Icono</div>
+<div class="fieldLabel" id="appURLLabel">URL</div>
+<input id="appURL" placeholder="URL" aria-label="URL" enterkeyhint="next" autocapitalize="off" autocomplete="off" inputmode="url" spellcheck="false"/>
+<div class="fieldLabel" id="appNameLabel">Name</div>
+<input id="appName" placeholder="Name" aria-label="Name" enterkeyhint="next" autocomplete="off"/>
+<div class="fieldLabel" id="iconOptionsLabel">Icon</div>
 <div class="iconOptionsRow" id="appIconOptions"></div>
 <div class="fieldNote" id="iconPrivacyNote"></div>
-<input id="appIcon" placeholder="Icono URL (opcional)"/>
-<img id="iconPreview"/>
-<a class="helperLink" id="appSvgApiLink" onclick="openSvgApiSearch('appName')">🔍 Buscar icono SVG en svgapi.com</a>
+<div class="fieldLabel" id="appIconLabel">Icon URL (optional)</div>
+<input id="appIcon" placeholder="Icon URL (optional)" aria-label="Icon URL (optional)" enterkeyhint="done" autocapitalize="off" autocomplete="off" spellcheck="false"/>
+<img id="iconPreview" alt=""/>
+<button type="button" class="helperLink" id="appSvgApiLink" onclick="openSvgApiSearch('appName')">🔍 Find an SVG icon on svgapi.com</button>
+<button type="button" class="helperLink" id="appIconPickerOpen" onclick="openIconPicker('appIcon')">🔎 Search an icon</button>
 </div>
 <div id="addFolderSection" style="display:none;">
-<input id="folderName" placeholder="Nombre del folder"/>
-<div class="fieldLabel" id="folderIconLabel">Icono del folder (opcional, se mostrará en negro)</div>
-<input id="folderIcon" placeholder="URL del icono (opcional)"/>
-<img id="folderIconPreview"/>
-<a class="helperLink" id="folderSvgApiLink" onclick="openSvgApiSearch('folderName')">🔍 Buscar icono SVG en svgapi.com</a>
+<div class="fieldLabel" id="folderNameLabel">Folder name</div>
+<input id="folderName" placeholder="Folder name" aria-label="Folder name" enterkeyhint="next" autocomplete="off"/>
+<div class="fieldLabel" id="folderIconLabel">Folder icon (optional, shown in black)</div>
+<input id="folderIcon" placeholder="Icon URL (optional)" aria-label="Icon URL (optional)" enterkeyhint="done" autocapitalize="off" autocomplete="off" spellcheck="false"/>
+<img id="folderIconPreview" alt=""/>
+<button type="button" class="helperLink" id="folderSvgApiLink" onclick="openSvgApiSearch('folderName')">🔍 Find an SVG icon on svgapi.com</button>
 <div id="folderAppList" style="max-height:200px;overflow:auto;margin-bottom:12px;"></div>
 </div>
-<button id="saveAddBtn" onclick="handleAddSave()">Guardar</button>
-<button id="cancelAddBtn" onclick="closeAddModal()" style="background:#aaa;">Cancelar</button>
+<button id="saveAddBtn" onclick="handleAddSave()" type="button">Save</button>
+<button class="btnCancel" id="cancelAddBtn" onclick="closeAddModal()" type="button">Cancel</button>
 </div>
 </div>
 <div id="editAppModal" role="dialog" aria-modal="true" aria-labelledby="editAppTitle">
 <div class="modalBox">
-<h3 id="editAppTitle" style="margin-top:0;">Editar App</h3>
-<input id="editAppURL" placeholder="URL"/>
-<input id="editAppName" placeholder="Nombre"/>
-<div class="fieldLabel" id="editIconOptionsLabel">Icono</div>
+<h3 id="editAppTitle" style="margin-top:0;">Edit App</h3>
+<div class="fieldLabel" id="editAppURLLabel">URL</div>
+<input id="editAppURL" placeholder="URL" aria-label="URL" enterkeyhint="next" autocapitalize="off" autocomplete="off" inputmode="url" spellcheck="false"/>
+<div class="fieldLabel" id="editAppNameLabel">Name</div>
+<input id="editAppName" placeholder="Name" aria-label="Name" enterkeyhint="next" autocomplete="off"/>
+<div class="fieldLabel" id="editIconOptionsLabel">Icon</div>
 <div class="iconOptionsRow" id="editAppIconOptions"></div>
-<input id="editAppIcon" placeholder="Icono URL"/>
-<img id="editIconPreview"/>
-<a class="helperLink" id="editAppSvgApiLink" onclick="openSvgApiSearch('editAppName')">🔍 Buscar icono SVG en svgapi.com</a>
-<button id="saveEditAppBtn" onclick="saveEditedApp()">Guardar cambios</button>
-<button id="moveAppBtn" onclick="moveFromEditApp()" style="background:#8e8e93;">Mover</button>
-<button id="cancelEditAppBtn" onclick="closeEditAppModal()" style="background:#aaa;">Cancelar</button>
-<button id="deleteAppBtn" onclick="deleteApp()" style="background:#ff3b30;">Eliminar App</button>
+<div class="fieldLabel" id="editAppIconLabel">Icon URL</div>
+<input id="editAppIcon" placeholder="Icon URL" aria-label="Icon URL" enterkeyhint="done" autocapitalize="off" autocomplete="off" spellcheck="false"/>
+<img id="editIconPreview" alt=""/>
+<button type="button" class="helperLink" id="editAppIconPickerOpen" onclick="openIconPicker('editAppIcon')">🔎 Search an icon</button>
+<button id="saveEditAppBtn" onclick="saveEditedApp()" type="button">Save changes</button>
+<button id="moveAppBtn" onclick="moveFromEditApp()" style="background:#8e8e93;" type="button">Move</button>
+<button class="btnCancel" id="cancelEditAppBtn" onclick="closeEditAppModal()" type="button">Cancel</button>
+<button id="deleteAppBtn" onclick="deleteApp()" style="background:#ff3b30;" type="button">Delete App</button>
 </div>
 </div>
 <div id="editFolderModal" role="dialog" aria-modal="true" aria-labelledby="editFolderTitle">
 <div class="modalBox">
-<h3 id="editFolderTitle" style="margin-top:0;">Editar Folder</h3>
-<input id="editFolderName" placeholder="Nombre del folder"/>
-<div class="fieldLabel" id="editFolderIconLabel">Icono del folder (opcional, se mostrará en negro)</div>
-<input id="editFolderIcon" placeholder="URL del icono (opcional)"/>
-<img id="editFolderIconPreview"/>
-<a class="helperLink" id="editFolderSvgApiLink" onclick="openSvgApiSearch('editFolderName')">🔍 Buscar icono SVG en svgapi.com</a>
+<h3 id="editFolderTitle" style="margin-top:0;">Edit Folder</h3>
+<div class="fieldLabel" id="editFolderNameLabel">Folder name</div>
+<input id="editFolderName" placeholder="Folder name" aria-label="Folder name" enterkeyhint="next" autocomplete="off"/>
+<div class="fieldLabel" id="editFolderIconLabel">Folder icon (optional, shown in black)</div>
+<input id="editFolderIcon" placeholder="Icon URL (optional)" aria-label="Icon URL (optional)" enterkeyhint="done" autocapitalize="off" autocomplete="off" spellcheck="false"/>
+<img id="editFolderIconPreview" alt=""/>
+<button type="button" class="helperLink" id="editFolderSvgApiLink" onclick="openSvgApiSearch('editFolderName')">🔍 Find an SVG icon on svgapi.com</button>
 <div id="editFolderAppList" style="max-height:200px;overflow:auto;margin-bottom:12px;"></div>
-<button id="saveEditFolderBtn" onclick="saveEditedFolder()">Guardar cambios</button>
-<button id="moveFolderBtn" onclick="moveFromEditFolder()" style="background:#8e8e93;">Mover</button>
-<button id="cancelEditFolderBtn" onclick="closeEditFolderModal()" style="background:#aaa;">Cancelar</button>
-<button id="deleteFolderBtn" onclick="deleteFolder()" style="background:#ff3b30;">Eliminar Folder</button>
+<button id="saveEditFolderBtn" onclick="saveEditedFolder()" type="button">Save changes</button>
+<button id="moveFolderBtn" onclick="moveFromEditFolder()" style="background:#8e8e93;" type="button">Move</button>
+<button class="btnCancel" id="cancelEditFolderBtn" onclick="closeEditFolderModal()" type="button">Cancel</button>
+<button id="deleteFolderBtn" onclick="deleteFolder()" style="background:#ff3b30;" type="button">Delete Folder</button>
 </div>
 </div>
 <div id="slugInfoModal" role="dialog" aria-modal="true" aria-labelledby="slugInfoTitle">
 <div aria-labelledby="slugInfoTitle" aria-modal="true" class="modalBox" role="dialog">
 <h3 id="slugInfoTitle" style="margin-top:0;">SlugLauncher</h3>
-<p id="slugInfoText" style="margin-top:0;opacity:0.75;font-size:14px;line-height:1.5;">¿Qué te gustaría hacer?</p>
+<p id="slugInfoText" style="margin-top:0;opacity:0.75;font-size:14px;line-height:1.5;">What would you like to do?</p>
 <button id="slugCreateBtn" type="button" onclick="goToLocalizedLanding(event)">Create your own SlugLauncher</button>
-<button id="slugShareBtn" onclick="shareLauncher()" type="button">Compartir tu launcher</button>
-<button id="slugRenameBtn" onclick="openRenamePageModal()" type="button">Cambiar nombre de la página</button>
-<button id="slugCancelBtn" onclick="closeSlugModal()" style="background:#aaa;" type="button">Cancelar</button>
+<button id="slugShareBtn" onclick="shareLauncher()" type="button">Share your launcher</button>
+<button id="slugRenameBtn" onclick="openRenamePageModal()" type="button">Change page name</button>
+<button class="btnCancel" id="slugCancelBtn" onclick="closeSlugModal()" type="button">Cancel</button>
 </div>
 </div>
 <div id="renamePageModal" role="dialog" aria-modal="true" aria-labelledby="renamePageTitle" style="display:none;position:fixed;inset:0;z-index:2200;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:20px;box-sizing:border-box;">
 <div aria-labelledby="renamePageTitle" aria-modal="true" class="modalBox" role="dialog" style="width:min(420px,100%);">
-<h3 id="renamePageTitle" style="margin-top:0;">Cambiar nombre de la página</h3>
-<input id="renamePageInput" maxlength="120" placeholder="Nombre de la página" style="width:100%;box-sizing:border-box;" type="text"/>
-<button id="renamePageSaveBtn" onclick="savePageName()" type="button">Guardar</button>
-<button id="renamePageCancelBtn" onclick="closeRenamePageModal()" style="background:#aaa;" type="button">Cancelar</button>
+<h3 id="renamePageTitle" style="margin-top:0;">Change page name</h3>
+<div class="fieldLabel" id="renamePageLabel">Page name</div>
+<input id="renamePageInput" maxlength="120" placeholder="Page name" aria-label="Page name" enterkeyhint="done" style="width:100%;box-sizing:border-box;" type="text"/>
+<button id="renamePageSaveBtn" onclick="savePageName()" type="button">Save</button>
+<button class="btnCancel" id="renamePageCancelBtn" onclick="closeRenamePageModal()" type="button">Cancel</button>
 </div>
 </div>
 <div id="urlIOModal" role="dialog" aria-modal="true" aria-labelledby="urlIOTitle">
 <div aria-labelledby="urlIOTitle" aria-modal="true" class="modalBox" role="dialog">
-<h3 id="urlIOTitle" style="margin-top:0;">Exportar URL</h3>
-<textarea id="urlIOField" rows="3" style="resize:vertical;width:100%;box-sizing:border-box;"></textarea>
+<h3 id="urlIOTitle" style="margin-top:0;">Export URL</h3>
+<div class="fieldLabel" id="urlIOLabel">URL</div>
+<textarea id="urlIOField" rows="3" style="resize:vertical;width:100%;box-sizing:border-box;" aria-label="URL"></textarea>
 <div class="fieldNote warn" id="urlIOWarn" role="status" style="display:none;"></div>
-<button id="urlIOPasteBtn" onclick="pasteUrlIOField()" style="background:#8e8e93;display:none;" type="button">Pegar</button>
+<button id="urlIOPasteBtn" onclick="pasteUrlIOField()" style="background:#8e8e93;display:none;" type="button">Paste</button>
 <div id="urlIOSelect" style="display:none;"><div id="urlIOList"></div></div>
-<button id="urlIOPrimaryBtn" onclick="confirmUrlIOModal()" type="button">Copiar</button>
-<button id="urlIOCancelBtn" onclick="closeUrlIOModal()" style="background:#aaa;" type="button">Cancelar</button>
+<button id="urlIOPrimaryBtn" onclick="confirmUrlIOModal()" type="button">Copy</button>
+<button class="btnCancel" id="urlIOCancelBtn" onclick="closeUrlIOModal()" type="button">Cancel</button>
+</div>
+</div>
+<!-- SELECTOR DE ICONOS (Iconify). Se superpone a los modales de app/editar app. -->
+<div id="iconPickerModal" role="dialog" aria-modal="true" aria-labelledby="iconPickerTitle">
+<div class="modalBox" id="iconPickerBox" role="dialog" aria-modal="true">
+<button aria-label="Close" id="iconPickerClose" title="Close" type="button">×</button>
+<h3 id="iconPickerTitle">Search an icon</h3>
+<div id="iconPickerSearchRow">
+<svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+<input autocapitalize="off" autocomplete="off" autocorrect="off" id="iconPickerSearch" spellcheck="false" type="text" placeholder="Search icons..." aria-label="Search icons"/>
+</div>
+<p class="iconPickerNote" id="iconPickerNote"></p>
+<div id="iconPickerResults"></div>
+<div class="iconPickerFooter">
+<button type="button" class="helperLink" id="iconPickerSvgApiLink" style="margin:0 auto 0 0;">🔍 Find an SVG icon on svgapi.com</button>
+<a href="https://www.google.com/search?tbm=isch" target="_blank" rel="noopener" id="iconPickerGoogle">Google Images</a>
+<button type="button" id="iconPickerCancel">Cancel</button>
 </div>
 </div>
 </div>
-
+</div>
 <script>
 /* ÍNDICE DE SECCIONES DEL JS DE LA APP (en el orden del archivo; sin números de línea para que no caduquen)
    0 · CONFIGURACIÓN Y CONSTANTES
@@ -1803,50 +1989,35 @@ body.theme-dark .fieldNote.warn { color:#ffb454; }
    26 · SALVAR Y COMPARTIR (plataforma, URLs, modal Salvar/Instalar y Compartir)
    27 · ICONOS EMBEBIDOS PARA EL MOCKUP COMPARTIDO
    28 · MOCKUP ESTÁTICO DEL LAUNCHER (HTML + CSS puro, sin JS)
-   29 · LISTENERS GLOBALES (scroll de scrollbars, Escape unificado)
-   30 · INIT
-   ------------------------------------------------------------------------------------
-   Estado propio de cada sección (let/const junto a sus funciones): 5 _bodyLockCount · 14 _iconBgCache ·
-   19 addAppTargetFolder, addAppTargetFolderIndex, addType, _iconCandidates, addIconCtx, editIconCtx, appNameAuto ·
-   24 urlIOMode, ioModel, ioRefs · 27 _mockupIconCache, _mockupIconFailAt, _mockupIconDomainOf, _iconsRun, _iconMem, _iconDBPromise, _iconOpenBusy */
+   29 · LISTENERS GLOBALES (scroll de scrollbars, Escape unificado, atajos Alt+Q/Alt+W)
+   30 · SELECTOR DE ICONOS (Iconify)
+   31 · INIT */
 
 /* =========================================================
    0 · CONFIGURACIÓN Y CONSTANTES
-   Único sitio con valores fijos de la app (solo literales: mover/ordenar aquí es seguro).
-   Claves de almacenamiento: SL_CONFIG (definido en <head>).
    ========================================================= */
-
-/* Límites del launcher: elementos en el escritorio y apps por carpeta */
 const DESKTOP_MAX = 64;
 const FOLDER_MAX = 36;
 const DESKTOP_OVERFLOW = DESKTOP_MAX + 1;
-
-/* Tiempos y avisos */
-const MODE_TIMEOUT_MS = 10000;      /* inactividad en modo edición/mover */
-const URL_WARN_LENGTH = 2000;       /* avisa cuando el hash supera estos caracteres */
-
-/* URLs públicas */
+const MODE_TIMEOUT_MS = 10000;
+const URL_WARN_LENGTH = 2000;
 const CANONICAL_LAUNCHER_URL = "https://git.inriris.com/launcher/";
 const LAUNCHER_PUBLIC_BASE = "https://git.inriris.com/launcher/";
 const LIVE_LANDING_LANGS = ["en", "es", "fr", "de", "pt", "it", "ru", "zh", "ja", "hi", "ar"];
-
-/* Preview de Compartir/Guardar: iconos vía proxy propio */
-const MOCKUP_ICON_SOURCE = "/launcher/icon-proxy?u=";   /* Cloudflare Worker, mismo origen */
-const MOCKUP_ICON_S2 = "https://www.google.com/s2/favicons?sz=128&domain=";   /* respaldo y valor por defecto */
+const MOCKUP_ICON_SOURCE = "/launcher/icon-proxy?u=";
+const MOCKUP_ICON_S2 = "https://www.google.com/s2/favicons?sz=128&domain=";
 const MOCKUP_ICON_PX = 96;
-const MOCKUP_ICON_TIMEOUT_MS = 5000;     /* por icono; todos se piden en paralelo */
-const MOCKUP_ICON_RETRY_MS = 60000;      /* un fallo no se reintenta antes de 1 min */
-const MOCKUP_MOBILE_COUNT  = 16;         /* cuadrícula móvil 4×4 */
-const MOCKUP_DESKTOP_COUNT = 18;         /* cuadrícula escritorio 6×3 */
-const MOCKUP_MAX_DATA_ICON = 20000;      /* máx. caracteres por icono embebido (PNG 96px ≈ 5-15 KB) */
-const MOCKUP_MAX_TOTAL_ICONS = 260000;   /* presupuesto total de iconos embebidos por archivo */
-
-/* Caché persistente de iconos (IndexedDB): se llena al abrir una app y al Compartir/Salvar */
+const MOCKUP_ICON_TIMEOUT_MS = 5000;
+const MOCKUP_ICON_RETRY_MS = 60000;
+const MOCKUP_MOBILE_COUNT  = 16;
+const MOCKUP_DESKTOP_COUNT = 18;
+const MOCKUP_MAX_DATA_ICON = 20000;
+const MOCKUP_MAX_TOTAL_ICONS = 260000;
 const ICON_DB_NAME = "sluglauncher-icons";
 const ICON_DB_STORE = "icons";
 const ICON_DB_VERSION = 1;
-const ICON_TTL_MS = 30 * 24 * 3600 * 1000;   /* vigencia del icono guardado; caducado se sigue mostrando */
-const ICON_DB_WAIT_MS = 400;                 /* espera máx. de la BD antes del primer pintado */
+const ICON_TTL_MS = 30 * 24 * 3600 * 1000;
+const ICON_DB_WAIT_MS = 400;
 
 /* =========================================================
    1 · ESTADO GLOBAL
@@ -1868,6 +2039,8 @@ let openFolderRootIndex = null;
 let inactivityTimer = null;
 let timerSuspended = false;
 
+/* Foco previo para devolver al disparador al cerrar cada modal. */
+const lastFocus = new Map();
 
 /* =========================================================
    2 · MODO RAÍZ HÍBRIDO (HYBRID ROOT MODE)
@@ -1876,7 +2049,7 @@ function isSlugAppMode(){ return /^#SLUG/i.test(window.location.hash || ""); }
 function goToLocalizedLanding(event){
     if (event) event.preventDefault();
     var lang = (typeof globalLang === "string" ? globalLang : "en").toLowerCase();
-    var supported = LIVE_LANDING_LANGS;   /* lista única: ver bloque 0 */
+    var supported = LIVE_LANDING_LANGS;
     if (!supported.includes(lang)) lang = "en";
     closeSlugModal();
     closeSidePanel();
@@ -1886,13 +2059,12 @@ function goToLocalizedLanding(event){
 
 /* =========================================================
    3 · DICCIONARIO i18n
-   FIX #2 — Añadidas claves limit* para enforceIconLimits traducido.
    ========================================================= */
 const i18n = {
     en: {
-        title:"Slug Launcher", menu:"Menu", exitMode:"Exit mode",
+        title:"Slug Launcher", menu:"Menu", exitMode:"Exit mode", close:"Close",
         actionsSection:"Actions", editIcons:"Edit icons", moveIcons:"Move icons", saveLauncher:"Save your SlugLauncher",
-        addSection:"Add", configSection:"Config",
+        addSection:"Add", configSection:"Config", legalSection:"Legal",
         addApp:"Add App", addFolder:"Add Folder",
         exportUrl:"Export URL", importUrl:"Import URL",
         theme:"Theme", lang:"Language",
@@ -1906,8 +2078,9 @@ const i18n = {
         previewLabel:"Preview", previewHint:"Tap anywhere to open in your browser", preparingIcons:"Preparing icons…", iconsReady:"Ready",
         savedYes:"Saved", savedNo:"Not saved",
         emptyTitle:"Welcome to your SlugLauncher!",
-        emptyBody:"Slug Launcher is an app launcher that stores your whole setup right in the URL \u2014 no accounts, no servers. Tap the \u2630 menu to choose your language and theme, then add your first icon to get started. To change the language, go to the menu.",
+        emptyBody:"Slug Launcher is an app launcher that stores your whole setup right in the URL \u2014 no accounts needed. Tap the \u2630 menu to choose your language and theme, then add your first icon to get started. To change the language, go to the menu.",
         placeholderName:"Name", placeholderURL:"URL", placeholderIcon:"Icon URL (optional)",
+        placeholderFolderName:"Folder name",
         iconOptionsLabel:"Icon",
         searchLabel:"Search", searchPlaceholder:"Search by name...", searchNoResults:"No results",
         urlTooLong:"This link is {n} characters long. Some apps and browsers may truncate long links; consider removing apps or using shorter icon URLs.", iconPrivacyNote:"Icons are looked up via Google's favicon service and the app's own site.",
@@ -1927,12 +2100,19 @@ const i18n = {
         limitDesktopBody:"Some icons were permanently removed:\n\n{messages}\n\nTo keep them, edit the link, remove them or group them into a folder, then reload.",
         limitDesktop:"Desktop (max. {max}): removed \"{name}\"{extra}.",
         limitFolder:"Folder \"{folder}\" (max. {max}): removed \"{name}\"{extra}.",
-        limitExtra:" and {n} more"
+        limitExtra:" and {n} more",
+        privacy:"Privacy Policy", terms:"Terms of Use", contact:"Contact",
+        shortcutSearch:"Search", shortcutMenu:"Menu",
+        iconPickerTitle:"Search an icon", iconPickerSearch:"Search icons...",
+        iconPickerIconify:"Iconify", iconPickerGoogle:"Google Images",
+        iconPickerEmpty:"No icons found", iconPickerError:"Icon search is not available right now. Try again.",
+        iconPickerPickHint:"Tap an icon to use its URL.",
+        slugVersion:"SlugLauncher Ver: 1.1.0"
     },
     es: {
-        title:"Slug Launcher", menu:"Menú", exitMode:"Salir del modo",
+        title:"Slug Launcher", menu:"Menú", exitMode:"Salir del modo", close:"Cerrar",
         actionsSection:"Acciones", editIcons:"Editar iconos", moveIcons:"Mover iconos", saveLauncher:"Salvar tu SlugLauncher",
-        addSection:"Añadir", configSection:"Configuración",
+        addSection:"Añadir", configSection:"Configuración", legalSection:"Legal",
         addApp:"Añadir App", addFolder:"Añadir Folder",
         exportUrl:"Exportar URL", importUrl:"Importar URL",
         theme:"Tema", lang:"Idioma",
@@ -1946,8 +2126,9 @@ const i18n = {
         previewLabel:"Vista previa", previewHint:"Presiona para abrir en el navegador", preparingIcons:"Preparando iconos…", iconsReady:"Listo",
         savedYes:"Guardado", savedNo:"No guardado",
         emptyTitle:"\u00a1Bienvenido a tu SlugLauncher!",
-        emptyBody:"Slug Launcher es un lanzador de apps que guarda toda tu configuraci\u00f3n en la URL, sin cuentas ni servidores. Toca el men\u00fa \u2630 para elegir tu idioma y tema, y luego a\u00f1ade tu primer icono para empezar. Para cambiar el idioma ve al men\u00fa.",
+        emptyBody:"Slug Launcher es un lanzador de apps que guarda toda tu configuraci\u00f3n en la URL, sin cuentas. Toca el men\u00fa \u2630 para elegir tu idioma y tema, y luego a\u00f1ade tu primer icono para empezar. Para cambiar el idioma ve al men\u00fa.",
         placeholderName:"Nombre", placeholderURL:"URL", placeholderIcon:"Icono URL (opcional)",
+        placeholderFolderName:"Nombre del folder",
         iconOptionsLabel:"Icono",
         searchLabel:"Buscar", searchPlaceholder:"Buscar por nombre...", searchNoResults:"Sin resultados",
         urlTooLong:"Este link tiene {n} caracteres. Algunas apps y navegadores pueden cortar links largos; considera quitar apps o usar URLs de íconos más cortas.", iconPrivacyNote:"Los íconos se buscan mediante el servicio de favicons de Google y el propio sitio de la app.",
@@ -1967,12 +2148,19 @@ const i18n = {
         limitDesktopBody:"Algunos se eliminaron permanentemente:\n\n{messages}\n\nPara conservarlos, edita el link, elimínalos o agrúpalos en un folder, y vuelve a cargar.",
         limitDesktop:"Escritorio (máx. {max}): se eliminó \"{name}\"{extra}.",
         limitFolder:"Folder \"{folder}\" (máx. {max}): se eliminó \"{name}\"{extra}.",
-        limitExtra:" y {n} más"
+        limitExtra:" y {n} más",
+        privacy:"Política de Privacidad", terms:"Términos de Uso", contact:"Contacto",
+        shortcutSearch:"Buscar", shortcutMenu:"Menú",
+        iconPickerTitle:"Buscar un icono", iconPickerSearch:"Buscar iconos...",
+        iconPickerIconify:"Iconify", iconPickerGoogle:"Google Imágenes",
+        iconPickerEmpty:"No se encontraron iconos", iconPickerError:"La búsqueda de iconos no está disponible ahora. Inténtalo de nuevo.",
+        iconPickerPickHint:"Toca un icono para usar su URL.",
+        slugVersion:"SlugLauncher Ver: 1.1.0"
     },
     fr: {
-        title:"Slug Launcher", menu:"Menu", exitMode:"Quitter le mode",
+        title:"Slug Launcher", menu:"Menu", exitMode:"Quitter le mode", close:"Fermer",
         actionsSection:"Actions", editIcons:"Modifier icônes", moveIcons:"Déplacer icônes", saveLauncher:"Enregistrer votre SlugLauncher",
-        addSection:"Ajouter", configSection:"Configuration",
+        addSection:"Ajouter", configSection:"Configuration", legalSection:"Mentions légales",
         addApp:"Ajouter App", addFolder:"Ajouter Dossier",
         exportUrl:"Exporter URL", importUrl:"Importer URL",
         theme:"Thème", lang:"Langue",
@@ -1986,8 +2174,9 @@ const i18n = {
         previewLabel:"Aperçu", previewHint:"Appuyez pour ouvrir dans le navigateur", preparingIcons:"Préparation des icônes…", iconsReady:"Prêt",
         savedYes:"Enregistr\u00e9", savedNo:"Non enregistr\u00e9",
         emptyTitle:"Bienvenue sur votre SlugLauncher !",
-        emptyBody:"Slug Launcher est un lanceur d'applications qui enregistre toute votre configuration directement dans l'URL, sans compte ni serveur. Touchez le menu \u2630 pour choisir votre langue et votre th\u00e8me, puis ajoutez votre premi\u00e8re ic\u00f4ne pour commencer. Pour changer de langue, allez dans le menu.",
+        emptyBody:"Slug Launcher est un lanceur d'applications qui enregistre toute votre configuration directement dans l'URL, sans compte. Touchez le menu \u2630 pour choisir votre langue et votre th\u00e8me, puis ajoutez votre premi\u00e8re ic\u00f4ne pour commencer. Pour changer de langue, allez dans le menu.",
         placeholderName:"Nom", placeholderURL:"URL", placeholderIcon:"URL de l'icône (optionnel)",
+        placeholderFolderName:"Nom du dossier",
         iconOptionsLabel:"Icône",
         searchLabel:"Rechercher", searchPlaceholder:"Rechercher par nom...", searchNoResults:"Aucun résultat",
         urlTooLong:"Ce lien fait {n} caractères. Certaines applis et navigateurs peuvent tronquer les liens longs ; envisagez de retirer des apps ou d'utiliser des URL d'icônes plus courtes.", iconPrivacyNote:"Les icônes sont récupérées via le service de favicons de Google et le site de l'app.",
@@ -2007,12 +2196,19 @@ const i18n = {
         limitDesktopBody:"Certaines icônes ont été supprimées définitivement :\n\n{messages}\n\nPour les conserver, modifiez le lien, supprimez-les ou regroupez-les dans un dossier, puis rechargez.",
         limitDesktop:"Bureau (max. {max}) : \"{name}\" supprimé{extra}.",
         limitFolder:"Dossier \"{folder}\" (max. {max}) : \"{name}\" supprimé{extra}.",
-        limitExtra:" et {n} de plus"
+        limitExtra:" et {n} de plus",
+        privacy:"Politique de Confidentialité", terms:"Conditions d'Utilisation", contact:"Contact",
+        shortcutSearch:"Rechercher", shortcutMenu:"Menu",
+        iconPickerTitle:"Rechercher une icône", iconPickerSearch:"Rechercher des icônes...",
+        iconPickerIconify:"Iconify", iconPickerGoogle:"Google Images",
+        iconPickerEmpty:"Aucune icône trouvée", iconPickerError:"La recherche d'icônes est indisponible pour le moment. Réessayez.",
+        iconPickerPickHint:"Touchez une icône pour utiliser son URL.",
+        slugVersion:"SlugLauncher Ver: 1.1.0"
     },
     de: {
-        title:"Slug Launcher", menu:"Menü", exitMode:"Modus verlassen",
+        title:"Slug Launcher", menu:"Menü", exitMode:"Modus verlassen", close:"Schließen",
         actionsSection:"Aktionen", editIcons:"Symbole bearbeiten", moveIcons:"Symbole verschieben", saveLauncher:"SlugLauncher speichern",
-        addSection:"Hinzufügen", configSection:"Konfiguration",
+        addSection:"Hinzufügen", configSection:"Konfiguration", legalSection:"Rechtliches",
         addApp:"App hinzufügen", addFolder:"Ordner hinzufügen",
         exportUrl:"URL exportieren", importUrl:"URL importieren",
         theme:"Theme", lang:"Sprache",
@@ -2026,8 +2222,9 @@ const i18n = {
         previewLabel:"Vorschau", previewHint:"Tippen, um im Browser zu öffnen", preparingIcons:"Symbole werden vorbereitet…", iconsReady:"Fertig",
         savedYes:"Gespeichert", savedNo:"Nicht gespeichert",
         emptyTitle:"Willkommen bei deinem SlugLauncher!",
-        emptyBody:"Slug Launcher ist ein App-Launcher, der deine gesamte Einrichtung direkt in der URL speichert \u2013 ohne Konten, ohne Server. Tippe auf das Men\u00fc \u2630, um Sprache und Design zu w\u00e4hlen, und f\u00fcge dann dein erstes Symbol hinzu, um loszulegen. Um die Sprache zu \u00e4ndern, gehe zum Men\u00fc.",
+        emptyBody:"Slug Launcher ist ein App-Launcher, der deine gesamte Einrichtung direkt in der URL speichert \u2013 ohne Konto. Tippe auf das Men\u00fc \u2630, um Sprache und Design zu w\u00e4hlen, und f\u00fcge dann dein erstes Symbol hinzu, um loszulegen. Um die Sprache zu \u00e4ndern, gehe zum Men\u00fc.",
         placeholderName:"Name", placeholderURL:"URL", placeholderIcon:"Symbol-URL (optional)",
+        placeholderFolderName:"Ordnername",
         iconOptionsLabel:"Symbol",
         searchLabel:"Suchen", searchPlaceholder:"Nach Namen suchen...", searchNoResults:"Keine Ergebnisse",
         urlTooLong:"Dieser Link ist {n} Zeichen lang. Manche Apps und Browser kürzen lange Links; entferne ggf. Apps oder nutze kürzere Icon-URLs.", iconPrivacyNote:"Symbole werden über Googles Favicon-Dienst und die Website der App abgerufen.",
@@ -2047,12 +2244,19 @@ const i18n = {
         limitDesktopBody:"Einige Icons wurden dauerhaft entfernt:\n\n{messages}\n\nUm sie zu behalten, bearbeite den Link, entferne sie oder gruppiere sie in einem Ordner und lade die Seite neu.",
         limitDesktop:"Schreibtisch (max. {max}): \"{name}\" entfernt{extra}.",
         limitFolder:"Ordner \"{folder}\" (max. {max}): \"{name}\" entfernt{extra}.",
-        limitExtra:" und {n} weitere"
+        limitExtra:" und {n} weitere",
+        privacy:"Datenschutzerklärung", terms:"Nutzungsbedingungen", contact:"Kontakt",
+        shortcutSearch:"Suchen", shortcutMenu:"Menü",
+        iconPickerTitle:"Symbol suchen", iconPickerSearch:"Symbole suchen...",
+        iconPickerIconify:"Iconify", iconPickerGoogle:"Google Bilder",
+        iconPickerEmpty:"Keine Symbole gefunden", iconPickerError:"Die Symbol Suche ist derzeit nicht verfügbar. Versuche es erneut.",
+        iconPickerPickHint:"Tippe auf ein Symbol, um seine URL zu verwenden.",
+        slugVersion:"SlugLauncher Ver: 1.1.0"
     },
     pt: {
-        title:"Slug Launcher", menu:"Menu", exitMode:"Sair do modo",
+        title:"Slug Launcher", menu:"Menu", exitMode:"Sair do modo", close:"Fechar",
         actionsSection:"Ações", editIcons:"Editar ícones", moveIcons:"Mover ícones", saveLauncher:"Salvar seu SlugLauncher",
-        addSection:"Adicionar", configSection:"Configuração",
+        addSection:"Adicionar", configSection:"Configuração", legalSection:"Legal",
         addApp:"Adicionar App", addFolder:"Adicionar Pasta",
         exportUrl:"Exportar URL", importUrl:"Importar URL",
         theme:"Tema", lang:"Idioma",
@@ -2066,8 +2270,9 @@ const i18n = {
         previewLabel:"Pré-visualização", previewHint:"Toque para abrir no navegador", preparingIcons:"Preparando ícones…", iconsReady:"Pronto",
         savedYes:"Salvo", savedNo:"N\u00e3o salvo",
         emptyTitle:"Bem-vindo ao seu SlugLauncher!",
-        emptyBody:"O Slug Launcher \u00e9 um launcher de apps que guarda toda a sua configura\u00e7\u00e3o diretamente na URL, sem contas nem servidores. Toque no menu \u2630 para escolher seu idioma e tema, depois adicione seu primeiro \u00edcone para come\u00e7ar. Para mudar o idioma, v\u00e1 ao menu.",
+        emptyBody:"O Slug Launcher \u00e9 um launcher de apps que guarda toda a sua configura\u00e7\u00e3o diretamente na URL, sem conta. Toque no menu \u2630 para escolher seu idioma e tema, depois adicione seu primeiro \u00edcone para come\u00e7ar. Para mudar o idioma, v\u00e1 ao menu.",
         placeholderName:"Nome", placeholderURL:"URL", placeholderIcon:"URL do ícone (opcional)",
+        placeholderFolderName:"Nome da pasta",
         iconOptionsLabel:"Ícone",
         searchLabel:"Buscar", searchPlaceholder:"Buscar por nome...", searchNoResults:"Nenhum resultado",
         urlTooLong:"Este link tem {n} caracteres. Alguns apps e navegadores podem cortar links longos; considere remover apps ou usar URLs de ícones mais curtas.", iconPrivacyNote:"Os ícones são buscados pelo serviço de favicons do Google e pelo site do app.",
@@ -2087,12 +2292,19 @@ const i18n = {
         limitDesktopBody:"Alguns ícones foram removidos permanentemente:\n\n{messages}\n\nPara mantê-los, edite o link, remova-os ou agrupe-os em uma pasta e recarregue.",
         limitDesktop:"Área de trabalho (máx. {max}): \"{name}\" removido{extra}.",
         limitFolder:"Pasta \"{folder}\" (máx. {max}): \"{name}\" removido{extra}.",
-        limitExtra:" e mais {n}"
+        limitExtra:" e mais {n}",
+        privacy:"Política de Privacidade", terms:"Termos de Uso", contact:"Contato",
+        shortcutSearch:"Buscar", shortcutMenu:"Menu",
+        iconPickerTitle:"Buscar um ícone", iconPickerSearch:"Buscar ícones...",
+        iconPickerIconify:"Iconify", iconPickerGoogle:"Google Imagens",
+        iconPickerEmpty:"Nenhum ícone encontrado", iconPickerError:"A busca de ícones não está disponível no momento. Tente novamente.",
+        iconPickerPickHint:"Toque em um ícone para usar sua URL.",
+        slugVersion:"SlugLauncher Ver: 1.1.0"
     },
     it: {
-        title:"Slug Launcher", menu:"Menu", exitMode:"Esci dalla modalità",
+        title:"Slug Launcher", menu:"Menu", exitMode:"Esci dalla modalità", close:"Chiudi",
         actionsSection:"Azioni", editIcons:"Modifica icone", moveIcons:"Sposta icone", saveLauncher:"Salva il tuo SlugLauncher",
-        addSection:"Aggiungi", configSection:"Configurazione",
+        addSection:"Aggiungi", configSection:"Configurazione", legalSection:"Note legali",
         addApp:"Aggiungi App", addFolder:"Aggiungi Cartella",
         exportUrl:"Esporta URL", importUrl:"Importa URL",
         theme:"Tema", lang:"Lingua",
@@ -2106,8 +2318,9 @@ const i18n = {
         previewLabel:"Anteprima", previewHint:"Tocca per aprire nel browser", preparingIcons:"Preparazione delle icone…", iconsReady:"Pronto",
         savedYes:"Salvato", savedNo:"Non salvato",
         emptyTitle:"Benvenuto nel tuo SlugLauncher!",
-        emptyBody:"Slug Launcher \u00e8 un launcher di app che salva tutta la tua configurazione direttamente nell'URL, senza account n\u00e9 server. Tocca il menu \u2630 per scegliere lingua e tema, poi aggiungi la tua prima icona per iniziare. Per cambiare lingua, vai al menu.",
+        emptyBody:"Slug Launcher \u00e8 un launcher di app che salva tutta la tua configurazione direttamente nell'URL, senza account. Tocca il menu \u2630 per scegliere lingua e tema, poi aggiungi la tua prima icona per iniziare. Per cambiare lingua, vai al menu.",
         placeholderName:"Nome", placeholderURL:"URL", placeholderIcon:"URL icona (opzionale)",
+        placeholderFolderName:"Nome cartella",
         iconOptionsLabel:"Icona",
         searchLabel:"Cerca", searchPlaceholder:"Cerca per nome...", searchNoResults:"Nessun risultato",
         urlTooLong:"Questo link è lungo {n} caratteri. Alcune app e browser possono troncare i link lunghi; valuta di rimuovere app o usare URL di icone più corti.", iconPrivacyNote:"Le icone vengono cercate tramite il servizio favicon di Google e il sito dell'app.",
@@ -2127,12 +2340,19 @@ const i18n = {
         limitDesktopBody:"Alcune icone sono state rimosse definitivamente:\n\n{messages}\n\nPer conservarle, modifica il link, rimuovile o raggruppale in una cartella, poi ricarica.",
         limitDesktop:"Scrivania (max. {max}): \"{name}\" rimosso{extra}.",
         limitFolder:"Cartella \"{folder}\" (max. {max}): \"{name}\" rimosso{extra}.",
-        limitExtra:" e altri {n}"
+        limitExtra:" e altri {n}",
+        privacy:"Informativa sulla Privacy", terms:"Termini di Utilizzo", contact:"Contatti",
+        shortcutSearch:"Cerca", shortcutMenu:"Menu",
+        iconPickerTitle:"Cerca un'icona", iconPickerSearch:"Cerca icone...",
+        iconPickerIconify:"Iconify", iconPickerGoogle:"Google Immagini",
+        iconPickerEmpty:"Nessuna icona trovata", iconPickerError:"La ricerca di icone non è disponibile al momento. Riprova.",
+        iconPickerPickHint:"Tocca un'icona per usare il suo URL.",
+        slugVersion:"SlugLauncher Ver: 1.1.0"
     },
     ru: {
-        title:"Slug Launcher", menu:"Меню", exitMode:"Выйти из режима",
+        title:"Slug Launcher", menu:"Меню", exitMode:"Выйти из режима", close:"Закрыть",
         actionsSection:"Действия", editIcons:"Редактировать значки", moveIcons:"Переместить значки", saveLauncher:"Сохранить SlugLauncher",
-        addSection:"Добавить", configSection:"Настройки",
+        addSection:"Добавить", configSection:"Настройки", legalSection:"Правовая информация",
         addApp:"Добавить приложение", addFolder:"Добавить папку",
         exportUrl:"Экспорт URL", importUrl:"Импорт URL",
         theme:"Тема", lang:"Язык",
@@ -2146,8 +2366,9 @@ const i18n = {
         previewLabel:"Предпросмотр", previewHint:"Нажмите, чтобы открыть в браузере", preparingIcons:"Подготовка значков…", iconsReady:"Готово",
         savedYes:"Сохранено", savedNo:"Не сохранено",
         emptyTitle:"Добро пожаловать в ваш SlugLauncher!",
-        emptyBody:"Slug Launcher — это лаунчер приложений, который хранит все настройки прямо в URL, без аккаунтов и серверов. Нажмите на меню ☰, чтобы выбрать язык и тему, а затем добавьте первую иконку, чтобы начать. Чтобы изменить язык, откройте меню.",
+        emptyBody:"Slug Launcher — это лаунчер приложений, который хранит все настройки прямо в URL, без аккаунта. Нажмите на меню ☰, чтобы выбрать язык и тему, а затем добавьте первую иконку, чтобы начать. Чтобы изменить язык, откройте меню.",
         placeholderName:"Имя", placeholderURL:"URL", placeholderIcon:"URL значка (необязательно)",
+        placeholderFolderName:"Имя папки",
         iconOptionsLabel:"Значок",
         searchLabel:"Поиск", searchPlaceholder:"Поиск по имени...", searchNoResults:"Нет результатов",
         urlTooLong:"Длина ссылки — {n} символов. Некоторые приложения и браузеры могут обрезать длинные ссылки; удалите часть приложений или используйте более короткие URL значков.", iconPrivacyNote:"Значки загружаются через сервис favicon Google и сайт приложения.",
@@ -2167,12 +2388,19 @@ const i18n = {
         limitDesktopBody:"Некоторые значки были удалены навсегда:\n\n{messages}\n\nЧтобы сохранить их, отредактируйте ссылку, удалите их или сгруппируйте в папку и перезагрузите.",
         limitDesktop:"Рабочий стол (макс. {max}): удалён \"{name}\"{extra}.",
         limitFolder:"Папка \"{folder}\" (макс. {max}): удалён \"{name}\"{extra}.",
-        limitExtra:" и ещё {n}"
+        limitExtra:" и ещё {n}",
+        privacy:"Политика конфиденциальности", terms:"Условия использования", contact:"Контакт",
+        shortcutSearch:"Поиск", shortcutMenu:"Меню",
+        iconPickerTitle:"Найти значок", iconPickerSearch:"Поиск значков...",
+        iconPickerIconify:"Iconify", iconPickerGoogle:"Google Картинки",
+        iconPickerEmpty:"Значки не найдены", iconPickerError:"Поиск значков сейчас недоступен. Попробуйте ещё раз.",
+        iconPickerPickHint:"Нажмите на значок, чтобы использовать его URL.",
+        slugVersion:"SlugLauncher Ver: 1.1.0"
     },
     zh: {
-        title:"Slug Launcher", menu:"菜单", exitMode:"退出模式",
+        title:"Slug Launcher", menu:"菜单", exitMode:"退出模式", close:"关闭",
         actionsSection:"操作", editIcons:"编辑图标", moveIcons:"移动图标", saveLauncher:"保存你的 SlugLauncher",
-        addSection:"添加", configSection:"设置",
+        addSection:"添加", configSection:"设置", legalSection:"法律信息",
         addApp:"添加应用", addFolder:"添加文件夹",
         exportUrl:"导出URL", importUrl:"导入URL",
         theme:"主题", lang:"语言",
@@ -2186,8 +2414,9 @@ const i18n = {
         previewLabel:"预览", previewHint:"点击任意位置，在浏览器中打开", preparingIcons:"正在准备图标…", iconsReady:"完成",
         savedYes:"已保存", savedNo:"未保存",
         emptyTitle:"欢迎使用你的 SlugLauncher！",
-        emptyBody:"Slug Launcher 是一款应用启动器，它把所有设置直接保存在网址（URL）中，无需账号也无需服务器。点击 ☰ 菜单选择语言和主题，然后添加你的第一个图标即可开始使用。要更改语言，请前往菜单。",
+        emptyBody:"Slug Launcher 是一款应用启动器，它把所有设置直接保存在网址（URL）中，无需账号。点击 ☰ 菜单选择语言和主题，然后添加你的第一个图标即可开始使用。要更改语言，请前往菜单。",
         placeholderName:"名称", placeholderURL:"URL", placeholderIcon:"图标 URL（可选）",
+        placeholderFolderName:"文件夹名称",
         iconOptionsLabel:"图标",
         searchLabel:"搜索", searchPlaceholder:"按名称搜索...", searchNoResults:"没有结果",
         urlTooLong:"此链接长度为 {n} 个字符。部分应用和浏览器可能会截断过长的链接，建议删除部分应用或使用更短的图标网址。", iconPrivacyNote:"图标通过 Google 的 favicon 服务及应用自身网站获取。",
@@ -2207,12 +2436,19 @@ const i18n = {
         limitDesktopBody:"部分图标已被永久移除：\n\n{messages}\n\n如需保留，请修改链接、将其删除或归入文件夹，然后重新加载。",
         limitDesktop:"桌面（最多 {max} 个）：已移除 \"{name}\"{extra}。",
         limitFolder:"文件夹 \"{folder}\"（最多 {max} 个）：已移除 \"{name}\"{extra}。",
-        limitExtra:" 以及另外 {n} 个"
+        limitExtra:" 以及另外 {n} 个",
+        privacy:"隐私政策", terms:"使用条款", contact:"联系方式",
+        shortcutSearch:"搜索", shortcutMenu:"菜单",
+        iconPickerTitle:"搜索图标", iconPickerSearch:"搜索图标...",
+        iconPickerIconify:"Iconify", iconPickerGoogle:"Google 图片",
+        iconPickerEmpty:"未找到图标", iconPickerError:"图标搜索暂时不可用，请稍后再试。",
+        iconPickerPickHint:"点击图标以使用其 URL。",
+        slugVersion:"SlugLauncher Ver: 1.1.0"
     },
     ja: {
-        title:"Slug Launcher", menu:"メニュー", exitMode:"モードを終了",
+        title:"Slug Launcher", menu:"メニュー", exitMode:"モードを終了", close:"閉じる",
         actionsSection:"操作", editIcons:"アイコンを編集", moveIcons:"アイコンを移動", saveLauncher:"SlugLauncherを保存",
-        addSection:"追加", configSection:"設定",
+        addSection:"追加", configSection:"設定", legalSection:"法的情報",
         addApp:"アプリ追加", addFolder:"フォルダ追加",
         exportUrl:"URLエクスポート", importUrl:"URLインポート",
         theme:"テーマ", lang:"言語",
@@ -2226,8 +2462,9 @@ const i18n = {
         previewLabel:"プレビュー", previewHint:"タップしてブラウザで開く", preparingIcons:"アイコンを準備中…", iconsReady:"完了",
         savedYes:"保存済み", savedNo:"未保存",
         emptyTitle:"SlugLauncherへようこそ！",
-        emptyBody:"Slug Launcherは、設定をすべてURLに直接保存するアプリランチャーです。アカウントもサーバーも不要です。☰メニューをタップして言語とテーマを選び、最初のアイコンを追加して始めましょう。言語を変更するには、メニューへ移動してください。",
+        emptyBody:"Slug Launcherは、設定をすべてURLに直接保存するアプリランチャーです。アカウントも不要です。☰メニューをタップして言語とテーマを選び、最初のアイコンを追加して始めましょう。言語を変更するには、メニューへ移動してください。",
         placeholderName:"名前", placeholderURL:"URL", placeholderIcon:"アイコンURL（任意）",
+        placeholderFolderName:"フォルダ名",
         iconOptionsLabel:"アイコン",
         searchLabel:"検索", searchPlaceholder:"名前で検索...", searchNoResults:"該当なし",
         urlTooLong:"このリンクは {n} 文字です。長いリンクは一部のアプリやブラウザで切り詰められることがあります。アプリを減らすか、短いアイコンURLを使ってください。", iconPrivacyNote:"アイコンは Google のファビコンサービスとアプリのサイトから取得されます。",
@@ -2247,12 +2484,19 @@ const i18n = {
         limitDesktopBody:"一部のアイコンは完全に削除されました：\n\n{messages}\n\n保持するには、リンクを編集するか、削除するか、フォルダにまとめてから再読み込みしてください。",
         limitDesktop:"デスクトップ（最大 {max}）：\"{name}\" を削除しました{extra}。",
         limitFolder:"フォルダ \"{folder}\"（最大 {max}）：\"{name}\" を削除しました{extra}。",
-        limitExtra:"、他 {n} 件"
+        limitExtra:"、他 {n} 件",
+        privacy:"プライバシーポリシー", terms:"利用規約", contact:"お問い合わせ",
+        shortcutSearch:"検索", shortcutMenu:"メニュー",
+        iconPickerTitle:"アイコンを検索", iconPickerSearch:"アイコンを検索...",
+        iconPickerIconify:"Iconify", iconPickerGoogle:"Google 画像",
+        iconPickerEmpty:"アイコンが見つかりません", iconPickerError:"アイコン検索は現在利用できません。後でもう一度お試しください。",
+        iconPickerPickHint:"アイコンをタップしてURLを使用します。",
+        slugVersion:"SlugLauncher Ver: 1.1.0"
     },
     hi: {
-        title:"Slug Launcher", menu:"मेनू", exitMode:"मोड से बाहर निकलें",
+        title:"Slug Launcher", menu:"मेनू", exitMode:"मोड से बाहर निकलें", close:"बंद करें",
         actionsSection:"कार्य", editIcons:"आइकन संपादित करें", moveIcons:"आइकन ले जाएं", saveLauncher:"अपना SlugLauncher सहेजें",
-        addSection:"जोड़ें", configSection:"सेटिंग्स",
+        addSection:"जोड़ें", configSection:"सेटिंग्स", legalSection:"कानूनी",
         addApp:"ऐप जोड़ें", addFolder:"फ़ोल्डर जोड़ें",
         exportUrl:"URL निर्यात करें", importUrl:"URL आयात करें",
         theme:"थीम", lang:"भाषा",
@@ -2266,8 +2510,9 @@ const i18n = {
         previewLabel:"पूर्वावलोकन", previewHint:"ब्राउज़र में खोलने के लिए टैप करें", preparingIcons:"आइकन तैयार हो रहे हैं…", iconsReady:"तैयार",
         savedYes:"सहेजा गया", savedNo:"सहेजा नहीं गया",
         emptyTitle:"आपके SlugLauncher में आपका स्वागत है!",
-        emptyBody:"Slug Launcher एक ऐप लॉन्चर है जो आपकी पूरी सेटिंग सीधे URL में सहेजता है — किसी खाते या सर्वर की ज़रूरत नहीं। भाषा और थीम चुनने के लिए ऊपर ☰ मेनू पर टैप करें, फिर शुरू करने के लिए अपना पहला आइकन जोड़ें। भाषा बदलने के लिए मेनू में जाएं।",
+        emptyBody:"Slug Launcher एक ऐप लॉन्चर है जो आपकी पूरी सेटिंग सीधे URL में सहेजता है — किसी खाते की ज़रूरत नहीं। भाषा और थीम चुनने के लिए ऊपर ☰ मेनू पर टैप करें, फिर शुरू करने के लिए अपना पहला आइकन जोड़ें। भाषा बदलने के लिए मेनू में जाएं।",
         placeholderName:"नाम", placeholderURL:"URL", placeholderIcon:"आइकन URL (वैकल्पिक)",
+        placeholderFolderName:"फ़ोल्डर का नाम",
         iconOptionsLabel:"आइकन",
         searchLabel:"खोजें", searchPlaceholder:"नाम से खोजें...", searchNoResults:"कोई परिणाम नहीं",
         urlTooLong:"यह लिंक {n} अक्षरों का है। कुछ ऐप और ब्राउज़र लंबे लिंक काट सकते हैं; ऐप हटाएँ या छोटे आइकन URL इस्तेमाल करें।", iconPrivacyNote:"आइकन Google की फ़ेविकॉन सेवा और ऐप की अपनी साइट से लाए जाते हैं।",
@@ -2287,12 +2532,19 @@ const i18n = {
         limitDesktopBody:"कुछ आइकन स्थायी रूप से हटा दिए गए:\n\n{messages}\n\nइन्हें रखने के लिए लिंक संपादित करें, हटाएँ, या फ़ोल्डर में समूहित करें, फिर पेज को फिर से लोड करें।",
         limitDesktop:"डेस्कटॉप (अधिकतम {max}): \"{name}\" हटाया गया{extra}।",
         limitFolder:"फ़ोल्डर \"{folder}\" (अधिकतम {max}): \"{name}\" हटाया गया{extra}।",
-        limitExtra:" और {n} अन्य"
+        limitExtra:" और {n} अन्य",
+        privacy:"गोपनीयता नीति", terms:"उपयोग की शर्तें", contact:"संपर्क",
+        shortcutSearch:"खोजें", shortcutMenu:"मेनू",
+        iconPickerTitle:"आइकन खोजें", iconPickerSearch:"आइकन खोजें...",
+        iconPickerIconify:"Iconify", iconPickerGoogle:"Google छवियाँ",
+        iconPickerEmpty:"कोई आइकन नहीं मिला", iconPickerError:"आइकन खोज अभी उपलब्ध नहीं है। बाद में पुनः प्रयास करें।",
+        iconPickerPickHint:"आइकन टैप करके उसका URL इस्तेमाल करें।",
+        slugVersion:"SlugLauncher Ver: 1.1.0"
     },
     ar: {
-        title:"Slug Launcher", menu:"القائمة", exitMode:"الخروج من الوضع",
+        title:"Slug Launcher", menu:"القائمة", exitMode:"الخروج من الوضع", close:"إغلاق",
         actionsSection:"إجراءات", editIcons:"تعديل الأيقونات", moveIcons:"نقل الأيقونات", saveLauncher:"حفظ SlugLauncher الخاص بك",
-        addSection:"إضافة", configSection:"الإعدادات",
+        addSection:"إضافة", configSection:"الإعدادات", legalSection:"معلومات قانونية",
         addApp:"إضافة تطبيق", addFolder:"إضافة مجلد",
         exportUrl:"تصدير URL", importUrl:"استيراد URL",
         theme:"السمة", lang:"اللغة",
@@ -2306,8 +2558,9 @@ const i18n = {
         previewLabel:"معاينة", previewHint:"اضغط للفتح في المتصفح", preparingIcons:"جارٍ تجهيز الأيقونات…", iconsReady:"تم",
         savedYes:"محفوظ", savedNo:"غير محفوظ",
         emptyTitle:"مرحبًا بك في SlugLauncher الخاص بك!",
-        emptyBody:"‏Slug Launcher هو مشغّل تطبيقات يحفظ كل إعداداتك مباشرة في الرابط (URL)، بدون حسابات أو خوادم. اضغط على قائمة ☰ لاختيار اللغة والسمة، ثم أضف أول أيقونة لك للبدء. لتغيير اللغة، اذهب إلى القائمة.",
+        emptyBody:"‏Slug Launcher هو مشغّل تطبيقات يحفظ كل إعداداتك مباشرة في الرابط (URL)، بدون حساب. اضغط على قائمة ☰ لاختيار اللغة والسمة، ثم أضف أول أيقونة لك للبدء. لتغيير اللغة، اذهب إلى القائمة.",
         placeholderName:"الاسم", placeholderURL:"URL", placeholderIcon:"رابط الأيقونة (اختياري)",
+        placeholderFolderName:"اسم المجلد",
         iconOptionsLabel:"الأيقونة",
         searchLabel:"بحث", searchPlaceholder:"ابحث بالاسم...", searchNoResults:"لا توجد نتائج",
         urlTooLong:"طول هذا الرابط {n} حرفًا. قد تقتطع بعض التطبيقات والمتصفحات الروابط الطويلة؛ فكّر في حذف بعض التطبيقات أو استخدام روابط أيقونات أقصر.", iconPrivacyNote:"يتم جلب الأيقونات عبر خدمة favicon من Google وموقع التطبيق نفسه.",
@@ -2327,7 +2580,14 @@ const i18n = {
         limitDesktopBody:"تمت إزالة بعض الأيقونات نهائيًا:\n\n{messages}\n\nللاحتفاظ بها، حرّر الرابط أو احذفها أو اجمعها في مجلد ثم أعد التحميل.",
         limitDesktop:"سطح المكتب (الحد الأقصى {max}): تمت إزالة \"{name}\"{extra}.",
         limitFolder:"المجلد \"{folder}\" (الحد الأقصى {max}): تمت إزالة \"{name}\"{extra}.",
-        limitExtra:" و {n} أخرى"
+        limitExtra:" و {n} أخرى",
+        privacy:"سياسة الخصوصية", terms:"شروط الاستخدام", contact:"اتصل بنا",
+        shortcutSearch:"بحث", shortcutMenu:"القائمة",
+        iconPickerTitle:"ابحث عن أيقونة", iconPickerSearch:"ابحث عن الأيقونات...",
+        iconPickerIconify:"Iconify", iconPickerGoogle:"صور Google",
+        iconPickerEmpty:"لم يتم العثور على أيقونات", iconPickerError:"البحث عن الأيقونات غير متوفر حاليًا. حاول مرة أخرى لاحقًا.",
+        iconPickerPickHint:"اضغط على أيقونة لاستخدام رابطها.",
+        slugVersion:"SlugLauncher Ver: 1.1.0"
     }
 };
 
@@ -2336,35 +2596,10 @@ function t(key){
     return dict[key] !== undefined ? dict[key] : (i18n.en[key] || key);
 }
 
-/* Lista fija (no depende del idioma activo) */
-const LANGUAGE_SWITCH_HINTS = [
-    "Change to English",
-    "Cambia a espa\u00f1ol",
-    "Passer en fran\u00e7ais",
-    "Auf Deutsch wechseln",
-    "Mudar para portugu\u00eas",
-    "Passa all'italiano",
-    "\u041f\u0435\u0440\u0435\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u043d\u0430 \u0440\u0443\u0441\u0441\u043a\u0438\u0439",
-    "\u5207\u6362\u5230\u4e2d\u6587",
-    "\u65e5\u672c\u8a9e\u306b\u5207\u308a\u66ff\u3048\u308b",
-    "\u0939\u093f\u0928\u094d\u0926\u0940 \u092e\u0947\u0902 \u092c\u0926\u0932\u0947\u0902",
-    "\u0627\u0644\u062a\u063a\u064a\u064a\u0631 \u0625\u0644\u0649 \u0627\u0644\u0639\u0631\u0628\u064a\u0629"
-];
-function renderLangHint(){
-    const el = document.getElementById("emptyLangHint");
-    if (el) el.textContent = "\u2630 " + LANGUAGE_SWITCH_HINTS.join("  \u00b7  ");
-}
-
-const nativeLangNames = {
-    en:"English", es:"Español", fr:"Français", de:"Deutsch", pt:"Português",
-    it:"Italiano", ru:"Русский", zh:"中文", ja:"日本語", hi:"हिन्दी", ar:"العربية"
-};
-
 /* =========================================================
    4 · SVG INTERNOS (folder y respaldo de icono)
    ========================================================= */
 const FOLDER_SVG = '<svg class="folderSvgIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#4A90E2"><path d="M10 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V8C22 6.9 21.1 6 20 6H12L10 4Z"/></svg>';
-
 const FALLBACK_ICON = 'data:image/svg+xml;utf8,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#9aa0a6"><rect x="3" y="3" width="18" height="18" rx="5"/></svg>'
 );
@@ -2372,7 +2607,6 @@ const FALLBACK_ICON = 'data:image/svg+xml;utf8,' + encodeURIComponent(
 /* =========================================================
    5 · HELPERS
    ========================================================= */
-/* FIX #6 — isValidDomain() eliminado: no se usaba en ningún sitio. */
 function escapeHtml(str){
     return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -2386,7 +2620,6 @@ function attachIconFallback(img){
 }
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
 
-/* FIX #5 — Bloqueo de scroll del body reentrante para modales apilados. */
 let _bodyLockCount = 0;
 function lockBodyScroll(){
     if (_bodyLockCount === 0) document.body.style.overflow = "hidden";
@@ -2397,7 +2630,6 @@ function unlockBodyScroll(){
     if (_bodyLockCount === 0) document.body.style.overflow = "";
 }
 
-/* ---- Validación y nombre sugerido de apps (compartido por Añadir y Editar) ---- */
 function suggestAppName(value){
     try {
         let raw = (value || "").trim();
@@ -2441,8 +2673,6 @@ function getAppURLParts(value){
 
 /* =========================================================
    6 · APLICAR I18N
-   FIX #6 — Eliminadas las dos líneas duplicadas de renamePageLink/slugRenameBtn
-   (applyI18n ya las aplica).
    ========================================================= */
 function applyI18n() {
     document.documentElement.lang = globalLang;
@@ -2456,6 +2686,7 @@ function applyI18n() {
     document.getElementById("saveLauncherLink").textContent = t("saveLauncher");
     document.getElementById("slugCreateLink").textContent = t("slugCreate");
     document.getElementById("slugShareLink").textContent = t("slugShare");
+    document.getElementById("renamePageLink").textContent = t("renamePage");
 
     document.getElementById("addSectionLabel").textContent = t("addSection");
     document.getElementById("addAppLink").textContent = t("addApp");
@@ -2471,6 +2702,21 @@ function applyI18n() {
     document.getElementById("themeSystemLink").textContent = t("themeSystem");
     document.getElementById("langLabel").textContent = t("lang");
 
+    /* Sección Legal — en: /launcher/privacy.html · otros idiomas: /launcher/<lang>/privacy.html */
+    document.getElementById("legalSectionLabel").textContent = t("legalSection");
+    const legalPath = (page) => "/launcher/" + (globalLang === "en" ? "" : globalLang + "/") + page;
+    document.getElementById("legalPrivacyLink").href = legalPath("privacy.html");
+    document.getElementById("legalTermsLink").href = legalPath("terms.html");
+    document.getElementById("legalPrivacyLink").textContent = t("privacy");
+    document.getElementById("legalTermsLink").textContent = t("terms");
+    document.getElementById("legalContactLink").textContent = t("contact");
+
+    /* Pista de atajos + versión */
+    const hint = document.getElementById("sideShortcutHint");
+    if (hint) hint.innerHTML = "<kbd>Alt</kbd>+<kbd>Q</kbd> " + t("shortcutSearch") + " · <kbd>Alt</kbd>+<kbd>W</kbd> " + t("shortcutMenu");
+    const ver = document.getElementById("sideMenuVersion");
+    if (ver) ver.textContent = t("slugVersion");
+
     document.getElementById("addTypeAppBtn").textContent = t("addApp");
     document.getElementById("addTypeFolderBtn").textContent = t("addFolder");
     setAddType(addType);
@@ -2478,9 +2724,23 @@ function applyI18n() {
     document.getElementById("iconOptionsLabel").textContent = t("iconOptionsLabel");
     const privNote = document.getElementById("iconPrivacyNote");
     if (privNote) privNote.textContent = t("iconPrivacyNote");
+
     document.getElementById("appURL").placeholder = t("placeholderURL");
+    document.getElementById("appURLLabel").textContent = t("placeholderURL");
+    document.getElementById("appURL").setAttribute("aria-label", t("placeholderURL"));
     document.getElementById("appName").placeholder = t("placeholderName");
+    document.getElementById("appNameLabel").textContent = t("placeholderName");
+    document.getElementById("appName").setAttribute("aria-label", t("placeholderName"));
     document.getElementById("appIcon").placeholder = t("placeholderIcon");
+    document.getElementById("appIconLabel").textContent = t("placeholderIcon");
+    document.getElementById("appIcon").setAttribute("aria-label", t("placeholderIcon"));
+
+    document.getElementById("folderName").placeholder = t("placeholderFolderName");
+    document.getElementById("folderNameLabel").textContent = t("placeholderFolderName");
+    document.getElementById("folderName").setAttribute("aria-label", t("placeholderFolderName"));
+    document.getElementById("folderIconLabel").textContent = t("folderIconLabel");
+    document.getElementById("folderIcon").placeholder = t("placeholderIcon");
+    document.getElementById("folderIcon").setAttribute("aria-label", t("placeholderIcon"));
 
     document.getElementById("editAppTitle").textContent = t("editAppTitle");
     document.getElementById("editIconOptionsLabel").textContent = t("iconOptionsLabel");
@@ -2489,27 +2749,37 @@ function applyI18n() {
     document.getElementById("cancelEditAppBtn").textContent = t("cancel");
     document.getElementById("deleteAppBtn").textContent = t("deleteApp");
     document.getElementById("editAppURL").placeholder = t("placeholderURL");
+    document.getElementById("editAppURLLabel").textContent = t("placeholderURL");
+    document.getElementById("editAppURL").setAttribute("aria-label", t("placeholderURL"));
     document.getElementById("editAppName").placeholder = t("placeholderName");
+    document.getElementById("editAppNameLabel").textContent = t("placeholderName");
+    document.getElementById("editAppName").setAttribute("aria-label", t("placeholderName"));
     document.getElementById("editAppIcon").placeholder = t("placeholderIcon");
+    document.getElementById("editAppIconLabel").textContent = t("placeholderIcon");
+    document.getElementById("editAppIcon").setAttribute("aria-label", t("placeholderIcon"));
 
     document.getElementById("editFolderTitle").textContent = t("editFolderTitle");
     document.getElementById("saveEditFolderBtn").textContent = t("saveEditFolder");
     document.getElementById("moveFolderBtn").textContent = t("moveItem");
     document.getElementById("cancelEditFolderBtn").textContent = t("cancel");
     document.getElementById("deleteFolderBtn").textContent = t("deleteFolder");
-    document.getElementById("editFolderName").placeholder = t("placeholderName");
+    document.getElementById("editFolderName").placeholder = t("placeholderFolderName");
+    document.getElementById("editFolderNameLabel").textContent = t("placeholderFolderName");
+    document.getElementById("editFolderName").setAttribute("aria-label", t("placeholderFolderName"));
+    document.getElementById("editFolderIcon").placeholder = t("placeholderIcon");
+    document.getElementById("editFolderIcon").setAttribute("aria-label", t("placeholderIcon"));
 
     document.getElementById("slugInfoText").textContent = t("slugQuestion");
     document.getElementById("slugCreateBtn").textContent = t("slugCreate");
     document.getElementById("slugShareBtn").textContent = t("slugShare");
     document.getElementById("slugRenameBtn").textContent = t("renamePage");
-    document.getElementById("renamePageLink").textContent = t("renamePage");
     document.getElementById("slugCancelBtn").textContent = t("cancel");
 
     document.getElementById("urlIOPasteBtn").textContent = t("pasteAction");
     document.getElementById("urlIOCancelBtn").textContent = t("cancel");
     if (document.getElementById("urlIOModal").style.display === "block"){
         document.getElementById("urlIOTitle").textContent = urlIOMode==="export" ? t("exportUrl") : t("importUrl");
+        document.getElementById("urlIOLabel").textContent = urlIOMode==="export" ? t("exportUrl") : t("importPasteHint");
         document.getElementById("urlIOPrimaryBtn").textContent = urlIOMode==="export" ? t("copyUrl") : t("importAction");
     }
 
@@ -2519,16 +2789,28 @@ function applyI18n() {
 
     document.getElementById("searchBtn").setAttribute("aria-label", t("searchLabel"));
     document.getElementById("editBtn").setAttribute("aria-label", t("editIcons"));
+    document.getElementById("moveBtn").setAttribute("aria-label", t("moveIcons"));
+    document.getElementById("burgerBtn").setAttribute("aria-label", t("menu"));
     document.getElementById("searchInput").placeholder = t("searchPlaceholder");
     document.getElementById("searchNoResults").textContent = t("searchNoResults");
-    ["appSvgApiLink","editAppSvgApiLink","folderSvgApiLink","editFolderSvgApiLink"].forEach(id=>{
+    ["appSvgApiLink","folderSvgApiLink","editFolderSvgApiLink","iconPickerSvgApiLink"].forEach(id=>{
         const el = document.getElementById(id);
         if (el) el.textContent = t("svgApiLink");
     });
+    const iconPickerOpen = document.getElementById("appIconPickerOpen");
+    if (iconPickerOpen) iconPickerOpen.textContent = "🔎 " + t("iconPickerTitle");
+    const editIconPickerOpen = document.getElementById("editAppIconPickerOpen");
+    if (editIconPickerOpen) editIconPickerOpen.textContent = "🔎 " + t("iconPickerTitle");
+
     document.getElementById("folderIconLabel").textContent = t("folderIconLabel");
     document.getElementById("editFolderIconLabel").textContent = t("folderIconLabel");
-    document.getElementById("folderIcon").placeholder = t("placeholderIcon");
-    document.getElementById("editFolderIcon").placeholder = t("placeholderIcon");
+
+    document.getElementById("iconPickerTitle").textContent = t("iconPickerTitle");
+    document.getElementById("iconPickerSearch").placeholder = t("iconPickerSearch");
+    document.getElementById("iconPickerSearch").setAttribute("aria-label", t("iconPickerSearch"));
+    document.getElementById("iconPickerGoogle").textContent = t("iconPickerGoogle");
+    document.getElementById("iconPickerCancel").textContent = t("cancel");
+    document.getElementById("iconPickerNote").textContent = t("iconPickerPickHint");
 
     const langSelect = document.getElementById("langSelect");
     langSelect.innerHTML = "";
@@ -2543,6 +2825,30 @@ function applyI18n() {
     updateHamburgerModeUI();
     updateSavedIndicator();
     updatePageTitleDisplay();
+    renderLangHint();
+}
+
+const nativeLangNames = {
+    en:"English", es:"Español", fr:"Français", de:"Deutsch", pt:"Português",
+    it:"Italiano", ru:"Русский", zh:"中文", ja:"日本語", hi:"हिन्दी", ar:"العربية"
+};
+
+const LANGUAGE_SWITCH_HINTS = [
+    "Change to English",
+    "Cambia a espa\u00f1ol",
+    "Passer en fran\u00e7ais",
+    "Auf Deutsch wechseln",
+    "Mudar para portugu\u00eas",
+    "Passa all'italiano",
+    "\u041f\u0435\u0440\u0435\u043a\u043b\u044e\u0447\u0438\u0442\u044c \u043d\u0430 \u0440\u0443\u0441\u0441\u043a\u0438\u0439",
+    "\u5207\u6362\u5230\u4e2d\u6587",
+    "\u65e5\u672c\u8a9e\u306b\u5207\u308a\u66ff\u3048\u308b",
+    "\u0939\u093f\u0928\u094d\u0926\u0940 \u092e\u0947\u0902 \u092c\u0926\u0932\u0947\u0902",
+    "\u0627\u0644\u062a\u063a\u064a\u064a\u0631 \u0625\u0644\u0649 \u0627\u0644\u0639\u0631\u0628\u064a\u0629"
+];
+function renderLangHint(){
+    const el = document.getElementById("emptyLangHint");
+    if (el) el.textContent = "\u2630 " + LANGUAGE_SWITCH_HINTS.join("  \u00b7  ");
 }
 
 /* =========================================================
@@ -2577,8 +2883,6 @@ function updateEmptyState(){
 
 /* =========================================================
    9 · TEMA (aplicar)
-   FIX #3 — applyTheme() sincroniza data-theme para que la landing lo vea.
-   FIX #3b — setTheme() escribe localStorage.slTheme para la landing.
    ========================================================= */
 function applyTheme() {
     document.body.classList.remove("theme-light","theme-dark");
@@ -2596,37 +2900,11 @@ function applyTheme() {
 }
 
 /* =========================================================
-   10 · HASH: CÓDEC (formato, codificación, lectura y escritura)
-   FIX #1 — pageTitle se codifica/decodifica con safeEncode/safeDecode.
+   10 · HASH: CÓDEC
    ========================================================= */
-
-/* FORMATO DEL HASH (el estado completo del launcher vive en la URL)
-
-   #SLUG:<tema>,<idioma>,<guardado>,<título>#<item>#<item>...
-
-     tema      0 = oscuro, 1 = claro, 2 = sistema (ver applyTheme)
-     idioma    código de 2 letras que exista en i18n (en, es, ...); si no existe se ignora
-     guardado  1 = el usuario ya salvó este launcher, 0 = no salvado (indicador y borde rojo)
-     título    nombre de la página (pageTitle)
-
-   item de app       <nombre>,<url>,<icono>
-   item de carpeta   FOLDER:<nombre>[::<icono>][|<app>|<app>...]     con <app> = <nombre>,<url>,<icono>
-
-   Reglas del códec:
-   - Todo texto de usuario (título, nombre, url, icono) se guarda con safeEncode, que es encodeURIComponent
-     aplicado DOS veces. Leer decodifica el hash completo una vez (getDecodedHashString) y cada campo otra
-     vez (safeDecode). Así los separadores  ,  #  |  :  ::  nunca aparecen crudos dentro de un campo.
-   - build quita solo "https://" (stripProtocol); parse lo devuelve con normalize. "http://" se conserva.
-   - normalize recorta espacios y antepone "https://"; con un valor de solo espacios devuelve "https://"
-     (la UI siempre hace trim antes, solo se alcanza con un hash escrito a mano).
-   - Un hash roto no lanza excepción (safeDecode/getDecodedHashString capturan URIError).
-   - Límite conocido: encodeURIComponent lanza URIError con un sustituto UTF-16 suelto (emoji partido).
-   - Las pruebas de ida y vuelta de este códec están en codec_tests.js (fuera de este archivo). */
-
-/* ---- 10.1 Codificación de campos ---- */
 function safeEncode(str){
     str = String(str || "");
-    if (typeof str.toWellFormed === "function") str = str.toWellFormed();   /* emoji partido → U+FFFD en vez de URIError */
+    if (typeof str.toWellFormed === "function") str = str.toWellFormed();
     return encodeURIComponent(encodeURIComponent(str));
 }
 
@@ -2638,13 +2916,12 @@ function safeDecode(str){
 function normalize(str) {
     if (!str) return "";
     str = str.trim();
-    if (!str) return "";   /* solo espacios: devuelve vacío (antes devolvía "https://") */
+    if (!str) return "";
     return /^https?:\/\//i.test(str) ? str : "https://" + str;
 }
 
 function stripProtocol(str){ return (str||"").replace(/^https:\/\//i,''); }
 
-/* ---- 10.2 Lectura: hash → estado ---- */
 function getDecodedHashString(h){
     const hashOriginal = (h !== undefined) ? h : window.location.hash;
     if (!hashOriginal) return "";
@@ -2716,7 +2993,6 @@ function getRawRestParts(){
     });
 }
 
-/* ---- 10.3 Escritura: estado → hash ---- */
 function globalPartString(){ return `SLUG:${globalTheme},${globalLang},${globalSaved},${safeEncode(pageTitle || "")}`; }
 
 function buildHashFromState(state){
@@ -2815,18 +3091,41 @@ function updateHamburgerModeUI(){
     const btn = document.getElementById("burgerBtn");
     const searchBtn = document.getElementById("searchBtn");
     const editBtn = document.getElementById("editBtn");
+    const moveBtn = document.getElementById("moveBtn");
     if (currentMode === "normal"){
         btn.innerHTML = "&#9776;";
         btn.setAttribute("aria-label", t("menu"));
+        btn.setAttribute("aria-keyshortcuts", "Alt+W");
         document.body.classList.remove("modeActive");
         if (searchBtn) searchBtn.style.display = "flex";
-        if (editBtn) editBtn.style.display = "flex";
+        if (editBtn){
+            editBtn.style.display = "flex";
+            editBtn.classList.remove("modeOn");
+            editBtn.setAttribute("aria-label", t("editIcons"));
+        }
+        if (moveBtn){
+            moveBtn.style.display = "none";
+            moveBtn.classList.remove("modeOn");
+        }
     } else {
         btn.innerHTML = "&#10005;";
         btn.setAttribute("aria-label", t("exitMode"));
+        btn.removeAttribute("aria-keyshortcuts");
         document.body.classList.add("modeActive");
         if (searchBtn) searchBtn.style.display = "none";
-        if (editBtn) editBtn.style.display = "none";
+        /* Editar: ✏️ ◀▶ ✕ · Mover: ✏️ ◀▶ ✕ — el botón del modo activo queda resaltado */
+        if (editBtn){
+            editBtn.style.display = "flex";
+            editBtn.classList.toggle("modeOn", currentMode === "edit");
+            editBtn.setAttribute("aria-label", t("editIcons"));
+            editBtn.setAttribute("aria-pressed", currentMode === "edit" ? "true" : "false");
+        }
+        if (moveBtn){
+            moveBtn.style.display = "flex";
+            moveBtn.classList.toggle("modeOn", currentMode === "move");
+            moveBtn.setAttribute("aria-label", t("moveIcons"));
+            moveBtn.setAttribute("aria-pressed", currentMode === "move" ? "true" : "false");
+        }
     }
 }
 
@@ -2835,17 +3134,44 @@ document.getElementById("burgerBtn").addEventListener("click", ()=>{
     else { openSidePanel(); }
 });
 document.getElementById("editBtn").addEventListener("click", ()=>{
-    if (currentMode === "normal") enterEditMode();
+    /* Normal: entra a Editar · Mover: vuelve a Editar · Editar: no hace nada */
+    if (currentMode === "normal" || currentMode === "move") enterEditMode();
+});
+document.getElementById("moveBtn").addEventListener("click", ()=>{
+    /* Editar: pasa a Mover · Mover: no hace nada (en normal el botón está oculto) */
+    if (currentMode === "edit" || currentMode === "move") enterMoveMode();
+});
+
+/* Enter/Espacio en enlaces del menú lateral (tabindex="0"). */
+document.querySelectorAll(".sideMenuLink[tabindex='0']").forEach(link => {
+    link.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " "){
+            e.preventDefault();
+            link.click();
+        }
+    });
 });
 
 /* =========================================================
    13 · SIDE PANEL
    ========================================================= */
+function rememberFocus(modalId){
+    const active = document.activeElement;
+    if (active && active !== document.body) lastFocus.set(modalId, active);
+}
+function restoreFocus(modalId){
+    const el = lastFocus.get(modalId);
+    if (el && typeof el.focus === "function") { try { el.focus(); } catch(e){} }
+    lastFocus.delete(modalId);
+}
+
 function openSidePanel(){
+    rememberFocus("sidePanel");
     const overlay = document.getElementById("sidePanelOverlay");
     overlay.classList.remove("closing");
     overlay.style.display="block";
     staggerSidePanelItems();
+    setTimeout(()=>{ const f = overlay.querySelector("#sidePanel a, #sidePanel button"); if (f) f.focus(); }, 30);
 }
 function staggerSidePanelItems(){
     const panel = document.getElementById("sidePanel");
@@ -2881,7 +3207,7 @@ function closeSidePanel(e){
     const overlay = document.getElementById("sidePanelOverlay");
     if (overlay.style.display==="none" || overlay.classList.contains("closing")) return;
     overlay.classList.add("closing");
-    setTimeout(()=>{ overlay.style.display="none"; overlay.classList.remove("closing"); }, 260);
+    setTimeout(()=>{ overlay.style.display="none"; overlay.classList.remove("closing"); restoreFocus("sidePanel"); }, 260);
 }
 
 /* =========================================================
@@ -3209,8 +3535,8 @@ function openFolder(folder, path){
     const closeBtn=document.createElement("button");
     closeBtn.className="folderModalClose";
     closeBtn.type="button";
-    closeBtn.setAttribute("aria-label","Cerrar");
-    closeBtn.setAttribute("title","Cerrar");
+    closeBtn.setAttribute("aria-label", t("close"));
+    closeBtn.setAttribute("title", t("close"));
     closeBtn.innerHTML="&#10005;";
     closeBtn.addEventListener("click",(e)=>{
         e.stopPropagation();
@@ -3221,8 +3547,8 @@ function openFolder(folder, path){
         const editFolderBtn=document.createElement("button");
         editFolderBtn.className="folderModalEditBtn";
         editFolderBtn.type="button";
-        editFolderBtn.setAttribute("aria-label", t("editFolder") || "Editar folder");
-        editFolderBtn.setAttribute("title", t("editFolder") || "Editar folder");
+        editFolderBtn.setAttribute("aria-label", t("editFolder") || "Edit folder");
+        editFolderBtn.setAttribute("title", t("editFolder") || "Edit folder");
         editFolderBtn.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
         editFolderBtn.addEventListener("click",(e)=>{
             e.stopPropagation();
@@ -3321,7 +3647,6 @@ function refreshFolderModalGrid(modalEl, appsArray){
 
 /* =========================================================
    17 · ICONOS: LÍMITES, DETECCIÓN Y VISTA PREVIA
-   FIX #2 — enforceIconLimits traducido vía t().
    ========================================================= */
 function enforceIconLimits(state){
     const messages = [];
@@ -3350,7 +3675,6 @@ function enforceIconLimits(state){
     return {state, messages, changed};
 }
 
-/* ---- Detección de iconos y vista previa (usadas por Añadir y Editar) ---- */
 function detectIconsFor(domain, ctx, options = {}){
     const preserveCurrent = !!options.preserveCurrent;
     if (!preserveCurrent){
@@ -3442,7 +3766,6 @@ function openSvgApiSearch(nameFieldId){
 
 /* =========================================================
    18 · RENDER: LAUNCHER PRINCIPAL
-   FIX #2 — alerta traducida vía t("limitDesktopBody").
    ========================================================= */
 function renderLauncher(){
     if (currentMode === "normal") {
@@ -3480,14 +3803,12 @@ function renderLauncher(){
 }
 
 /* =========================================================
-   19 · MODAL: AÑADIR (app y nombre de la página)
-   FIX #5 — lockBodyScroll/unlockBodyScroll.
+   19 · MODAL: AÑADIR
    ========================================================= */
 let addAppTargetFolder = null;
 let addAppTargetFolderIndex = -1;
 let addType = "app";
 
-/* ---- 19.1 Añadir app o carpeta: tipo, abrir y cerrar ---- */
 function setAddType(type){
     addType = type;
     document.getElementById("addTypeAppBtn").classList.toggle("active", type==="app");
@@ -3518,6 +3839,7 @@ function populateFolderAppList(){
 
 function openAddModal(targetFolder = null, initialType = "app"){
     if (!targetFolder && getActiveState().length >= DESKTOP_OVERFLOW) return;
+    rememberFocus("addModal");
     addAppTargetFolder = targetFolder;
     addAppTargetFolderIndex = -1;
     if (targetFolder){
@@ -3543,16 +3865,18 @@ function openAddModal(targetFolder = null, initialType = "app"){
 
     closeSidePanel();
     document.getElementById("addModal").style.display="block";
-    lockBodyScroll();  /* FIX #5 */
+    lockBodyScroll();
+    setTimeout(()=>{ const f = document.getElementById(initialType==="folder" ? "folderName" : "appURL"); if (f) f.focus(); }, 30);
 }
 function closeAddModal(){
     document.getElementById("addModal").style.display="none";
     addAppTargetFolder = null;
     addAppTargetFolderIndex = -1;
-    unlockBodyScroll();  /* FIX #5 */
+    unlockBodyScroll();
+    restoreFocus("addModal");
 }
 
-/* ---- 19.2 Nombre de la página ---- */
+/* ---- 19.1 Nombre de la página ---- */
 function updatePageTitleDisplay(){
     const suffix = document.getElementById("pageTitleSuffix");
     const suffixText = document.getElementById("pageTitleSuffixText");
@@ -3573,20 +3897,24 @@ function updatePageTitleDisplay(){
 }
 function openRenamePageModal(){
     closeSlugModal(); closeSidePanel();
+    rememberFocus("renamePageModal");
     const modal=document.getElementById("renamePageModal");
     const input=document.getElementById("renamePageInput");
     document.getElementById("renamePageTitle").textContent=t("renamePage");
+    document.getElementById("renamePageLabel").textContent=t("renamePagePlaceholder");
     input.placeholder=t("renamePagePlaceholder");
+    input.setAttribute("aria-label", t("renamePagePlaceholder"));
     document.getElementById("renamePageSaveBtn").textContent=t("save");
     document.getElementById("renamePageCancelBtn").textContent=t("cancel");
     input.value=pageTitle;
     modal.style.display="flex";
-    lockBodyScroll();  /* FIX #5 */
+    lockBodyScroll();
     setTimeout(()=>{input.focus();input.select();},30);
 }
 function closeRenamePageModal(){
     document.getElementById("renamePageModal").style.display="none";
-    unlockBodyScroll();  /* FIX #5 */
+    unlockBodyScroll();
+    restoreFocus("renamePageModal");
 }
 function savePageName(){
     pageTitle=document.getElementById("renamePageInput").value.trim();
@@ -3664,7 +3992,28 @@ document.getElementById("editAppIcon").addEventListener("input", () => {
 bindIconPreview("folderIcon","folderIconPreview");
 bindIconPreview("editFolderIcon","editFolderIconPreview");
 
-/* ---- 19.3 Guardar app (usado por Añadir) ---- */
+/* Enter avanza al siguiente campo del mismo modal. */
+function advanceOnEnter(modalId, fieldIds){
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    fieldIds.forEach((id, i)=>{
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("keydown", (e)=>{
+            if (e.key !== "Enter") return;
+            e.preventDefault();
+            const nextId = fieldIds[i+1];
+            if (nextId) { const n = document.getElementById(nextId); if (n) n.focus(); }
+            else { const save = modal.querySelector("button[id^='save'], button.btnCancel"); if (save) save.focus(); }
+        });
+    });
+}
+advanceOnEnter("addModal",        ["appURL","appName","appIcon"]);
+advanceOnEnter("addModal",        ["folderName","folderIcon"]);
+advanceOnEnter("editAppModal",    ["editAppURL","editAppName","editAppIcon"]);
+advanceOnEnter("editFolderModal", ["editFolderName","editFolderIcon"]);
+
+/* ---- 19.2 Guardar app ---- */
 function persistActiveState(state){
     globalSaved = 0;
     if (currentMode === "normal"){
@@ -3775,6 +4124,7 @@ function renderSearchResults(query){
 
 function openSearchModal(){
     closeSidePanel();
+    rememberFocus("searchModal");
     const overlay = document.getElementById("searchModalOverlay");
     const input = document.getElementById("searchInput");
     input.value = "";
@@ -3784,6 +4134,7 @@ function openSearchModal(){
 }
 function closeSearchModal(){
     document.getElementById("searchModalOverlay").classList.remove("open");
+    restoreFocus("searchModal");
 }
 
 document.getElementById("searchBtn").addEventListener("click", openSearchModal);
@@ -3834,10 +4185,10 @@ function saveFolder(){
 
 /* =========================================================
    22 · MODAL: EDITAR APP
-   FIX #5 — lock/unlock body scroll.
    ========================================================= */
 function openEditApp(path){
     editingPath = path;
+    rememberFocus("editAppModal");
     const app = path.array[path.index];
     document.getElementById("editAppURL").value = stripProtocol(app.url);
     document.getElementById("editAppName").value = app.name;
@@ -3856,14 +4207,16 @@ function openEditApp(path){
         detectIconsFor(domain, editIconCtx, {preserveCurrent:true});
     }
     document.getElementById("editAppModal").style.display="block";
-    lockBodyScroll();  /* FIX #5 */
+    lockBodyScroll();
     verifyIconOnEdit(app);
     resetInactivityTimer();
+    setTimeout(()=>{ const f = document.getElementById("editAppURL"); if (f) f.focus(); }, 30);
 }
 function closeEditAppModal(){
     document.getElementById("editAppModal").style.display="none";
     editingPath=null;
-    unlockBodyScroll();  /* FIX #5 */
+    unlockBodyScroll();
+    restoreFocus("editAppModal");
     resetInactivityTimer();
 }
 function moveFromEditApp(){
@@ -3901,10 +4254,10 @@ function deleteApp(){
 
 /* =========================================================
    23 · MODAL: EDITAR FOLDER
-   FIX #5 — lock/unlock body scroll.
    ========================================================= */
 function openEditFolder(path){
     editingFolderPath = path;
+    rememberFocus("editFolderModal");
     const folder = path.array[path.index];
     document.getElementById("editFolderName").value = folder.name;
     const iconVal = stripProtocol(folder.icon || "");
@@ -3922,13 +4275,15 @@ function openEditFolder(path){
         list.appendChild(div);
     });
     document.getElementById("editFolderModal").style.display="block";
-    lockBodyScroll();  /* FIX #5 */
+    lockBodyScroll();
     resetInactivityTimer();
+    setTimeout(()=>{ const f = document.getElementById("editFolderName"); if (f) f.focus(); }, 30);
 }
 function closeEditFolderModal(){
     document.getElementById("editFolderModal").style.display="none";
     editingFolderPath=null;
-    unlockBodyScroll();  /* FIX #5 */
+    unlockBodyScroll();
+    restoreFocus("editFolderModal");
     resetInactivityTimer();
 }
 function moveFromEditFolder(){
@@ -3997,7 +4352,6 @@ function deleteFolder(){
    24 · EXPORT / IMPORT
    ========================================================= */
 let urlIOMode = "export";
-
 let ioModel = [];
 let ioRefs = {};
 
@@ -4151,35 +4505,41 @@ function ioRefreshExportField(){
 function exportConfig(){
     if (currentMode !== "normal") exitCurrentMode();
     markSavedAndRewriteHash();
+    rememberFocus("urlIOModal");
     urlIOMode = "export";
     ioModel = ioBuildModel(parseHash());
     document.getElementById("urlIOTitle").textContent = t("exportUrl");
+    document.getElementById("urlIOLabel").textContent = t("exportUrl");
     const field = document.getElementById("urlIOField");
     field.readOnly = true;
     field.placeholder = "";
+    field.setAttribute("aria-label", t("exportUrl"));
     document.getElementById("urlIOPasteBtn").style.display = "none";
     document.getElementById("urlIOPrimaryBtn").textContent = t("copyUrl");
     closeSidePanel();
     ioRender();
     document.getElementById("urlIOModal").style.display = "block";
-    lockBodyScroll();  /* FIX #5 */
+    lockBodyScroll();
 }
 function importConfig(){
     if (currentMode !== "normal") exitCurrentMode();
+    rememberFocus("urlIOModal");
     urlIOMode = "import";
     ioModel = [];
     document.getElementById("urlIOTitle").textContent = t("importUrl");
+    document.getElementById("urlIOLabel").textContent = t("importPasteHint");
     const field = document.getElementById("urlIOField");
     field.value = "";
     field.readOnly = false;
     field.placeholder = t("importPasteHint");
+    field.setAttribute("aria-label", t("importPasteHint"));
     document.getElementById("urlIOWarn").style.display = "none";
     document.getElementById("urlIOPasteBtn").style.display = (navigator.clipboard && navigator.clipboard.readText) ? "block" : "none";
     document.getElementById("urlIOPrimaryBtn").textContent = t("importAction");
     closeSidePanel();
     ioRender();
     document.getElementById("urlIOModal").style.display = "block";
-    lockBodyScroll();  /* FIX #5 */
+    lockBodyScroll();
     setTimeout(()=>{ field.focus(); }, 60);
 }
 function ioParseImportField(){
@@ -4228,7 +4588,8 @@ function closeUrlIOModal(){
     ioModel = [];
     ioRefs = {};
     document.getElementById("urlIOList").innerHTML = "";
-    unlockBodyScroll();  /* FIX #5 */
+    unlockBodyScroll();
+    restoreFocus("urlIOModal");
 }
 
 function importSelectedApps(){
@@ -4285,7 +4646,6 @@ async function confirmUrlIOModal(){
 
 /* =========================================================
    25 · AJUSTES: TEMA E IDIOMA (setters)
-   FIX #3b — setTheme escribe localStorage.slTheme.
    ========================================================= */
 function setTheme(tval){
     globalTheme = tval;
@@ -4324,9 +4684,8 @@ function setLanguage(lang){
 }
 
 /* =========================================================
-   26 · SALVAR Y COMPARTIR (plataforma, URLs, modal Salvar/Instalar y Compartir)
+   26 · SALVAR Y COMPARTIR
    ========================================================= */
-/* ---- 26.1 Plataforma y descarga ---- */
 function detectPlatform(){
     const ua = navigator.userAgent || navigator.vendor || "";
     const platform = navigator.platform || "";
@@ -4365,15 +4724,12 @@ function shortcutFileInfo(url){
     };
 }
 
-/* ---- 26.2 URLs y archivo de acceso directo ---- */
 function redirectShortcutHTML(url, title){
     const escAttr = v => String(v).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
     const jsUrl = JSON.stringify(String(url)).replace(/</g,"\\u003c");
     const lang = escAttr(globalLang || "en");
     const dir = (globalLang === "ar") ? "rtl" : "ltr";
 
-    /* Mockup estático del launcher (HTML/CSS puro). Se ve solo si el visor no
-       ejecuta JS ni sigue el redirect. Si algo falla, se usa la página simple de antes. */
     let mk = null;
     try {
         mk = buildMockupParts(
@@ -4389,7 +4745,6 @@ function redirectShortcutHTML(url, title){
         );
     } catch (e) { mk = null; }
 
-    /* Diagnóstico para saber por qué un icono no se embebió (CORS/timeout vs. precarga pendiente). */
     let diag = "";
     try {
         const st = mockupIconStats();
@@ -4446,7 +4801,6 @@ function getShareableSlugURL(hash){
     return origin + "/launcher/" + folder + (hash != null ? hash : window.location.hash);
 }
 
-/* ---- 26.3 Modal Salvar / Instalar ---- */
 function getSaveInstructions(platform, filename){
     const commonUpdate = {
         title: t("savedTitle"),
@@ -4476,6 +4830,7 @@ function getSaveInstructions(platform, filename){
 }
 
 function openSaveLauncherModal(instructions, url){
+    rememberFocus("saveLauncherModal");
     const modal = document.getElementById("saveLauncherModal");
     const title = document.getElementById("saveLauncherTitle");
     const intro = document.getElementById("saveLauncherIntro");
@@ -4537,24 +4892,24 @@ function openSaveLauncherModal(instructions, url){
 
     modal.classList.add("open");
     modal.setAttribute("aria-hidden","false");
-    lockBodyScroll();  /* FIX #5 */
+    lockBodyScroll();
 }
 
 function closeSaveLauncherModal(){
     const modal = document.getElementById("saveLauncherModal");
     modal.classList.remove("open");
     modal.setAttribute("aria-hidden","true");
-    unlockBodyScroll();  /* FIX #5 */
+    unlockBodyScroll();
+    restoreFocus("saveLauncherModal");
 }
 
 async function saveSlugLauncher(){
     closeSidePanel();
     const platform = detectPlatform();
     const isDesktop = (platform === "windows" || platform === "mac" || platform === "linux");
-    /* Solo en escritorio se genera y descarga el HTML: ahí se cargan los iconos (modal con progreso). */
     if (isDesktop) {
         const pre = await prepareMockupIcons();
-        if (!pre.proceed) return;            /* cancelado: no se marca como guardado */
+        if (!pre.proceed) return;
         closeIconsLoadingModal();
     }
     markSavedAndRewriteHash();
@@ -4574,33 +4929,32 @@ async function saveSlugLauncher(){
         openSaveLauncherModal(instructions, getShareableSlugURL());
     }catch(err){
         const instructions = getSaveInstructions(platform, filename);
-        instructions.intro = "El SlugLauncher está actualizado, pero no se pudo completar la descarga automática.";
-        instructions.steps.unshift(["Siguiente paso", "Puedes copiar la URL actual y utilizar la función de acceso directo o instalación disponible en tu navegador o sistema."]);
+        instructions.intro = "SlugLauncher is up to date, but the automatic download could not be completed.";
+        instructions.steps.unshift(["Next step", "You can copy the current URL and use the shortcut or install option available in your browser or system."]);
         openSaveLauncherModal(instructions, getShareableSlugURL());
     }
 }
 
-/* ---- 26.4 Compartir (modal del slug y Web Share) ---- */
 function openSlugModal(){
     closeSidePanel();
+    rememberFocus("slugInfoModal");
     document.getElementById("slugInfoModal").style.display="block";
-    lockBodyScroll();  /* FIX #5 */
+    lockBodyScroll();
 }
 
 function closeSlugModal(){
     document.getElementById("slugInfoModal").style.display="none";
-    unlockBodyScroll();  /* FIX #5 */
+    unlockBodyScroll();
+    restoreFocus("slugInfoModal");
 }
 
 async function shareLauncher(){
     closeSidePanel();
     const url = getCurrentSlugLauncherURL();
-    /* Carga los iconos (vía proxy) con modal de progreso; si no hay nada que cargar, sigue directo. */
     const pre = await prepareMockupIcons();
-    if (!pre.proceed) { closeSlugModal(); return; }   /* cancelado por el usuario */
+    if (!pre.proceed) { closeSlugModal(); return; }
     const {filename, html} = shortcutFileInfo(url);
 
-    /* Respaldo de siempre: descargar el archivo o, si no se puede, copiar la URL. */
     const fallbackShare = async () => {
         try {
             downloadTextFile(filename, html, "text/html;charset=utf-8");
@@ -4629,7 +4983,6 @@ async function shareLauncher(){
         if (err && err.name === "AbortError") {
             closeIconsLoadingModal();
         } else if (err && err.name === "NotAllowedError" && pre.waited && shareData) {
-            /* Tras la espera el navegador (p. ej. Safari/iOS) pide un toque nuevo: botón "Compartir" en el modal. */
             showIconsReadyStep(async () => {
                 try { await navigator.share(shareData); }
                 catch (e2) { if (!(e2 && e2.name === "AbortError")) { closeIconsLoadingModal(); await fallbackShare(); } }
@@ -4645,29 +4998,16 @@ async function shareLauncher(){
 }
 
 /* =========================================================
-   27 · ICONOS EMBEBIDOS PARA EL MOCKUP COMPARTIDO (vía proxy propio /launcher/icon-proxy)
-   Los visores de WhatsApp/iOS no cargan imágenes externas, así que al tocar
-   Compartir/Salvar se convierten a data: URI (PNG pequeño) mostrando un modal
-   de carga con progreso circular. Si un icono falla, queda la inicial de color.
-   PRIVACIDAD: el proxy (Cloudflare Worker de inriris) recibe la URL de cada icono, y solo
-   cuando el usuario toca Compartir/Salvar, abre una app por primera vez (o con el icono
-   caducado) o abre el modal de edición (nunca al mostrar el launcher). Si el icono
-   elegido falla en Compartir/Salvar, se pide al proxy el favicon de S2 del dominio del enlace.
-   CACHÉ PERSISTENTE (IndexedDB "sluglauncher-icons"): cada icono pedido al proxy se guarda
-   como PNG de 96px con 30 días de vigencia. Se sirve siempre desde ahí (aunque haya caducado);
-   al abrir la app se renueva si caducó, y si el proxy falla se conserva el viejo 30 días más.
-   Al abrir el modal de edición se compara con la web: si cambió se actualiza, y si el servidor
-   dice que ya no existe se borra. El respaldo S2 nunca se guarda (taparía un icono muerto).
+   27 · ICONOS EMBEBIDOS PARA EL MOCKUP COMPARTIDO
    ========================================================= */
-const _mockupIconCache  = new Map();     /* clave (URL del icono) -> data URI */
-const _mockupIconFailAt = new Map();     /* clave -> timestamp del fallo */
-const _mockupIconDomainOf = new Map();   /* clave -> dominio del enlace (para el respaldo S2) */
+const _mockupIconCache  = new Map();
+const _mockupIconFailAt = new Map();
+const _mockupIconDomainOf = new Map();
 let _iconsRun = null;
-const _iconMem = new Map();              /* URL del icono -> {url, d (data URI 96px), exp (caducidad)}; copia en memoria porque el render es síncrono */
-let _iconDBPromise = null;               /* conexión a IndexedDB (null si el navegador no la permite) */
-const _iconOpenBusy = new Set();         /* iconos que se están pidiendo al abrir una app */
+const _iconMem = new Map();
+let _iconDBPromise = null;
+const _iconOpenBusy = new Set();
 
-/* Dominio del enlace de un elemento; "" si no hay, o si es una IP/host local (S2 no sirve para eso). */
 function mockupIconDomain(it){
     if (!it || !it.url) return "";
     try {
@@ -4675,8 +5015,6 @@ function mockupIconDomain(it){
         return (/^[\d.]+$/.test(d) || d.indexOf(".") < 0) ? "" : d;
     } catch (e) { return ""; }
 }
-/* Clave del icono = URL de la imagen elegida (la que ya muestra el launcher). "" si no aplica
-   (carpeta o icono propio data:). Sin icono se usa el mismo S2 por defecto que usa saveApp. */
 function mockupIconHost(it){
     if (!it || it.type === "folder") return "";
     if (/^data:image\//i.test(it.icon || "")) return "";
@@ -4687,7 +5025,6 @@ function mockupIconHost(it){
 function mockupIconItems(){
     return (typeof appsState !== "undefined" && Array.isArray(appsState)) ? appsState.slice(0, MOCKUP_DESKTOP_COUNT) : [];
 }
-/* Dominios que faltan por cargar (no en caché; los fallos recientes no se reintentan). */
 function mockupIconHosts(){
     const set = new Set(), now = Date.now();
     mockupIconItems().forEach(it => {
@@ -4736,10 +5073,8 @@ async function loadMockupIcons(keys, onProgress, noFallback){
     await Promise.all(keys.map(async k => {
         const t0 = Date.now();
         let v = await mockupIconToDataURI(MOCKUP_ICON_SOURCE + encodeURIComponent(k));
-        if (v) iconDBPut({url:k, d:v, exp:Date.now() + ICON_TTL_MS});   /* solo el icono elegido, nunca el respaldo S2 */
+        if (v) iconDBPut({url:k, d:v, exp:Date.now() + ICON_TTL_MS});
         else if (!noFallback) {
-            /* Respaldo: favicon de S2 del dominio del enlace, también servido por el proxy.
-               Comparte el límite de 5 s por icono; si ya no queda tiempo, se queda la inicial. */
             const d = _mockupIconDomainOf.get(k), fb = d ? MOCKUP_ICON_S2 + encodeURIComponent(d) : "";
             const left = MOCKUP_ICON_TIMEOUT_MS - (Date.now() - t0);
             if (fb && fb !== k && left > 800) v = await mockupIconToDataURI(MOCKUP_ICON_SOURCE + encodeURIComponent(fb), left);
@@ -4749,7 +5084,7 @@ async function loadMockupIcons(keys, onProgress, noFallback){
         done++; onProgress(done, keys.length);
     }));
 }
-/* ---------- Caché persistente de iconos (IndexedDB) ---------- */
+
 function iconDBOpen(){
     if (_iconDBPromise) return _iconDBPromise;
     _iconDBPromise = new Promise(function(resolve){
@@ -4758,11 +5093,10 @@ function iconDBOpen(){
             rq.onupgradeneeded = function(){ rq.result.createObjectStore(ICON_DB_STORE, {keyPath:"url"}); };
             rq.onsuccess = function(){ resolve(rq.result); };
             rq.onerror = rq.onblocked = function(){ resolve(null); };
-        } catch (e) { resolve(null); }   /* sin IndexedDB (modo privado, etc.): la app sigue con los iconos de la web */
+        } catch (e) { resolve(null); }
     });
     return _iconDBPromise;
 }
-/* Carga todos los iconos guardados en memoria y los deja listos para Compartir/Salvar. */
 function iconDBLoadAll(){
     return iconDBOpen().then(function(db){
         if (!db) return;
@@ -4782,11 +5116,9 @@ function iconDBLoadAll(){
         });
     });
 }
-/* Espera a la BD (máx. ms) para que el primer pintado ya use los iconos guardados. */
 function iconDBReady(ms){
     return Promise.race([iconDBLoadAll(), new Promise(function(r){ setTimeout(r, ms || ICON_DB_WAIT_MS); })]).catch(function(){});
 }
-/* Icono guardado (data URI) para esa URL, o "". Lo usan renderApp y la búsqueda. */
 function iconStoreGet(url){
     const r = url ? _iconMem.get(url) : null;
     return r ? r.d : "";
@@ -4806,25 +5138,20 @@ function iconDBDelete(url){
         try { db.transaction(ICON_DB_STORE, "readwrite").objectStore(ICON_DB_STORE).delete(url); } catch (e) {}
     });
 }
-/* Al abrir una app: guarda el icono la primera vez; si caducó lo renueva, y si falla conserva el viejo 30 días más.
-   Se llama después del window.open, sin esperar. Sin conexión no hace nada. */
 function cacheIconOnOpen(item){
     try {
         const k = mockupIconHost(item);
         if (!k || _iconOpenBusy.has(k) || navigator.onLine === false) return;
         const cur = _iconMem.get(k);
-        if (cur && cur.exp > Date.now()) return;                  /* vigente: no se pide nada */
+        if (cur && cur.exp > Date.now()) return;
         const f = _mockupIconFailAt.get(k);
         if (f && Date.now() - f < MOCKUP_ICON_RETRY_MS) return;
         _iconOpenBusy.add(k);
         loadMockupIcons([k], function(){}, true).then(function(){
-            /* mismo objeto = la carga falló: se mantiene el icono viejo y se extiende su vigencia */
             if (cur && _iconMem.get(k) === cur) iconDBPut({url:cur.url, d:cur.d, exp:Date.now() + ICON_TTL_MS});
         }).catch(function(){}).then(function(){ _iconOpenBusy.delete(k); });
     } catch (e) {}
 }
-/* ¿El servidor de origen ya no tiene el icono? Solo los casos definitivos devuelven true.
-   El Worker avisa con 502 "Upstream 404|410" o con 415 "Not an image"; red, timeout, 403, 5xx o 413 no cuentan. */
 async function iconIsGone(k){
     const ctl = new AbortController(), tm = setTimeout(function(){ ctl.abort(); }, MOCKUP_ICON_TIMEOUT_MS);
     try {
@@ -4835,8 +5162,6 @@ async function iconIsGone(k){
     } catch (e) { return false; }
     finally { clearTimeout(tm); }
 }
-/* Al abrir el modal de edición: compara el icono de la web con el guardado. Distinto = actualiza,
-   igual = renueva la vigencia, ya no existe = se borra para que la persona elija otro. */
 async function verifyIconOnEdit(app){
     try {
         const k = mockupIconHost(app), cur = k ? _iconMem.get(k) : null;
@@ -4851,12 +5176,10 @@ async function verifyIconOnEdit(app){
     } catch (e) {}
 }
 
-/* Lo usa buildMockupParts: data URI ya cargado para ese elemento, o "". */
 function resolveMockupIcon(it){
     const h = mockupIconHost(it);
     return (h && _mockupIconCache.get(h)) || "";
 }
-/* Estado para el comentario de diagnóstico del HTML generado. */
 function mockupIconStats(){
     const st = {total:0, ok:0, failed:0, pending:0}, seen = new Set();
     mockupIconItems().forEach(it => {
@@ -4868,14 +5191,13 @@ function mockupIconStats(){
     return st;
 }
 
-/* ---------- Modal de carga con progreso circular ---------- */
 function _ilEl(id){ return document.getElementById(id); }
 function setIconsLoadingProgress(done, total){
     const bar = _ilEl("iconsLoadingBar"), num = _ilEl("iconsLoadingNum");
     if (!bar || !num) return;
     const f = total ? done / total : 1;
-    bar.style.strokeDashoffset = String(264 * (1 - Math.max(0.04, f)));   /* 2π·42 ≈ 264 */
-    num.textContent = Math.round(f * 100) + "%";   /* % en vez de n/N: el total solo cuenta los iconos que faltan */
+    bar.style.strokeDashoffset = String(264 * (1 - Math.max(0.04, f)));
+    num.textContent = Math.round(f * 100) + "%";
 }
 function openIconsLoadingModal(total){
     const m = _ilEl("iconsLoadingModal"); if (!m) return;
@@ -4893,7 +5215,6 @@ function cancelIconsLoading(){
     if (_iconsRun) { _iconsRun.cancelled = true; _iconsRun.cancel(); }
     closeIconsLoadingModal();
 }
-/* Paso "Listo": el navegador exige un toque nuevo (p. ej. iOS tras esperar) para abrir Compartir. */
 function showIconsReadyStep(onGo){
     const m = _ilEl("iconsLoadingModal"); if (!m) { onGo(); return; }
     _ilEl("iconsLoadingTitle").textContent = t("iconsReady");
@@ -4904,8 +5225,6 @@ function showIconsReadyStep(onGo){
     go.onclick = () => { go.style.display = "none"; onGo(); };
     m.classList.add("open"); m.setAttribute("aria-hidden", "false");
 }
-/* Carga los iconos que falten mostrando el modal. Devuelve {proceed, waited}.
-   El modal se deja abierto al terminar: quien llama lo cierra (o muestra el paso "Listo"). */
 async function prepareMockupIcons(){
     let hosts = [];
     try { hosts = mockupIconHosts(); } catch (e) {}
@@ -4928,14 +5247,7 @@ async function prepareMockupIcons(){
 
 /* =========================================================
    28 · MOCKUP ESTÁTICO DEL LAUNCHER (HTML + CSS puro, sin JS)
-   Se incrusta en el archivo .html que genera Save / Share.
-   - Móvil (<=650px): 4 columnas, 16 elementos.
-   - Desktop (>650px): 6 columnas, 18 elementos (3 filas completas).
-   - Nada es clickable: un <a> a pantalla completa (Paso 4) cubre todo.
-   Devuelve {css, html, total, shownMobile, shownDesktop} para que
-   el Paso 3 (degradado) y el Paso 4 (integración) puedan usarlos.
    ========================================================= */
-
 function buildMockupParts(items, opts){
     opts = opts || {};
     const esc = v => String(v == null ? "" : v)
@@ -4944,10 +5256,8 @@ function buildMockupParts(items, opts){
 
     const all   = Array.isArray(items) ? items : [];
     const shown = all.slice(0, MOCKUP_DESKTOP_COUNT);
-    /* globalTheme: 1 = claro, 0 = oscuro, 2 = sistema */
     const theme = opts.theme === 0 ? "dark" : (opts.theme === 2 ? "system" : "light");
 
-    /* Icono del título: se toma del DOM de la app para no duplicar el SVG. */
     let titleSvg = opts.titleIconSVG || "";
     if (!titleSvg && typeof document !== "undefined") {
         const s = document.querySelector("#titleLabel svg");
@@ -4959,11 +5269,8 @@ function buildMockupParts(items, opts){
     const footerText   = opts.footerText   || "";
     const suffix = opts.title ? " - " + opts.title : "";
 
-    /* Inicial + color estable por nombre (fallback si el icono no carga). */
     const initialOf = name => (Array.from(String(name || "?").trim())[0] || "?").toUpperCase();
     const hueOf = name => { let h = 0; for (const c of String(name || "")) h = (h * 31 + c.codePointAt(0)) % 360; return h; };
-    /* Devuelve un data: URI embebido (icono propio o precargado vía proxy) o "" -> se usa la inicial.
-       Nunca devuelve URL externas: los visores de WhatsApp/iOS no las cargan. */
     let embeddedChars = 0;
     const safeIcon = item => {
         const own = item && item.icon ? String(item.icon) : "";
@@ -4991,7 +5298,6 @@ function buildMockupParts(items, opts){
                    `</div>${label}<i class="mkBadge">${count}</i></div>`;
         }
         const ic = safeIcon(it);
-        /* Con icono embebido solo la imagen (puede tener transparencia); sin él, la inicial de color. */
         const inner = ic
             ? `<img class="mkImg" src="${esc(ic)}" alt="">`
             : `<b class="mkLetter" style="background:hsl(${hueOf(it.name)},55%,52%)">${esc(initialOf(it.name))}</b>`;
@@ -5001,7 +5307,7 @@ function buildMockupParts(items, opts){
     const svgSearch = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
     const svgEdit   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
 
-    const lightVars = "--accent:#007aff;--bg:#fffef7;--card:#fff;--text:#1c1c1e;--hdr:rgba(247,246,224,.72);--hdrLine:rgba(127,127,127,.14);--bd:rgba(0,0,0,.08);--sh:0 1px 2px rgba(0,0,0,.05),0 10px 22px rgba(0,0,0,.10);";
+    const lightVars = "--accent:#0070e0;--bg:#fffef7;--card:#fff;--text:#1c1c1e;--hdr:rgba(247,246,224,.72);--hdrLine:rgba(127,127,127,.14);--bd:rgba(0,0,0,.08);--sh:0 1px 2px rgba(0,0,0,.05),0 10px 22px rgba(0,0,0,.10);";
     const darkVars  = "--accent:#0a84ff;--bg:#0c0c0c;--card:#1e1e20;--text:#f2f2f7;--hdr:rgba(0,0,0,.55);--hdrLine:rgba(255,255,255,.08);--bd:rgba(255,255,255,.12);--sh:0 1px 2px rgba(0,0,0,.5),0 10px 26px rgba(0,0,0,.75);";
 
     const css = `
@@ -5037,15 +5343,13 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 }
 .mkFooter{box-sizing:border-box;padding:10px 12px;text-align:center;font-size:12px;background:var(--hdr);border-top:1px solid var(--hdrLine)}
 .mkFooter span{opacity:.85}
-.mkHint{display:flex;align-items:center;gap:14px;width:-webkit-fit-content;width:fit-content;max-width:100%;margin:0 auto;box-sizing:border-box;padding:16px 22px;border-radius:28px;background:var(--accent);color:#fff;box-shadow:0 8px 24px rgba(0,122,255,.35),0 2px 6px rgba(0,0,0,.2)}
+.mkHint{display:flex;align-items:center;gap:14px;width:-webkit-fit-content;width:fit-content;max-width:100%;margin:0 auto;box-sizing:border-box;padding:16px 22px;border-radius:28px;background:var(--accent);color:#fff;box-shadow:0 8px 24px rgba(0,112,224,.35),0 2px 6px rgba(0,0,0,.2)}
 .mkHint svg{flex:0 0 36px;width:36px;height:36px}
 .mkHintTxt{display:flex;flex-direction:column;gap:2px;min-width:0}
 .mkHintLbl{font-size:22px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;opacity:.85;line-height:1.15;overflow-wrap:anywhere}
 .mkHintMsg{font-size:28px;font-weight:700;line-height:1.15;overflow-wrap:anywhere}
 :lang(ar) .mkHintLbl,:lang(hi) .mkHintLbl{letter-spacing:0;text-transform:none}
 
-/* Degradado: solo si la lista continúa. Últimas 2 filas visibles -> se desvanecen.
-   Móvil: 4 filas (fade desde ~51%). Desktop: 3 filas (fade desde ~36%). */
 @media (max-width:650px){
   .mkFadeM .mkGrid{-webkit-mask-image:linear-gradient(to bottom,#000 0,#000 51%,rgba(0,0,0,.1) 100%);mask-image:linear-gradient(to bottom,#000 0,#000 51%,rgba(0,0,0,.1) 100%)}
 }
@@ -5053,7 +5357,6 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
   .mkFadeD .mkGrid{-webkit-mask-image:linear-gradient(to bottom,#000 0,#000 36%,rgba(0,0,0,.1) 100%);mask-image:linear-gradient(to bottom,#000 0,#000 36%,rgba(0,0,0,.1) 100%)}
 }`;
 
-    /* El fade solo aparece si hay más elementos de los que se muestran en ese tamaño. */
     const fadeMobile  = all.length > MOCKUP_MOBILE_COUNT;
     const fadeDesktop = all.length > MOCKUP_DESKTOP_COUNT;
     const fadeClasses = (fadeMobile ? "mkFadeM " : "") + (fadeDesktop ? "mkFadeD" : "");
@@ -5079,10 +5382,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
     };
 }
 
-
-
 /* =========================================================
-   29 · LISTENERS GLOBALES (scroll de scrollbars, Escape unificado)
+   29 · LISTENERS GLOBALES (scroll, Escape unificado, atajos)
    ========================================================= */
 
 document.addEventListener("scroll", e=>{
@@ -5093,7 +5394,17 @@ document.addEventListener("scroll", e=>{
     el._scrollHideTimer = setTimeout(()=>el.classList.remove("isScrolling"), 900);
 }, true);
 
-/* FIX #8 — Escape unificado: cierra el modal de mayor prioridad que esté abierto. */
+/* Foco atrapado dentro de un contenedor con [data-focus-trap]. */
+function trapFocus(e, container){
+    if (e.key !== "Tab" || !container) return;
+    const focusables = container.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])');
+    if (!focusables.length) return;
+    const first = focusables[0], last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+}
+
+/* Escape unificado: cierra el modal más alto primero. */
 document.addEventListener("keydown", e=>{
     if (!isSlugAppMode()) return;
     if (e.key !== "Escape") return;
@@ -5101,6 +5412,8 @@ document.addEventListener("keydown", e=>{
     if (ilM && ilM.classList.contains("open")) { cancelIconsLoading(); return; }
     const saveM = document.getElementById("saveLauncherModal");
     if (saveM && saveM.classList.contains("open")) { closeSaveLauncherModal(); return; }
+    const icoM = document.getElementById("iconPickerModal");
+    if (icoM && icoM.style.display === "block") { closeIconPicker(); return; }
     const addM = document.getElementById("addModal");
     if (addM && addM.style.display === "block") { closeAddModal(); return; }
     const editA = document.getElementById("editAppModal");
@@ -5115,12 +5428,164 @@ document.addEventListener("keydown", e=>{
     if (urlIO && urlIO.style.display === "block") { closeUrlIOModal(); return; }
     const searchO = document.getElementById("searchModalOverlay");
     if (searchO && searchO.classList.contains("open")) { closeSearchModal(); return; }
+    const sideO = document.getElementById("sidePanelOverlay");
+    if (sideO && sideO.style.display === "block") { closeSidePanel(); return; }
+});
+
+/* Trampa de foco en side panel y en el selector de iconos. */
+document.addEventListener("keydown", e=>{
+    const sideO = document.getElementById("sidePanelOverlay");
+    if (sideO && sideO.style.display === "block") trapFocus(e, document.getElementById("sidePanel"));
+    const icoM = document.getElementById("iconPickerModal");
+    if (icoM && icoM.style.display === "block") trapFocus(e, document.getElementById("iconPickerBox"));
+});
+
+/* Atajos Alt+Q (buscar) y Alt+W (menú). Solo en modo normal, sin modal abierto ni campo activo. */
+function anyModalOpen(){
+    const ids = ["addModal","editAppModal","editFolderModal","renamePageModal","slugInfoModal","urlIOModal","iconPickerModal","saveLauncherModal","iconsLoadingModal"];
+    for (const id of ids){
+        const el = document.getElementById(id);
+        if (!el) continue;
+        if (el.classList && el.classList.contains("open")) return true;
+        if (el.style.display === "block" || el.style.display === "flex") return true;
+    }
+    const s = document.getElementById("searchModalOverlay");
+    if (s && s.classList.contains("open")) return true;
+    const sp = document.getElementById("sidePanelOverlay");
+    if (sp && sp.style.display === "block") return true;
+    return false;
+}
+function fieldActive(){
+    const a = document.activeElement;
+    if (!a) return false;
+    const tag = a.tagName;
+    return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || a.isContentEditable;
+}
+document.addEventListener("keydown", e => {
+    if (!isSlugAppMode()) return;
+    if (!e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.code !== "KeyQ" && e.code !== "KeyW") return;
+    if (currentMode !== "normal") return;
+    if (anyModalOpen() || fieldActive()) return;
+    e.preventDefault();
+    if (e.code === "KeyQ") openSearchModal();
+    else openSidePanel();
 });
 
 /* =========================================================
-   30 · INIT
+   30 · SELECTOR DE ICONOS (Iconify)
    ========================================================= */
+const ICONIFY_API = "https://api.iconify.design/search";
+const ICONIFY_MAX_RESULTS = 10;          /* límite de resultados por búsqueda */
+const ICONIFY_DEBOUNCE_MS = 1000;        /* pausa de 1 s antes de buscar (evita bloqueos por sobreuso) */
+const ICON_PICKER_NAME_FIELDS = {        /* input de nombre asociado a cada input de icono */
+    appIcon: "appName",
+    editAppIcon: "editAppName",
+    folderIcon: "folderName",
+    editFolderIcon: "editFolderName"
+};
+let _iconPickerTarget = null;   /* id del input al que se devolverá la URL elegida */
+let _iconPickerNameField = null;
+let _iconPickerTimer = null;
+let _iconPickerAbort = null;
 
+function openIconPicker(targetInputId){
+    _iconPickerTarget = targetInputId;
+    _iconPickerNameField = ICON_PICKER_NAME_FIELDS[targetInputId] || null;
+    rememberFocus("iconPickerModal");
+    const modal = document.getElementById("iconPickerModal");
+    const input = document.getElementById("iconPickerSearch");
+    if (!modal) return;
+    input.value = "";
+    document.getElementById("iconPickerNote").textContent = t("iconPickerPickHint");
+    renderIconPickerStatus("");
+    modal.style.display = "block";
+    lockBodyScroll();
+    setTimeout(()=> input.focus(), 40);
+}
+function closeIconPicker(){
+    const modal = document.getElementById("iconPickerModal");
+    if (!modal) return;
+    modal.style.display = "none";
+    if (_iconPickerAbort) { try { _iconPickerAbort.abort(); } catch(e){} _iconPickerAbort = null; }
+    unlockBodyScroll();
+    restoreFocus("iconPickerModal");
+}
+function renderIconPickerStatus(text, isError){
+    const box = document.getElementById("iconPickerResults");
+    if (!box) return;
+    box.innerHTML = text
+        ? `<div class="iconPickerStatus${isError ? " error" : ""}">${escapeHtml(text)}</div>`
+        : "";
+}
+function pickIcon(url){
+    if (!_iconPickerTarget) return;
+    const input = document.getElementById(_iconPickerTarget);
+    if (!input) return;
+    input.value = stripProtocol(url);
+    input.dispatchEvent(new Event("input", {bubbles:true}));
+    closeIconPicker();
+}
+function renderIconPickerCells(items){
+    const box = document.getElementById("iconPickerResults");
+    if (!box) return;
+    if (!items.length){ renderIconPickerStatus(t("iconPickerEmpty")); return; }
+    box.innerHTML = "";
+    items.forEach(it => {
+        const cell = document.createElement("button");
+        cell.type = "button";
+        cell.className = "iconCell";
+        cell.title = it.label || it.url;
+        cell.setAttribute("aria-label", it.label || it.url);
+        cell.innerHTML = `<img alt="" loading="lazy" referrerpolicy="no-referrer" src="${escapeHtml(it.url)}"><span>${escapeHtml(it.label || "")}</span>`;
+        cell.addEventListener("click", () => pickIcon(it.url));
+        box.appendChild(cell);
+    });
+}
+async function searchIconify(query){
+    if (!query){ renderIconPickerStatus(""); return; }
+    if (_iconPickerAbort) { try { _iconPickerAbort.abort(); } catch(e){} }
+    _iconPickerAbort = new AbortController();
+    const ctl = _iconPickerAbort;
+    try{
+        const r = await fetch(ICONIFY_API + "?query=" + encodeURIComponent(query) + "&limit=" + ICONIFY_MAX_RESULTS, {signal: ctl.signal});
+        if (!r.ok) throw new Error("status " + r.status);
+        const data = await r.json();
+        const icons = (data && data.icons) || [];
+        if (!icons.length){ renderIconPickerStatus(t("iconPickerEmpty")); return; }
+        const items = icons.map(name => ({
+            url: "https://api.iconify.design/" + name.replace(":", "/") + ".svg",
+            label: name
+        }));
+        renderIconPickerCells(items);
+    } catch (err) {
+        if (err && err.name === "AbortError") return;
+        renderIconPickerStatus(t("iconPickerError"), true);
+    }
+}
+function scheduleIconPickerSearch(){
+    clearTimeout(_iconPickerTimer);
+    const q = document.getElementById("iconPickerSearch").value.trim();
+    _iconPickerTimer = setTimeout(() => {
+        searchIconify(q);
+    }, ICONIFY_DEBOUNCE_MS);
+}
+(function initIconPicker(){
+    const modal = document.getElementById("iconPickerModal");
+    if (!modal) return;
+    modal.addEventListener("click", e => { if (e.target.id === "iconPickerModal") closeIconPicker(); });
+    document.getElementById("iconPickerClose").addEventListener("click", closeIconPicker);
+    document.getElementById("iconPickerCancel").addEventListener("click", closeIconPicker);
+    document.getElementById("iconPickerSearch").addEventListener("input", scheduleIconPickerSearch);
+    const svgApiBtn = document.getElementById("iconPickerSvgApiLink");
+    if (svgApiBtn) svgApiBtn.addEventListener("click", () => {
+        if (_iconPickerNameField) openSvgApiSearch(_iconPickerNameField);
+    });
+})();
+
+/* =========================================================
+   31 · INIT
+   ========================================================= */
 function isStandaloneApp(){
     try{
         return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
@@ -5130,7 +5595,7 @@ function isStandaloneApp(){
 function persistLastHash(){
     try{
         if (location.hash && location.hash.length > 1) localStorage.setItem(SL_CONFIG.lastHashKey, location.hash);
-    }catch(e){ /* almacenamiento bloqueado o lleno: se ignora */ }
+    }catch(e){}
 }
 if (isSlugAppMode()) {
     parseGlobal();
@@ -5138,7 +5603,7 @@ if (isSlugAppMode()) {
     applyI18n();
     updatePageTitleDisplay();
     persistLastHash();
-    iconDBReady(ICON_DB_WAIT_MS).then(function(){ renderLauncher(); });   /* el primer pintado espera (máx. 0,4 s) a los iconos guardados */
+    iconDBReady(ICON_DB_WAIT_MS).then(function(){ renderLauncher(); });
 }
 
 window.addEventListener("hashchange", ()=>{
@@ -5165,18 +5630,15 @@ window.addEventListener("hashchange", ()=>{
 </script>
 <script>
 (function initEnglishLanding(){
-    /* FUNCIONES COMPARTIDAS CON LA APP (Paso 7). Ya no se duplican aquí; se usan las del script de la app (arriba):
-       bindIconPreview, escapeHtml, getAppURLParts, getDecodedHashString, ioBuildModel, ioMakeRow, isValidAppURL, normalize, openSvgApiSearch, parseHash, safeDecode, safeEncode, selectIconOptionFor, stripProtocol, suggestAppName.
-       Son idénticas y no dependen de variables de esta IIFE (las landings por idioma, sin script de app, conservan sus copias: ver checklist al inicio del archivo). Las demás duplicadas se quedan porque usan t, I18N,
-       estado o goToLauncher propios de la landing. */
+    /* Funciones compartidas con la app (Paso 7). Las landings por idioma, sin script de app,
+       conservan sus copias: ver LANDING_CHANGES.md. */
     var template = document.getElementById("landingModalsTemplate");
     var landingShell = document.getElementById("landingShell");
     if (!template || !landingShell || isSlugAppMode()) return;
     landingShell.appendChild(template.content.cloneNode(true));
 
-/* Configuración de idioma de ESTA landing. */
 const PAGE_LANG = "en";
-const THEME_KEY = SL_CONFIG.themeKey;   /* definida en <head> */
+const THEME_KEY = SL_CONFIG.themeKey;
 function currentTheme(){ return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light"; }
 function getStoredTheme(){ try { const t = localStorage.getItem(THEME_KEY); return (t === "light" || t === "dark") ? t : null; } catch (e) { return null; } }
 function paintTheme(t){
@@ -5201,14 +5663,6 @@ function paintTheme(t){
     }
 })();
 
-/* =========================================================
-   DICCIONARIO i18n de la landing.
-   IMPORTANTE (explicado en el review): este archivo solo sirve
-   /launcher/ con PAGE_LANG="en". Al duplicarlo a /launcher/<lang>/
-   hay que cambiar PAGE_LANG y reemplazar/añadir la clave <lang> en
-   este I18N. Si se olvida, el t() defensivo cae a I18N.en (o a la
-   propia clave) sin crashear.
-   ========================================================= */
 const I18N = {
     en: {
         addApp: "Add App",
@@ -5221,6 +5675,7 @@ const I18N = {
         placeholderName: "Name",
         placeholderURL: "URL",
         placeholderIcon: "Icon URL (optional)",
+        placeholderFolderName: "Folder name",
         iconOptionsLabel: "Icon",
         svgApiLink: "🔍 Find an SVG icon on svgapi.com",
         folderIconLabel: "Folder icon (optional, shown in black)",
@@ -5242,8 +5697,6 @@ const I18N = {
         importUrl: "Import URL",
         typeApp: "App",
         typeFolder: "Folder",
-        placeholderFolderName: "Folder name",
-        placeholderFolderIcon: "Icon URL (optional)",
         limitDesktop: "Desktop (max. {max}): removed \"{name}\"{extra}.",
         limitFolder: "Folder \"{folder}\" (max. {max}): removed \"{name}\"{extra}.",
         limitExtra: " and {n} more",
@@ -5252,17 +5705,12 @@ const I18N = {
     }
 };
 function t(key, vars){
-    /* FIX defensivo — antes: I18N[PAGE_LANG] || I18N.es (I18N.es no existe → crash).
-       Ahora: fallback seguro a I18N.en y, si tampoco, a la propia clave. */
     const dict = I18N[PAGE_LANG] || I18N.en || {};
     let str = (dict[key] !== undefined) ? dict[key] : key;
     if (vars) Object.keys(vars).forEach(function (k) { str = str.split("{" + k + "}").join(vars[k]); });
     return str;
 }
 
-/* =========================================================
-   NÚCLEO SLUG — copia de index.html.
-   ========================================================= */
 const DESKTOP_MAX = 64;
 const FOLDER_MAX = 36;
 let globalTheme = 2;
@@ -5270,7 +5718,6 @@ const globalLang = PAGE_LANG;
 let globalSaved = 0;
 let pageTitle = "";
 
-/* FIX #1 (landing) — pageTitle con safeEncode para sobrevivir al decode global. */
 function globalPartString(){ return `SLUG:${globalTheme},${globalLang},${globalSaved},${safeEncode(pageTitle || "")}`; }
 function buildHashFromState(state){
     const parts=[];
@@ -5326,9 +5773,6 @@ function goToLauncher(state){
     window.location.assign("/launcher/" + buildHashFromState(limited.state));
 }
 
-/* =========================================================
-   MODAL AÑADIR — lógica de la landing.
-   ========================================================= */
 let addType = "app";
 
 function setAddType(type){
@@ -5349,15 +5793,19 @@ function applyAddModalI18n(){
     const set = function (id, key, attr) {
         const el = document.getElementById(id);
         if (!el) return;
-        if (attr) el.setAttribute(attr, t(key)); else el.textContent = t(key);
+        if (attr) {
+            el.setAttribute(attr, t(key));
+            if (attr === "placeholder") el.setAttribute("aria-label", t(key));
+        } else el.textContent = t(key);
     };
     set("addTypeAppBtn","typeApp"); set("addTypeFolderBtn","typeFolder");
     set("appURL","placeholderURL","placeholder"); set("appName","placeholderName","placeholder");
     set("appIcon","placeholderIcon","placeholder");
+    set("folderName","placeholderFolderName","placeholder");
     set("iconOptionsLabel","iconOptionsLabel"); set("iconPrivacyNote","iconPrivacyNote");
     set("appSvgApiLink","svgApiLink"); set("folderSvgApiLink","svgApiLink");
-    set("folderName","placeholderFolderName","placeholder"); set("folderIconLabel","folderIconLabel");
-    set("folderIcon","placeholderFolderIcon","placeholder");
+    set("folderIconLabel","folderIconLabel");
+    set("folderIcon","placeholderIcon","placeholder");
     set("cancelAddBtn","cancel");
     document.querySelectorAll("[data-i18n]").forEach(function (el) { el.textContent = t(el.getAttribute("data-i18n")); });
     document.querySelectorAll("[data-i18n-ph]").forEach(function (el) {
@@ -5530,11 +5978,23 @@ function saveFolder(){
         if ((e.key === "Enter" || e.key === " ") && e.target.matches("input")) { e.preventDefault(); openFromTryForm(e); }
     });
     document.querySelectorAll('[data-try="add"]').forEach(b => b.addEventListener("click", () => openAddModal("app")));
+
+    /* Enter avanza al siguiente campo (landing). */
+    [["appURL","appName","appIcon"],["folderName","folderIcon"]].forEach(function(ids){
+        ids.forEach(function(id, i){
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener("keydown", function(e){
+                if (e.key !== "Enter") return;
+                e.preventDefault();
+                const next = ids[i+1];
+                if (next) { const n = document.getElementById(next); if (n) n.focus(); }
+                else { const save = document.getElementById("saveAddBtn"); if (save) save.focus(); }
+            });
+        });
+    });
 })();
 
-/* =========================================================
-   DEMO DE BÚSQUEDA
-   ========================================================= */
 const SEARCH_DEMO_APPS = [
     {i18n:"demoMyApp", glyph:"★",  color:"#8e8e93"},
     {name:"MSN",           glyph:"M",  color:"#2b2b30"},
@@ -5615,9 +6075,6 @@ function renderSearchDemo(query){
     document.addEventListener("visibilitychange", function () { document.hidden ? stop() : start(); });
 })();
 
-/* =========================================================
-   MODAL IMPORTAR — lógica de la landing.
-   ========================================================= */
 const FOLDER_SVG = '<svg class="folderSvgIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#4A90E2"><path d="M10 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V8C22 6.9 21.1 6 20 6H12L10 4Z"/></svg>';
 const FALLBACK_ICON = 'data:image/svg+xml;utf8,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#9aa0a6"><rect x="3" y="3" width="18" height="18" rx="5"/></svg>'
@@ -5853,7 +6310,7 @@ function changeLanguage(url){
         appStyles.forEach(function(el){ el.disabled = true; });
         document.documentElement.lang = "en";
         document.documentElement.dir = "ltr";
-        document.title = "SlugLauncher — Private web app launcher";
+        document.title = "SlugLauncher — Web app launcher with the config in the link";
     }
 })();
 </script>
