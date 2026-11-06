@@ -1857,7 +1857,6 @@ body.theme-dark .iconPickerStatus.error { color:#ffb454; }
 <div class="fieldLabel" id="appIconLabel">Icon URL (optional)</div>
 <input id="appIcon" placeholder="Icon URL (optional)" aria-label="Icon URL (optional)" enterkeyhint="done" autocapitalize="off" autocomplete="off" spellcheck="false"/>
 <img id="iconPreview" alt=""/>
-<button type="button" class="helperLink" id="appSvgApiLink" onclick="openSvgApiSearch('appName')">🔍 Find an SVG icon on svgapi.com</button>
 <button type="button" class="helperLink" id="appIconPickerOpen" onclick="openIconPicker('appIcon')">🔎 Search an icon</button>
 </div>
 <div id="addFolderSection" style="display:none;">
@@ -1866,7 +1865,7 @@ body.theme-dark .iconPickerStatus.error { color:#ffb454; }
 <div class="fieldLabel" id="folderIconLabel">Folder icon (optional, shown in black)</div>
 <input id="folderIcon" placeholder="Icon URL (optional)" aria-label="Icon URL (optional)" enterkeyhint="done" autocapitalize="off" autocomplete="off" spellcheck="false"/>
 <img id="folderIconPreview" alt=""/>
-<button type="button" class="helperLink" id="folderSvgApiLink" onclick="openSvgApiSearch('folderName')">🔍 Find an SVG icon on svgapi.com</button>
+<button type="button" class="helperLink" id="folderIconPickerOpen" onclick="openIconPicker('folderIcon')">🔎 Search an icon</button>
 <div id="folderAppList" style="max-height:200px;overflow:auto;margin-bottom:12px;"></div>
 </div>
 <button id="saveAddBtn" onclick="handleAddSave()" type="button">Save</button>
@@ -2793,12 +2792,14 @@ function applyI18n() {
     document.getElementById("burgerBtn").setAttribute("aria-label", t("menu"));
     document.getElementById("searchInput").placeholder = t("searchPlaceholder");
     document.getElementById("searchNoResults").textContent = t("searchNoResults");
-    ["appSvgApiLink","folderSvgApiLink","editFolderSvgApiLink","iconPickerSvgApiLink"].forEach(id=>{
+    ["editFolderSvgApiLink","iconPickerSvgApiLink"].forEach(id=>{
         const el = document.getElementById(id);
         if (el) el.textContent = t("svgApiLink");
     });
     const iconPickerOpen = document.getElementById("appIconPickerOpen");
     if (iconPickerOpen) iconPickerOpen.textContent = "🔎 " + t("iconPickerTitle");
+    const folderIconPickerOpen = document.getElementById("folderIconPickerOpen");
+    if (folderIconPickerOpen) folderIconPickerOpen.textContent = "🔎 " + t("iconPickerTitle");
     const editIconPickerOpen = document.getElementById("editAppIconPickerOpen");
     if (editIconPickerOpen) editIconPickerOpen.textContent = "🔎 " + t("iconPickerTitle");
 
