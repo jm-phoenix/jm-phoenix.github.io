@@ -55,11 +55,33 @@ function showScreen(name) {
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 function setStatus(t) { $('#camera-status').textContent = t; }
 
-/* ---------- audio: best effort, nunca bloquea el flujo ---------- */
+/* ---------- audio: best effort, nunca bloquea el flujo ----------
+   En iOS el Audio hay que guardarlo: si el elemento queda sin referencia
+   el sistema lo descarta y no suena (en PC el navegador lo mantiene). */
+const audioCache = {};
+
+function getAudio(url) {
+  if (audioCache[url]) return audioCache[url];
+  const a = new Audio();
+  a.preload = 'auto';
+  a.src = url;
+  a.volume = 1;
+  audioCache[url] = a;
+  return a;
+}
+
+function preloadAudio() {
+  for (const key of Object.keys(CFG.audio || {})) {
+    const v = CFG.audio[key];
+    if (typeof v === 'string') { const a = getAudio(v); if (a) a.load(); }
+  }
+}
+
 function playAudio(url) {
   try {
-    const a = new Audio(url);
-    a.preload = 'auto';
+    const a = getAudio(url);
+    if (!a) return null;
+    try { a.currentTime = 0; } catch (e) { /* aún no cargado */ }
     const p = a.play();
     if (p) p.catch(() => {});
     return a;
@@ -69,6 +91,17 @@ function playAudio(url) {
 function unlockAudio() {
   if (audioUnlocked) return;
   audioUnlocked = true;
+  try {
+    // Blip silencioso vía WebAudio: desbloquea la sesión de audio de iOS dentro del gesto.
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AC();
+    if (ctx.state === 'suspended') ctx.resume();
+    const buf = ctx.createBuffer(1, 1, 22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+  } catch (e) { /* el Audio de HTML igual intenta sonar */ }
   startAmbientLoop(); // el primer toque desbloquea el audio en Safari
 }
 
@@ -391,6 +424,7 @@ window.addEventListener('load', async () => {
     CFG = Object.assign({}, DEFAULTS, await res.json());
   } catch (e) { CFG = DEFAULTS; }
   computeRender();
+  preloadAudio();
   applyTexts();
   showAttract();
   if ('serviceWorker' in navigator) {
