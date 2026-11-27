@@ -72,7 +72,13 @@ body {
    Nada fuera del cuadro se ve, así nadie cree que saldrá en la foto final. */
 .stage {
   position: relative;
-  height: min(88vh, 1000px);
+  /* El ANCHO manda y el alto sale del aspecto: así el recuadro siempre
+     tiene la proporción exacta de la foto (640/1080) y el preview muestra
+     lo mismo que sale en la composición. Antes se fijaba el alto y, en
+     pantallas angostas, el ancho se recortaba: el recuadro quedaba más
+     estrecho que la foto, el preview hacía zoom y la composición mostraba
+     partes que no se veían en el preview. */
+  width: min(92vw, 51vh);
   aspect-ratio: 640 / 1080;
   background: #111;
   border: 3px solid var(--gold);
