@@ -55,10 +55,23 @@ function showScreen(name) {
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 function setStatus(t) { $('#camera-status').textContent = t; }
 
-/* ---------- audio: best effort, nunca bloquea el flujo ----------
-   En iOS el Audio hay que guardarlo: si el elemento queda sin referencia
-   el sistema lo descarta y no suena (en PC el navegador lo mantiene). */
-const audioCache = {};
+/* ---------- audio: WebAudio, la vía fiable en iOS ----------
+   El <audio> de HTML en iOS solo suena dentro de la ventana corta tras
+   el toque (por eso el intro sonaba y los demás no: llegan 5-20 s
+   después, fuera de esa ventana). En cambio, un AudioContext retomado
+   dentro del gesto queda corriendo y sus sonidos suenan cuando sea.
+   Los mp3 se decodifican al cargar; si algo falla, cae al <audio>. */
+let audioCtx = null;
+const audioBuffers = {}; // key -> AudioBuffer decodificado
+const audioCache = {};   // fallback: un <audio> por url
+
+function getAudioContext() {
+  if (audioCtx) return audioCtx;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  audioCtx = new AC();
+  return audioCtx;
+}
 
 function getAudio(url) {
   if (audioCache[url]) return audioCache[url];
@@ -71,13 +84,34 @@ function getAudio(url) {
 }
 
 function preloadAudio() {
+  const ctx = getAudioContext();
   for (const key of Object.keys(CFG.audio || {})) {
     const v = CFG.audio[key];
-    if (typeof v === 'string') { const a = getAudio(v); if (a) a.load(); }
+    if (typeof v !== 'string') continue;
+    const a = getAudio(v);
+    if (a) a.load(); // fallback <audio>, precargado
+    if (ctx) {
+      fetch(v).then((r) => r.arrayBuffer())
+        .then((b) => ctx.decodeAudioData(b))
+        .then((buf) => { audioBuffers[key] = buf; })
+        .catch(() => {});
+    }
   }
 }
 
-function playAudio(url) {
+function playAudio(key) {
+  const url = (CFG.audio && CFG.audio[key]) || key;
+  const buf = audioBuffers[key];
+  if (buf && audioCtx) {
+    try {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      src.connect(audioCtx.destination);
+      src.start(0);
+      return src;
+    } catch (e) { /* cae al fallback */ }
+  }
   try {
     const a = getAudio(url);
     if (!a) return null;
@@ -91,23 +125,24 @@ function playAudio(url) {
 function unlockAudio() {
   if (audioUnlocked) return;
   audioUnlocked = true;
-  try {
-    // Blip silencioso vía WebAudio: desbloquea la sesión de audio de iOS dentro del gesto.
-    const AC = window.AudioContext || window.webkitAudioContext;
-    const ctx = new AC();
-    if (ctx.state === 'suspended') ctx.resume();
-    const buf = ctx.createBuffer(1, 1, 22050);
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    src.connect(ctx.destination);
-    src.start(0);
-  } catch (e) { /* el Audio de HTML igual intenta sonar */ }
+  const ctx = getAudioContext();
+  if (ctx) {
+    try {
+      // Blip silencioso dentro del gesto: retoma el contexto y desbloquea el audio.
+      if (ctx.state === 'suspended') ctx.resume();
+      const buf = ctx.createBuffer(1, 1, 22050);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      src.start(0);
+    } catch (e) { /* el <audio> igual intenta sonar */ }
+  }
   startAmbientLoop(); // el primer toque desbloquea el audio en Safari
 }
 
 function startAmbientLoop() {
   if (ambientTimer) return;
-  const play = () => { if (state === 'attract') playAudio(CFG.audio.ambient); };
+  const play = () => { if (state === 'attract') playAudio('ambient'); };
   play();
   ambientTimer = setInterval(play, (CFG.audio.ambientIntervalSeconds || 30) * 1000);
 }
@@ -177,7 +212,7 @@ async function runCountdown() {
   const total = (CFG.timing.countdownSeconds || 5.6) * 1000;
   const labels = ['3', '2', '1', '¡Sonríe!'];
   const cd = $('#countdown');
-  playAudio(CFG.audio.countdown);
+  playAudio('countdown');
   cd.hidden = false;
   const start = performance.now();
   await new Promise((resolve) => {
@@ -208,17 +243,17 @@ async function startSession() {
     return;
   }
   requestWakeLock();
-  playAudio(CFG.audio.intro);
+  playAudio('intro');
   await sleep((CFG.timing.poseSeconds || 4) * 1000);
   await runCountdown();
   photo1 = captureSlot();
   setStatus(CFG.texts.secondReady);
-  playAudio(CFG.audio.transition);
+  playAudio('transition');
   await sleep((CFG.timing.transitionSeconds || 3) * 1000);
   await runCountdown();
   photo2 = captureSlot();
   showResult();
-  playAudio(CFG.audio.final);
+  playAudio('final');
   armResetTimer();
 }
 
