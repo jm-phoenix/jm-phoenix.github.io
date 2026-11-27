@@ -67,7 +67,7 @@ body {
 .subtitle { font-size: 1.25rem; color: var(--blush); margin: 0; letter-spacing: .04em; }
 .hint { color: var(--sage); font-size: 1rem; margin: 0; }
 
-/* Pantalla de cámara: la vista previa ES la plantilla 4x6 */
+/* Pantalla de cámara: un solo preview grande; el marco marca el recorte */
 .stage {
   position: relative;
   width: min(96vw, 105vh);
@@ -79,36 +79,23 @@ body {
 }
 .booth-cam {
   position: absolute;
-  top: 5%;
-  height: 90%;
-  width: 35.56%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   transform: scaleX(-1); /* espejo: lo que ves es lo que sale */
   background: #111;
 }
-#video-left { left: 2.22%; }
-#video-right { left: 62.22%; }
-.center-band {
+/* Marco dorado que marca de dónde sale la foto (el recorte central).
+   Lo fuera del marco queda atenuado. Se posiciona por JS según la cámara. */
+.capture-zone {
   position: absolute;
-  left: 37.78%;
-  top: 5%;
-  width: 24.44%;
-  height: 90%;
-  background: var(--deep);
-  border-left: 2px solid var(--gold);
-  border-right: 2px solid var(--gold);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: .15rem;
-  text-align: center;
-  padding: .25rem;
+  border: 3px solid var(--gold);
+  border-radius: 6px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, .45);
+  pointer-events: none;
+  z-index: 1;
 }
-.center-band p { margin: 0; }
-.band-monogram { font-family: Georgia, "Times New Roman", serif; font-style: italic; color: var(--gold); font-size: clamp(1.4rem, 4.5vmin, 2.6rem); line-height: 1; }
-.band-name { font-family: Georgia, "Times New Roman", serif; font-style: italic; color: var(--paper); font-size: clamp(.95rem, 3vmin, 1.5rem); }
-.band-sub { color: var(--blush); font-size: clamp(.7rem, 2.2vmin, 1rem); }
 .countdown {
   position: absolute;
   inset: 0;

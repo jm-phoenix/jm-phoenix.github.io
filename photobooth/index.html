@@ -27,16 +27,11 @@
       </div>
     </section>
 
-    <!-- Pantalla de cámara -->
+    <!-- Pantalla de cámara: un solo preview grande -->
     <section id="screen-camera" class="screen">
       <div class="stage">
-        <video id="video-left" class="booth-cam" playsinline muted autoplay disablepictureinpicture></video>
-        <div class="center-band">
-          <p class="band-monogram">XV</p>
-          <p class="band-name">Sara Sofía</p>
-          <p class="band-sub">Mis Quince Años</p>
-        </div>
-        <video id="video-right" class="booth-cam" playsinline muted autoplay disablepictureinpicture></video>
+        <video id="video-main" class="booth-cam" playsinline muted autoplay disablepictureinpicture></video>
+        <div id="capture-zone" class="capture-zone" hidden></div>
         <div id="countdown" class="countdown" hidden>3</div>
       </div>
       <p id="camera-status" class="camera-status">Mírense en la pantalla…</p>
