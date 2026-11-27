@@ -18,7 +18,7 @@ const DEFAULTS = {
   },
   camera: { facingMode: 'user', width: 1920, height: 1080 },
   print: { width: 1800, height: 1200, margin: 40, slotWidth: 640, slotHeight: 1080, slotY: 60, renderWidth: 4096, flowers: true },
-  shortcuts: { savePrint: 'PhotoBooth', saveOnly: 'PhotoBooth Guardar' },
+  shortcuts: { savePrint: 'Imprimir PB', saveOnly: 'Compartir PB' },
   template: { logo: null },
   timing: { countdownSeconds: 5.6, poseSeconds: 4, transitionSeconds: 3, autoResetSeconds: 90 },
   texts: {
@@ -26,7 +26,8 @@ const DEFAULTS = {
     attractButton: '📸 Toma tus fotos', attractHint: 'Toca el botón y sonríe',
     capturing: 'Mírense en la pantalla…', secondReady: 'Prepárate para la segunda',
     resultTitle: '¡Quedó brutal!',
-    btnSavePrint: 'Guardar e Imprimir', btnSaveOnly: 'Solo guardar', btnRetake: 'Volver a empezar'
+    resultHint: 'Toca Continuar y elige Imprimir PB o Compartir PB',
+    btnContinue: 'Continuar'
   }
 };
 
@@ -35,7 +36,7 @@ let stream = null;
 let photo1 = null; // canvas 640x1080
 let photo2 = null;
 let compositeBlob = null;
-let pendingReturn = null; // 'done' | 'retake'
+let pendingReturn = false; // esperando el regreso tras abrir un Shortcut (plan B)
 let state = 'attract';
 let ambientTimer = null;
 let audioUnlocked = false;
@@ -415,7 +416,7 @@ function compose() {
 
 function showResult() {
   const c = compose();
-  const btns = ['#btn-save-print', '#btn-save-only', '#btn-retake'];
+  const btns = ['#btn-continue'];
   btns.forEach((s) => { $(s).disabled = true; });
   c.toBlob((blob) => {
     compositeBlob = blob;
@@ -425,20 +426,20 @@ function showResult() {
   showScreen('result');
 }
 
-/* ---------- Shortcuts: el montaje viaja por Compartir ---------- */
-/* Camino principal: navigator.share con el PNG. El invitado toca el
-   Shortcut en el share sheet y la foto le llega como entrada directa:
-   sin portapapeles, sin el aviso "Safari quiere abrir Shortcuts" y sin
-   el aviso de "pegar". Plan B (si Compartir no está disponible):
-   portapapeles + shortcuts://, que sí pide esos dos avisos. */
-async function openShortcut(name, pending) {
+/* ---------- Compartir: un solo botón Continuar ---------- */
+/* El invitado toca Continuar y la página abre el share sheet con el PNG.
+   Ahí elige "Imprimir PB" (guarda e imprime) o "Compartir PB" (solo
+   guarda). La foto llega como entrada directa del Shortcut: sin
+   portapapeles y sin los avisos de iOS. Plan B (si Compartir no está
+   disponible): portapapeles + shortcuts:// con "Imprimir PB". */
+async function shareComposite() {
   clearResetTimer();
   if (!compositeBlob) return;
   const file = new File([compositeBlob], 'sara-sofia-xv.png', { type: 'image/png' });
   if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
       await navigator.share({ files: [file] });
-      afterShortcutReturn(pending);
+      showAttract();
     } catch (err) { /* el invitado cerró el share sheet: se queda en la pantalla de resultado */ }
     return;
   }
@@ -448,20 +449,14 @@ async function openShortcut(name, pending) {
     window.print();
     return;
   }
-  pendingReturn = pending;
-  window.location.href = 'shortcuts://run-shortcut?name=' + encodeURIComponent(name) + '&input=clipboard';
-}
-
-function afterShortcutReturn(pending) {
-  if (pending === 'retake') startSession();
-  else showAttract();
+  pendingReturn = true;
+  window.location.href = 'shortcuts://run-shortcut?name=' + encodeURIComponent(CFG.shortcuts.savePrint) + '&input=clipboard';
 }
 
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && pendingReturn) {
-    const p = pendingReturn;
-    pendingReturn = null;
-    afterShortcutReturn(p);
+    pendingReturn = false;
+    showAttract();
   }
 });
 
@@ -488,16 +483,13 @@ function applyTexts() {
   $('#btn-start').textContent = t.attractButton;
   $('#attract-hint').textContent = t.attractHint;
   $('#result-title').textContent = t.resultTitle;
-  $('#btn-save-print').textContent = t.btnSavePrint;
-  $('#btn-save-only').textContent = t.btnSaveOnly;
-  $('#btn-retake').textContent = t.btnRetake;
+  $('#result-hint').textContent = t.resultHint;
+  $('#btn-continue').textContent = t.btnContinue;
 }
 
 document.addEventListener('pointerdown', unlockAudio);
 $('#btn-start').addEventListener('click', () => { unlockAudio(); startSession(); });
-$('#btn-save-print').addEventListener('click', () => openShortcut(CFG.shortcuts.savePrint, 'done'));
-$('#btn-save-only').addEventListener('click', () => openShortcut(CFG.shortcuts.saveOnly, 'done'));
-$('#btn-retake').addEventListener('click', () => openShortcut(CFG.shortcuts.saveOnly, 'retake'));
+$('#btn-continue').addEventListener('click', () => shareComposite());
 
 window.addEventListener('load', async () => {
   try {

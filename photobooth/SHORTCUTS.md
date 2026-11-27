@@ -3,16 +3,17 @@
 La cabina (PWA) no puede guardar en Fotos ni imprimir sola. El puente son
 **dos Shortcuts** que reciben el montaje como **entrada directa**.
 
-Camino principal: la página abre el **share sheet** con el PNG y el
-invitado toca el Shortcut ahí. La foto llega como entrada del Shortcut:
-sin portapapeles, sin el aviso "Safari quiere abrir Shortcuts" y sin el
-aviso de "pegar". Camino de respaldo (si Compartir no está disponible):
-la página copia el PNG al portapapeles y abre el Shortcut por URL —
-ese sí pide los dos avisos de iOS.
+La cabina tiene **un solo botón, Continuar**: abre el **share sheet**
+con el PNG y el invitado toca el Shortcut ahí. La foto llega como
+entrada del Shortcut: sin portapapeles, sin el aviso "Safari quiere
+abrir Shortcuts" y sin el aviso de "pegar". Camino de respaldo (si
+Compartir no está disponible): la página copia el PNG al portapapeles
+y abre el Shortcut por URL — ese sí pide los dos avisos de iOS.
 
-> Nombres exactos (la página los llama por nombre en la URL):
-> - **PhotoBooth** — guarda + imprime
-> - **PhotoBooth Guardar** — solo guarda
+> Nombres exactos (el plan B los llama por nombre en la URL; en el camino
+> principal el invitado los elige en el share sheet):
+> - **Imprimir PB** — guarda + imprime
+> - **Compartir PB** — solo guarda
 >
 > Si cambias un nombre, cambia también `shortcuts` en `config.json` y
 > vuelve a publicar.
@@ -24,14 +25,25 @@ ese sí pide los dos avisos de iOS.
    Shortcut → toca el botón de ajustes (ⓘ) → activa "Mostrar en la hoja
    para compartir" y deja marcado **Imágenes**. Sin esto el Shortcut no
    aparece en el share sheet de la cabina.
-3. Conecta el iPad a la impresora por **Wi-Fi Direct** (Ajustes → Wi-Fi →
+3. **Ordena el share sheet (una sola vez, en el iPad):** la página no
+   puede esconder apps de la hoja — eso se hace a mano y iOS lo recuerda:
+   - Acciones arriba: abre el share sheet desde cualquier foto → baja
+     hasta **Editar acciones** → toca el **+** verde junto a
+     **Imprimir PB** y **Compartir PB** para subirlos a Favoritos →
+     arrástralos a los dos primeros puestos. Así salen justo debajo de
+     la fila de apps.
+   - Apps que sobran: en la fila de apps desliza hasta **Más** →
+     **Editar** → quita de Favoritos y apaga el interruptor de
+     WhatsApp, Notas y Recordatorios (y las que no quieras ver).
+     **AirDrop no se puede quitar** — siempre queda primero en la fila.
+4. Conecta el iPad a la impresora por **Wi-Fi Direct** (Ajustes → Wi-Fi →
    red DIRECT-ET-3760…) y haz una prueba de AirPrint desde Fotos para que
    la Epson quede como impresora conocida.
-4. Abre cada Shortcut una vez a mano y acepta los permisos (Fotos: acceso
+5. Abre cada Shortcut una vez a mano y acepta los permisos (Fotos: acceso
    total). El aviso de "Permitir pegar" solo sale en el camino de
    respaldo (portapapeles); en el camino principal por Compartir no sale.
 
-## Shortcut 1 — "PhotoBooth" (Guardar e Imprimir)
+## Shortcut 1 — "Imprimir PB" (Guardar e Imprimir)
 
 Acciones, en este orden:
 
@@ -50,7 +62,7 @@ Acciones, en este orden:
    cabina. Si la PWA no aparece en la lista de apps, deja esta acción
    fuera y usa el plan B de abajo.
 
-## Shortcut 2 — "PhotoBooth Guardar" (Solo guardar / Volver a empezar)
+## Shortcut 2 — "Compartir PB" (Solo guardar)
 
 Acciones, en este orden:
 
@@ -71,26 +83,29 @@ Acciones, en este orden:
   el icono de la cabina en el Home Screen. La foto ya está guardada, así
   que nada se pierde.
 
-## Qué hace cada botón de la cabina
+## Qué hace el botón de la cabina
 
-| Botón | Shortcut | Al regresar |
+Un solo botón, **Continuar**: abre el share sheet con el montaje y el
+invitado elige ahí:
+
+| En el share sheet | Shortcut | Al regresar |
 |---|---|---|
-| Guardar e Imprimir | PhotoBooth | Pantalla de inicio |
-| Solo guardar | PhotoBooth Guardar | Pantalla de inicio |
-| Volver a empezar | PhotoBooth Guardar | Arranca la captura de nuevo |
+| Imprimir PB | Imprimir PB | Pantalla de inicio |
+| Compartir PB | Compartir PB | Pantalla de inicio |
 
-Los tres guardan. Ningún camino descarta la foto.
+Los dos guardan. Ningún camino descarta la foto. Para otra foto, el
+invitado toca "Toma tus fotos" de nuevo en la pantalla de inicio.
 
-> En el share sheet el invitado debe tocar el Shortcut con el mismo
-> nombre del botón que apretó: **PhotoBooth** para imprimir,
-> **PhotoBooth Guardar** para solo guardar o volver a empezar. Si no lo
-> ven en la hoja, busquen en la fila de Shortcuts o bajo "Más".
+> Si un Shortcut no se ve en la hoja, busquen en la fila de acciones o
+> bajo "Ver más" — y súbanlo a Favoritos con **Editar acciones** (paso 3
+> de arriba).
 
 ## Pruebas antes de la fiesta (con la Epson y el iPad real)
 
-1. Sesión completa con los tres botones.
-2. Verificar que los dos Shortcuts aparecen en el share sheet y que cada
-   botón lleva al Shortcut correcto.
+1. Sesión completa con el botón Continuar y cada uno de los dos Shortcuts.
+2. Verificar que **Imprimir PB** y **Compartir PB** salen arriba en la
+   lista de acciones (Favoritos) y que WhatsApp, Notas y Recordatorios
+   ya no estorban en la fila de apps (AirDrop queda, no se puede quitar).
 3. Cancelar el diálogo de imprimir y verificar que la foto quedó en el
    álbum Sara Sofía XV.
 4. Verificar que el regreso a la cabina funciona solo (opción A).
