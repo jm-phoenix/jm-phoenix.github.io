@@ -425,20 +425,26 @@ function showResult() {
   showScreen('result');
 }
 
-/* ---------- Shortcuts: el montaje viaja por el portapapeles ---------- */
+/* ---------- Shortcuts: el montaje viaja por Compartir ---------- */
+/* Camino principal: navigator.share con el PNG. El invitado toca el
+   Shortcut en el share sheet y la foto le llega como entrada directa:
+   sin portapapeles, sin el aviso "Safari quiere abrir Shortcuts" y sin
+   el aviso de "pegar". Plan B (si Compartir no está disponible):
+   portapapeles + shortcuts://, que sí pide esos dos avisos. */
 async function openShortcut(name, pending) {
   clearResetTimer();
   if (!compositeBlob) return;
+  const file = new File([compositeBlob], 'sara-sofia-xv.png', { type: 'image/png' });
+  if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file] });
+      afterShortcutReturn(pending);
+    } catch (err) { /* el invitado cerró el share sheet: se queda en la pantalla de resultado */ }
+    return;
+  }
   try {
     await navigator.clipboard.write([new ClipboardItem({ 'image/png': compositeBlob })]);
   } catch (e) {
-    // Plan B: Compartir → el invitado elige el Shortcut (ya recibe imágenes)
-    const file = new File([compositeBlob], 'sara-sofia-xv.png', { type: 'image/png' });
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file] }); } catch (err) { /* cancelado */ }
-      afterShortcutReturn(pending);
-      return;
-    }
     window.print();
     return;
   }
