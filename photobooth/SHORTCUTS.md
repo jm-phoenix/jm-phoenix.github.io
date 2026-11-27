@@ -93,9 +93,12 @@ y abre el share sheet con el PNG; el invitado elige ahí:
 | Imprimir PB | Imprimir PB | Pantalla de inicio |
 | Compartir PB | Compartir PB | Pantalla de inicio |
 
-Tras compartir, la cabina espera 5 segundos (`timing.returnDelaySeconds`
-en `config.json`) y vuelve sola a la pantalla de inicio. Los dos
-Shortcuts guardan. Ningún camino descarta la foto. Para otra foto, el
+Al abrir el share sheet, la cabina espera 5 segundos
+(`timing.returnDelaySeconds` en `config.json`) y vuelve sola a la
+pantalla de inicio — sin esperar a que termine el destino elegido, porque
+en iOS la promesa de Compartir puede quedarse pendiente con los Shortcuts.
+Si el invitado cierra la hoja sin elegir nada, se cancela el regreso y
+se queda en la pantalla de resultado. Los dos Shortcuts guardan. Ningún camino descarta la foto. Para otra foto, el
 invitado toca "Toma tus fotos" de nuevo en la pantalla de inicio.
 
 > Si un Shortcut no se ve en la hoja, busquen en la fila de acciones o

@@ -431,9 +431,13 @@ function showResult() {
    (escribir no pide aviso), (2) abre el share sheet con el PNG — ahí el
    invitado elige "Imprimir PB" (guarda e imprime) o "Compartir PB" (solo
    guarda). La foto llega como entrada directa del Shortcut, sin los
-   avisos de iOS. Tras compartir, espera 5 s y vuelve sola a la pantalla
-   de inicio. Plan B (si Compartir no está disponible): portapapeles +
-   shortcuts:// con "Imprimir PB". */
+   avisos de iOS. El regreso (botón "¡Listo!" + 5 s) se dispara AL ABRIR
+   la hoja, sin esperar la promesa de navigator.share: en iOS esa promesa
+   puede quedarse pendiente para siempre con destinos que tardan o cambian
+   de app (un Shortcut que imprime o que abre la cabina), y esperar por
+   ella dejaba el botón activo sin cuenta atrás. Solo se cancela el regreso
+   si el invitado cierra la hoja sin elegir nada. Plan B (si Compartir no
+   está disponible): portapapeles + shortcuts:// con "Imprimir PB". */
 async function shareComposite() {
   clearResetTimer();
   if (!compositeBlob) return;
@@ -442,12 +446,15 @@ async function shareComposite() {
   } catch (e) { /* sin portapapeles: sigue con Compartir */ }
   const file = new File([compositeBlob], 'sara-sofia-xv.png', { type: 'image/png' });
   if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file] });
-      $('#btn-continue').disabled = true;
-      $('#btn-continue').textContent = '¡Listo!';
-      setTimeout(() => showAttract(), (CFG.timing.returnDelaySeconds || 5) * 1000);
-    } catch (err) { /* el invitado cerró el share sheet: se queda en la pantalla de resultado */ }
+    const btn = $('#btn-continue');
+    btn.disabled = true;
+    btn.textContent = '¡Listo!';
+    const returnTimer = setTimeout(() => showAttract(), (CFG.timing.returnDelaySeconds || 5) * 1000);
+    navigator.share({ files: [file] }).catch(() => {
+      clearTimeout(returnTimer);
+      btn.disabled = false;
+      btn.textContent = CFG.texts.btnContinue;
+    });
     return;
   }
   try {
