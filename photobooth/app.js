@@ -17,7 +17,7 @@ const DEFAULTS = {
     gain: { ambient: 1.46, countdown: 1.6, final: 1.84, intro: 1, transition: 1.58 }
   },
   camera: { facingMode: 'user', width: 1920, height: 1080 },
-  print: { width: 1800, height: 1200, margin: 40, slotWidth: 640, slotHeight: 1080, slotY: 60, renderWidth: 4096 },
+  print: { width: 1800, height: 1200, margin: 40, slotWidth: 640, slotHeight: 1080, slotY: 60, renderWidth: 4096, flowers: true },
   shortcuts: { savePrint: 'PhotoBooth', saveOnly: 'PhotoBooth Guardar' },
   template: { logo: null },
   timing: { countdownSeconds: 5.6, poseSeconds: 4, transitionSeconds: 3, autoResetSeconds: 90 },
@@ -314,6 +314,58 @@ function computeRender() {
   RENDER = { width: W, height: H, scale: W / CFG.print.width };
 }
 
+/* Borde de flores alrededor del marco de la composición: guirnalda
+   dibujada en canvas (sin imágenes externas, funciona offline), con los
+   colores de la paleta — rosa y melocotón para los pétalos, salvia para
+   las hojas. Se apaga con print.flowers = false. */
+function drawFlowerBorder(x, S) {
+  const P = CFG.print, pal = CFG.palette;
+  const W = P.width, H = P.height;
+  const petalColors = [pal.rose || '#D1968C', pal.peach || '#EFD9C9', pal.gold, pal.paper];
+  const r = 34, step = 150;
+  let i = 0;
+  const flower = (cx, cy, rr) => {
+    const pc = petalColors[i % petalColors.length];
+    const cc = (i % 2 === 0) ? pal.gold : pal.deep;
+    i++;
+    // hojas
+    x.fillStyle = pal.sage;
+    for (const a of [Math.PI * 0.25, Math.PI * 0.75]) {
+      x.beginPath();
+      x.ellipse(S(cx + Math.cos(a) * rr * 0.9), S(cy + Math.sin(a) * rr * 0.9), S(rr * 0.42), S(rr * 0.2), a, 0, Math.PI * 2);
+      x.fill();
+    }
+    // pétalos (6 por flor)
+    x.fillStyle = pc;
+    for (let p = 0; p < 6; p++) {
+      const a = (p / 6) * Math.PI * 2;
+      x.beginPath();
+      x.ellipse(S(cx + Math.cos(a) * rr * 0.55), S(cy + Math.sin(a) * rr * 0.55), S(rr * 0.45), S(rr * 0.28), a, 0, Math.PI * 2);
+      x.fill();
+    }
+    // centro
+    x.fillStyle = cc;
+    x.beginPath();
+    x.arc(S(cx), S(cy), S(rr * 0.3), 0, Math.PI * 2);
+    x.fill();
+  };
+  // esquinas (más grandes)
+  flower(r * 1.25, r * 1.25, r * 1.25);
+  flower(W - r * 1.25, r * 1.25, r * 1.25);
+  flower(r * 1.25, H - r * 1.25, r * 1.25);
+  flower(W - r * 1.25, H - r * 1.25, r * 1.25);
+  // bordes superior e inferior
+  for (let cx = step; cx < W - step * 0.5; cx += step) {
+    flower(cx, r, r);
+    flower(cx, H - r, r);
+  }
+  // bordes laterales
+  for (let cy = step; cy < H - step * 0.5; cy += step) {
+    flower(r, cy, r);
+    flower(W - r, cy, r);
+  }
+}
+
 function compose() {
   const P = CFG.print, pal = CFG.palette;
   const W = RENDER.width, H = RENDER.height, s = RENDER.scale;
@@ -357,6 +409,7 @@ function compose() {
   x.font = S(36) + 'px ' + serif;
   x.fillText(CFG.event.date, cx, y + S(570));
   x.fillRect(cx - S(90), y + S(650), S(180), S(3));
+  if (P.flowers !== false) drawFlowerBorder(x, S);
   return c;
 }
 
