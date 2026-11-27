@@ -13,7 +13,8 @@ const DEFAULTS = {
   audio: {
     ambient: 'assets/audio/01-ambiente.mp3', ambientIntervalSeconds: 30,
     intro: 'assets/audio/02-intro.mp3', countdown: 'assets/audio/03-countdown.mp3',
-    transition: 'assets/audio/04-transicion.mp3', final: 'assets/audio/05-final.mp3'
+    transition: 'assets/audio/04-transicion.mp3', final: 'assets/audio/05-final.mp3',
+    gain: { ambient: 1.46, countdown: 1.6, final: 1.84, intro: 1, transition: 1.58 }
   },
   camera: { facingMode: 'user', width: 1920, height: 1080 },
   print: { width: 1800, height: 1200, margin: 40, slotWidth: 640, slotHeight: 1080, slotY: 60, renderWidth: 4096 },
@@ -64,6 +65,7 @@ function setStatus(t) { $('#camera-status').textContent = t; }
 let audioCtx = null;
 const audioBuffers = {}; // key -> AudioBuffer decodificado
 const audioCache = {};   // fallback: un <audio> por url
+const activeSources = new Set(); // fuentes sonando: guardadas para que iOS no las descarte
 
 function getAudioContext() {
   if (audioCtx) return audioCtx;
@@ -99,27 +101,45 @@ function preloadAudio() {
   }
 }
 
+/* Suena un audio y resuelve cuando termina (nunca rechaza). La ganancia
+   por audio está en CFG.audio.gain: los archivos no salieron todos al
+   mismo nivel y así quedan parejos sin recortar. */
 function playAudio(key) {
   const url = (CFG.audio && CFG.audio[key]) || key;
+  const gain = (CFG.audio && CFG.audio.gain && CFG.audio.gain[key]) || 1;
   const buf = audioBuffers[key];
   if (buf && audioCtx) {
     try {
       if (audioCtx.state === 'suspended') audioCtx.resume();
       const src = audioCtx.createBufferSource();
       src.buffer = buf;
-      src.connect(audioCtx.destination);
+      const g = audioCtx.createGain();
+      g.gain.value = gain;
+      src.connect(g);
+      g.connect(audioCtx.destination);
       src.start(0);
-      return src;
+      activeSources.add(src);
+      return new Promise((resolve) => {
+        let done = false;
+        const finish = () => { if (done) return; done = true; activeSources.delete(src); resolve(); };
+        src.onended = finish;
+        setTimeout(finish, buf.duration * 1000 + 2000); // seguridad: nunca bloquear el flujo
+      });
     } catch (e) { /* cae al fallback */ }
   }
-  try {
-    const a = getAudio(url);
-    if (!a) return null;
-    try { a.currentTime = 0; } catch (e) { /* aún no cargado */ }
-    const p = a.play();
-    if (p) p.catch(() => {});
-    return a;
-  } catch (e) { return null; }
+  return new Promise((resolve) => {
+    try {
+      const a = getAudio(url);
+      if (!a) { resolve(); return; }
+      a.volume = Math.min(1, gain);
+      try { a.currentTime = 0; } catch (e) { /* aún no cargado */ }
+      const done = () => { a.removeEventListener('ended', done); resolve(); };
+      a.addEventListener('ended', done);
+      const p = a.play();
+      if (p) p.catch(() => resolve());
+      setTimeout(done, 12000); // seguridad
+    } catch (e) { resolve(); }
+  });
 }
 
 function unlockAudio() {
@@ -243,13 +263,11 @@ async function startSession() {
     return;
   }
   requestWakeLock();
-  playAudio('intro');
-  await sleep((CFG.timing.poseSeconds || 4) * 1000);
+  await Promise.all([playAudio('intro'), sleep((CFG.timing.poseSeconds || 4) * 1000)]);
   await runCountdown();
   photo1 = captureSlot();
   setStatus(CFG.texts.secondReady);
-  playAudio('transition');
-  await sleep((CFG.timing.transitionSeconds || 3) * 1000);
+  await Promise.all([playAudio('transition'), sleep((CFG.timing.transitionSeconds || 3) * 1000)]);
   await runCountdown();
   photo2 = captureSlot();
   showResult();
