@@ -107,7 +107,7 @@ invitado toca "Toma tus fotos" de nuevo en la pantalla de inicio.
 
 ## Pruebas antes de la fiesta (con la Epson y el iPad real)
 
-1. Sesión completa con el botón Continuar y cada uno de los dos Shortcuts.
+1. Sesión completa: inicio → Continuar → preview (bienvenida + Toma tus fotos) → fotos → Continuar con cada uno de los dos Shortcuts.
 2. Verificar que tras compartir la cabina vuelve sola a la pantalla de
    inicio a los 5 segundos, y que la foto quedó en el portapapeles
    (pegar en Notas como prueba).

@@ -23,8 +23,10 @@ const DEFAULTS = {
   timing: { countdownSeconds: 5.6, poseSeconds: 4, transitionSeconds: 3, autoResetSeconds: 90, returnDelaySeconds: 5 },
   texts: {
     attractTitle: 'Sara Sofía', attractSubtitle: 'Mis Quince Años · Abril 2027',
-    attractButton: '📸 Toma tus fotos', attractHint: 'Toca el botón y sonríe',
+    attractButton: 'Continuar', attractHint: 'Toca el botón y sonríe',
     capturing: 'Mírense en la pantalla…', secondReady: 'Prepárate para la segunda',
+    previewWelcome: '¡Bienvenidos a la cabina! Mírense en la pantalla, acomódense y cuando estén listos toquen Toma tus fotos.',
+    previewButton: '📸 Toma tus fotos',
     resultTitle: '¡Quedó brutal!',
     resultHint: 'Toca Continuar y elige Imprimir PB o Compartir PB',
     btnContinue: 'Continuar'
@@ -45,6 +47,7 @@ let resetTimer = null;
 
 const screens = {
   attract: $('#screen-attract'),
+  preview: $('#screen-preview'),
   camera: $('#screen-camera'),
   result: $('#screen-result')
 };
@@ -182,16 +185,17 @@ async function ensureCamera() {
       height: { ideal: CFG.camera.height || 720 }
     }
   });
-  const v = $('#video-main');
-  v.srcObject = stream;
-  try { await v.play(); } catch (e) { /* reintento en el siguiente frame */ }
+  for (const id of ['#video-main', '#video-preview']) {
+    const v = $(id);
+    v.srcObject = stream;
+    try { await v.play(); } catch (e) { /* reintento en el siguiente frame */ }
+  }
   return stream;
 }
 
 function releaseCamera() {
   if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; }
-  const v = $('#video-main');
-  v.srcObject = null;
+  for (const id of ['#video-main', '#video-preview']) $(id).srcObject = null;
 }
 
 async function requestWakeLock() {
@@ -234,6 +238,7 @@ async function runCountdown() {
   const labels = ['3', '2', '1', '¡Sonríe!'];
   const cd = $('#countdown');
   playAudio('countdown');
+  cd.textContent = '3';
   cd.hidden = false;
   const start = performance.now();
   await new Promise((resolve) => {
@@ -247,6 +252,26 @@ async function runCountdown() {
     requestAnimationFrame(tick);
   });
   cd.hidden = true;
+}
+
+/* Pantalla intermedia: preview en vivo para prepararse y posar antes de
+   la primera foto. El botón de inicio ahora dice Continuar y trae aquí;
+   "Toma tus fotos" arranca la sesión. El ambiente sigue sonando aquí;
+   se apaga al arrancar la sesión. */
+async function showPreview() {
+  clearResetTimer();
+  $('#preview-welcome').textContent = CFG.texts.previewWelcome;
+  showScreen('preview');
+  try {
+    await ensureCamera();
+  } catch (e) {
+    $('#preview-welcome').textContent = 'No pude abrir la cámara. Revisa el permiso y toca de nuevo.';
+    await sleep(2500);
+    showAttract();
+    return;
+  }
+  requestWakeLock();
+  armResetTimer();
 }
 
 /* ---------- flujo de la sesión ---------- */
@@ -496,13 +521,16 @@ function applyTexts() {
   $('#attract-subtitle').textContent = t.attractSubtitle;
   $('#btn-start').textContent = t.attractButton;
   $('#attract-hint').textContent = t.attractHint;
+  $('#preview-welcome').textContent = t.previewWelcome;
+  $('#btn-take-photos').textContent = t.previewButton;
   $('#result-title').textContent = t.resultTitle;
   $('#result-hint').textContent = t.resultHint;
   $('#btn-continue').textContent = t.btnContinue;
 }
 
 document.addEventListener('pointerdown', unlockAudio);
-$('#btn-start').addEventListener('click', () => { unlockAudio(); startSession(); });
+$('#btn-start').addEventListener('click', () => { unlockAudio(); showPreview(); });
+$('#btn-take-photos').addEventListener('click', () => { unlockAudio(); startSession(); });
 $('#btn-continue').addEventListener('click', () => shareComposite());
 
 window.addEventListener('load', async () => {

@@ -101,14 +101,19 @@ body {
   inset: 0;
   display: grid;
   place-items: center;
-  font-size: 26vmin;
+  font-size: 23.4vmin;
   font-weight: 800;
   color: #fff;
   text-shadow: 0 4px 32px rgba(0, 0, 0, .55);
   pointer-events: none;
   z-index: 2;
 }
+/* Sin esto, `hidden` no esconde el numerito: la regla display:grid de
+   arriba le gana al display:none del navegador, y el texto viejo
+   (¡Sonríe!) se quedaba visible en la siguiente sesión. */
+.countdown[hidden] { display: none; }
 .camera-status { font-size: 1.3rem; color: var(--blush); margin: 0; text-align: center; }
+.preview-welcome { font-size: 1.3rem; color: var(--blush); margin: 0; text-align: center; max-width: min(94vw, 560px); }
 
 /* Pantalla de resultado */
 #screen-result h2 {

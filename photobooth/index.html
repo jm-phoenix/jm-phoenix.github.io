@@ -22,7 +22,7 @@
         <p class="monogram">XV</p>
         <h1 id="attract-title">Sara Sofía</h1>
         <p class="subtitle" id="attract-subtitle">Mis Quince Años · Abril 2027</p>
-        <button id="btn-start" class="btn btn-primary btn-big">📸 Toma tus fotos</button>
+        <button id="btn-start" class="btn btn-primary btn-big">Continuar</button>
         <p class="hint" id="attract-hint">Toca el botón y sonríe</p>
       </div>
     </section>
@@ -34,6 +34,15 @@
         <div id="countdown" class="countdown" hidden>3</div>
       </div>
       <p id="camera-status" class="camera-status">Mírense en la pantalla…</p>
+    </section>
+
+    <!-- Pantalla intermedia: preview en vivo para prepararse y posar -->
+    <section id="screen-preview" class="screen">
+      <div class="stage">
+        <video id="video-preview" class="booth-cam" playsinline muted autoplay disablepictureinpicture></video>
+      </div>
+      <p id="preview-welcome" class="preview-welcome">¡Bienvenidos a la cabina! Mírense en la pantalla, acomódense y cuando estén listos toquen Toma tus fotos.</p>
+      <button id="btn-take-photos" class="btn btn-primary btn-big">📸 Toma tus fotos</button>
     </section>
 
     <!-- Pantalla de resultado -->
