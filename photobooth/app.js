@@ -15,8 +15,8 @@ const DEFAULTS = {
     intro: 'assets/audio/02-intro.mp3', countdown: 'assets/audio/03-countdown.mp3',
     transition: 'assets/audio/04-transicion.mp3', final: 'assets/audio/05-final.mp3'
   },
-  camera: { facingMode: 'user', width: 1280, height: 720 },
-  print: { width: 1800, height: 1200, margin: 40, slotWidth: 640, slotHeight: 1080, slotY: 60 },
+  camera: { facingMode: 'user', width: 1920, height: 1080 },
+  print: { width: 1800, height: 1200, margin: 40, slotWidth: 640, slotHeight: 1080, slotY: 60, renderWidth: 4096 },
   shortcuts: { savePrint: 'PhotoBooth', saveOnly: 'PhotoBooth Guardar' },
   template: { logo: null },
   timing: { countdownSeconds: 5.6, poseSeconds: 4, transitionSeconds: 3, autoResetSeconds: 90 },
@@ -123,7 +123,8 @@ function releaseWakeLock() {
    para que la foto impresa sea lo que el invitado vio. */
 function captureSlot() {
   const v = $('#video-main');
-  const w = CFG.print.slotWidth, h = CFG.print.slotHeight;
+  const w = Math.round(CFG.print.slotWidth * RENDER.scale);
+  const h = Math.round(CFG.print.slotHeight * RENDER.scale);
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
   const ctx = c.getContext('2d');
@@ -222,54 +223,84 @@ async function startSession() {
 function fitFont(ctx, text, maxWidth, basePx, family) {
   let px = basePx;
   ctx.font = 'italic 600 ' + px + 'px ' + family;
+  const step = Math.max(2, basePx * 0.04);
   while (px > 20 && ctx.measureText(text).width > maxWidth) {
-    px -= 4;
+    px -= step;
     ctx.font = 'italic 600 ' + px + 'px ' + family;
   }
   return px;
 }
 
+/* Resolución de render: la composición sale a 4096×2730 (el techo del
+   canvas en iOS: ~16.7 MP y 4096 px de lado). A 300 DPI eso es 13.6"×9.1",
+   suficiente para imprimir más grande que 4x6. Si el iPad no lo aguanta,
+   se baja solo a 1800×1200. */
+let RENDER = { width: 1800, height: 1200, scale: 1 };
+
+function canvasSizeSupported(w, h) {
+  try {
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const x = c.getContext('2d');
+    if (!x) return false;
+    x.fillStyle = '#fff';
+    x.fillRect(0, 0, 1, 1);
+    return x.getImageData(0, 0, 1, 1).data[0] === 255;
+  } catch (e) { return false; }
+}
+
+function computeRender() {
+  const targetW = CFG.print.renderWidth || 4096;
+  const targetH = Math.round(targetW * CFG.print.height / CFG.print.width);
+  const ok = canvasSizeSupported(targetW, targetH);
+  const W = ok ? targetW : CFG.print.width;
+  const H = Math.round(W * CFG.print.height / CFG.print.width);
+  RENDER = { width: W, height: H, scale: W / CFG.print.width };
+}
+
 function compose() {
   const P = CFG.print, pal = CFG.palette;
+  const W = RENDER.width, H = RENDER.height, s = RENDER.scale;
+  const S = (v) => v * s;
   const c = document.createElement('canvas');
-  c.width = P.width; c.height = P.height;
+  c.width = W; c.height = H;
   const x = c.getContext('2d');
   const serif = 'Georgia, "Times New Roman", serif';
 
   x.fillStyle = pal.blush;
-  x.fillRect(0, 0, P.width, P.height);
+  x.fillRect(0, 0, W, H);
 
-  const y = P.slotY;
-  x.drawImage(photo1, P.margin, y, P.slotWidth, P.slotHeight);
-  x.drawImage(photo2, P.width - P.margin - P.slotWidth, y, P.slotWidth, P.slotHeight);
+  const y = S(P.slotY), sw = S(P.slotWidth), sh = S(P.slotHeight), m = S(P.margin);
+  x.drawImage(photo1, m, y, sw, sh);
+  x.drawImage(photo2, W - m - sw, y, sw, sh);
   x.strokeStyle = pal.gold;
-  x.lineWidth = 4;
-  x.strokeRect(P.margin, y, P.slotWidth, P.slotHeight);
-  x.strokeRect(P.width - P.margin - P.slotWidth, y, P.slotWidth, P.slotHeight);
+  x.lineWidth = S(4);
+  x.strokeRect(m, y, sw, sh);
+  x.strokeRect(W - m - sw, y, sw, sh);
 
-  const bx = P.margin + P.slotWidth;
-  const bw = P.width - 2 * P.margin - 2 * P.slotWidth;
+  const bx = m + sw;
+  const bw = W - 2 * m - 2 * sw;
   x.fillStyle = pal.deep;
-  x.fillRect(bx, y, bw, P.slotHeight);
+  x.fillRect(bx, y, bw, sh);
   x.strokeStyle = pal.gold;
-  x.lineWidth = 3;
-  x.strokeRect(bx + 8, y + 8, bw - 16, P.slotHeight - 16);
+  x.lineWidth = S(3);
+  x.strokeRect(bx + S(8), y + S(8), bw - S(16), sh - S(16));
 
   const cx = bx + bw / 2;
   x.textAlign = 'center';
   x.textBaseline = 'middle';
   x.fillStyle = pal.gold;
-  fitFont(x, CFG.event.monogram, bw - 60, 92, serif);
-  x.fillText(CFG.event.monogram, cx, y + 210);
+  fitFont(x, CFG.event.monogram, bw - S(60), S(92), serif);
+  x.fillText(CFG.event.monogram, cx, y + S(210));
   x.fillStyle = pal.paper;
-  fitFont(x, CFG.event.name, bw - 40, 64, serif);
-  x.fillText(CFG.event.name, cx, y + 390);
-  x.font = '40px ' + serif;
-  x.fillText(CFG.event.subtitle, cx, y + 490);
+  fitFont(x, CFG.event.name, bw - S(40), S(64), serif);
+  x.fillText(CFG.event.name, cx, y + S(390));
+  x.font = S(40) + 'px ' + serif;
+  x.fillText(CFG.event.subtitle, cx, y + S(490));
   x.fillStyle = pal.gold;
-  x.font = '36px ' + serif;
-  x.fillText(CFG.event.date, cx, y + 570);
-  x.fillRect(cx - 90, y + 650, 180, 3);
+  x.font = S(36) + 'px ' + serif;
+  x.fillText(CFG.event.date, cx, y + S(570));
+  x.fillRect(cx - S(90), y + S(650), S(180), S(3));
   return c;
 }
 
@@ -359,6 +390,7 @@ window.addEventListener('load', async () => {
     const res = await fetch('config.json');
     CFG = Object.assign({}, DEFAULTS, await res.json());
   } catch (e) { CFG = DEFAULTS; }
+  computeRender();
   applyTexts();
   showAttract();
   if ('serviceWorker' in navigator) {
