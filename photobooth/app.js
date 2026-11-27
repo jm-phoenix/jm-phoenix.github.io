@@ -128,9 +128,7 @@ async function ensureCamera() {
   });
   const v = $('#video-main');
   v.srcObject = stream;
-  v.onloadedmetadata = updateCaptureZone;
   try { await v.play(); } catch (e) { /* reintento en el siguiente frame */ }
-  updateCaptureZone();
   return stream;
 }
 
@@ -138,7 +136,6 @@ function releaseCamera() {
   if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; }
   const v = $('#video-main');
   v.srcObject = null;
-  $('#capture-zone').hidden = true;
 }
 
 async function requestWakeLock() {
@@ -171,33 +168,6 @@ function captureSlot() {
   ctx.drawImage(v, sx, sy, sw, sh, 0, 0, w, h);
   ctx.restore();
   return c;
-}
-
-/* Posiciona el marco dorado sobre el recorte central que captura la foto.
-   Se calcula con las dimensiones reales de la cámara, así que se adapta
-   a cualquier aspecto de video (16:9, 4:3...). */
-function updateCaptureZone() {
-  const v = $('#video-main');
-  const zone = $('#capture-zone');
-  if (!v.videoWidth) { zone.hidden = true; return; }
-  const vw = v.videoWidth, vh = v.videoHeight;
-  const stage = document.querySelector('.stage');
-  const sw = stage.clientWidth, sh = stage.clientHeight;
-  const s = Math.max(sw / vw, sh / vh); // cover: lo que se ve del video
-  const visW = sw / s, visH = sh / s;
-  const visX0 = (vw - visW) / 2, visY0 = (vh - visH) / 2;
-  const sc = Math.max(CFG.print.slotWidth / vw, CFG.print.slotHeight / vh);
-  const cw = CFG.print.slotWidth / sc, ch = CFG.print.slotHeight / sc;
-  const cx0 = (vw - cw) / 2, cy0 = (vh - ch) / 2;
-  const left = Math.max(0, (cx0 - visX0) / visW * 100);
-  const top = Math.max(0, (cy0 - visY0) / visH * 100);
-  const width = Math.min(100 - left, cw / visW * 100);
-  const height = Math.min(100 - top, ch / visH * 100);
-  zone.style.left = left + '%';
-  zone.style.top = top + '%';
-  zone.style.width = width + '%';
-  zone.style.height = height + '%';
-  zone.hidden = false;
 }
 
 /* La cuenta regresiva va por temporizador (no por el audio): si Safari
@@ -412,7 +382,6 @@ function applyTexts() {
 }
 
 document.addEventListener('pointerdown', unlockAudio);
-window.addEventListener('resize', () => { if (state === 'camera') updateCaptureZone(); });
 $('#btn-start').addEventListener('click', () => { unlockAudio(); startSession(); });
 $('#btn-save-print').addEventListener('click', () => openShortcut(CFG.shortcuts.savePrint, 'done'));
 $('#btn-save-only').addEventListener('click', () => openShortcut(CFG.shortcuts.saveOnly, 'done'));

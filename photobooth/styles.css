@@ -67,12 +67,14 @@ body {
 .subtitle { font-size: 1.25rem; color: var(--blush); margin: 0; letter-spacing: .04em; }
 .hint { color: var(--sage); font-size: 1rem; margin: 0; }
 
-/* Pantalla de cámara: un solo preview grande; el marco marca el recorte */
+/* Pantalla de cámara: un solo preview grande que muestra SOLO el recorte
+   que sale en la foto (el video se corta al aspecto de la foto, como antes).
+   Nada fuera del cuadro se ve, así nadie cree que saldrá en la foto final. */
 .stage {
   position: relative;
-  width: min(96vw, 105vh);
-  aspect-ratio: 3 / 2;
-  background: var(--blush);
+  height: min(88vh, 1000px);
+  aspect-ratio: 640 / 1080;
+  background: #111;
   border: 3px solid var(--gold);
   border-radius: 6px;
   overflow: hidden;
@@ -85,16 +87,6 @@ body {
   object-fit: cover;
   transform: scaleX(-1); /* espejo: lo que ves es lo que sale */
   background: #111;
-}
-/* Marco dorado que marca de dónde sale la foto (el recorte central).
-   Lo fuera del marco queda atenuado. Se posiciona por JS según la cámara. */
-.capture-zone {
-  position: absolute;
-  border: 3px solid var(--gold);
-  border-radius: 6px;
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, .45);
-  pointer-events: none;
-  z-index: 1;
 }
 .countdown {
   position: absolute;
