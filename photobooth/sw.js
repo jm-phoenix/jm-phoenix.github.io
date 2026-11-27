@@ -1,7 +1,7 @@
 /* PhotoBooth · Sara Sofía XV — service worker: la cabina funciona sin internet.
    Con Wi-Fi Direct el iPad pierde internet, así que todo (página, audios,
    plantilla) queda cacheado en la primera instalación. */
-const CACHE = 'photobooth-v1';
+const CACHE = 'photobooth-v2'; // SUBIR en cada cambio de código, si no el iPad sirve la versión vieja
 const ASSETS = [
   './',
   'index.html',
