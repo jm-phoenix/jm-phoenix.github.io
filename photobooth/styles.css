@@ -1,0 +1,143 @@
+/* PhotoBooth · Sara Sofía XV — paleta: #465A43 #808867 #DACDAC #A08E6A */
+:root {
+  --deep: #465A43;
+  --sage: #808867;
+  --blush: #DACDAC;
+  --gold: #A08E6A;
+  --ink: #2E332E;
+  --paper: #FBF7F1;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; overscroll-behavior: none; }
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--deep);
+  color: var(--paper);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-text-size-adjust: 100%;
+}
+#app { height: 100%; }
+.screen {
+  display: none;
+  height: 100%;
+  min-height: 100%;
+  padding: calc(env(safe-area-inset-top, 0px) + 1rem) 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
+}
+.screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.25rem; }
+
+/* Botones grandes, de kiosco */
+.btn {
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding: 1rem 2rem;
+  min-height: 64px;
+  border-radius: 16px;
+  border: 2px solid var(--gold);
+  background: transparent;
+  color: var(--paper);
+  cursor: pointer;
+}
+.btn:disabled { opacity: .45; cursor: default; }
+.btn-primary { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+.btn-big { font-size: 1.6rem; padding: 1.25rem 2.5rem; min-height: 84px; border-radius: 20px; }
+.btn-ghost { border-color: rgba(251, 247, 241, .45); color: var(--blush); }
+
+/* Pantalla de inicio */
+.attract-inner { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.monogram {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-size: 4.5rem;
+  color: var(--gold);
+  margin: 0;
+  line-height: 1;
+}
+.attract-inner h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(2.6rem, 8vw, 4rem);
+  margin: 0;
+  line-height: 1.1;
+}
+.subtitle { font-size: 1.25rem; color: var(--blush); margin: 0; letter-spacing: .04em; }
+.hint { color: var(--sage); font-size: 1rem; margin: 0; }
+
+/* Pantalla de cámara: la vista previa ES la plantilla 4x6 */
+.stage {
+  position: relative;
+  width: min(96vw, 105vh);
+  aspect-ratio: 3 / 2;
+  background: var(--blush);
+  border: 3px solid var(--gold);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.booth-cam {
+  position: absolute;
+  top: 5%;
+  height: 90%;
+  width: 35.56%;
+  object-fit: cover;
+  transform: scaleX(-1); /* espejo: lo que ves es lo que sale */
+  background: #111;
+}
+#video-left { left: 2.22%; }
+#video-right { left: 62.22%; }
+.center-band {
+  position: absolute;
+  left: 37.78%;
+  top: 5%;
+  width: 24.44%;
+  height: 90%;
+  background: var(--deep);
+  border-left: 2px solid var(--gold);
+  border-right: 2px solid var(--gold);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .15rem;
+  text-align: center;
+  padding: .25rem;
+}
+.center-band p { margin: 0; }
+.band-monogram { font-family: Georgia, "Times New Roman", serif; font-style: italic; color: var(--gold); font-size: clamp(1.4rem, 4.5vmin, 2.6rem); line-height: 1; }
+.band-name { font-family: Georgia, "Times New Roman", serif; font-style: italic; color: var(--paper); font-size: clamp(.95rem, 3vmin, 1.5rem); }
+.band-sub { color: var(--blush); font-size: clamp(.7rem, 2.2vmin, 1rem); }
+.countdown {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 26vmin;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 4px 32px rgba(0, 0, 0, .55);
+  pointer-events: none;
+  z-index: 2;
+}
+.camera-status { font-size: 1.3rem; color: var(--blush); margin: 0; text-align: center; }
+
+/* Pantalla de resultado */
+#screen-result h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  margin: 0;
+}
+#result-img {
+  max-width: min(94vw, 860px);
+  max-height: 52vh;
+  width: auto;
+  height: auto;
+  border: 3px solid var(--gold);
+  border-radius: 6px;
+  background: var(--blush);
+}
+.actions { display: flex; flex-direction: column; gap: .75rem; width: min(94vw, 480px); }
+.actions .btn { width: 100%; }
