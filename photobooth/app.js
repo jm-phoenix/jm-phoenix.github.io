@@ -9,7 +9,7 @@ const $ = (s) => document.querySelector(s);
 
 const DEFAULTS = {
   event: { name: 'Sara Sofía', subtitle: 'Mis Quince Años', date: 'Abril 2027', monogram: 'XV' },
-  palette: { deep: '#465A43', sage: '#808867', blush: '#DACDAC', gold: '#A08E6A', ink: '#2E332E', paper: '#FBF7F1' },
+  palette: { deep: '#465A43', sage: '#808867', blush: '#DACDAC', gold: '#A08E6A', ink: '#2E332E', paper: '#FBF7F1', rose: '#D1968C', peach: '#EFD9C9' },
   audio: {
     ambient: 'assets/audio/01-ambiente.mp3', ambientIntervalSeconds: 30,
     intro: 'assets/audio/02-intro.mp3', countdown: 'assets/audio/03-countdown.mp3',
