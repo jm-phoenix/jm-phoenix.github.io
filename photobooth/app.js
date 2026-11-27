@@ -20,7 +20,7 @@ const DEFAULTS = {
   print: { width: 1800, height: 1200, margin: 40, slotWidth: 640, slotHeight: 1080, slotY: 60, renderWidth: 4096, flowers: true },
   shortcuts: { savePrint: 'Imprimir PB', saveOnly: 'Compartir PB' },
   template: { logo: null },
-  timing: { countdownSeconds: 5.6, poseSeconds: 4, transitionSeconds: 3, autoResetSeconds: 90 },
+  timing: { countdownSeconds: 5.6, poseSeconds: 4, transitionSeconds: 3, autoResetSeconds: 90, returnDelaySeconds: 5 },
   texts: {
     attractTitle: 'Sara Sofía', attractSubtitle: 'Mis Quince Años · Abril 2027',
     attractButton: '📸 Toma tus fotos', attractHint: 'Toca el botón y sonríe',
@@ -416,30 +416,37 @@ function compose() {
 
 function showResult() {
   const c = compose();
-  const btns = ['#btn-continue'];
-  btns.forEach((s) => { $(s).disabled = true; });
+  $('#btn-continue').disabled = true;
   c.toBlob((blob) => {
     compositeBlob = blob;
     $('#result-img').src = URL.createObjectURL(blob);
-    btns.forEach((s) => { $(s).disabled = false; });
+    $('#btn-continue').disabled = false;
+    $('#btn-continue').textContent = CFG.texts.btnContinue;
   }, 'image/png');
   showScreen('result');
 }
 
 /* ---------- Compartir: un solo botón Continuar ---------- */
-/* El invitado toca Continuar y la página abre el share sheet con el PNG.
-   Ahí elige "Imprimir PB" (guarda e imprime) o "Compartir PB" (solo
-   guarda). La foto llega como entrada directa del Shortcut: sin
-   portapapeles y sin los avisos de iOS. Plan B (si Compartir no está
-   disponible): portapapeles + shortcuts:// con "Imprimir PB". */
+/* Al tocar Continuar: (1) copia el montaje al portapapeles como respaldo
+   (escribir no pide aviso), (2) abre el share sheet con el PNG — ahí el
+   invitado elige "Imprimir PB" (guarda e imprime) o "Compartir PB" (solo
+   guarda). La foto llega como entrada directa del Shortcut, sin los
+   avisos de iOS. Tras compartir, espera 5 s y vuelve sola a la pantalla
+   de inicio. Plan B (si Compartir no está disponible): portapapeles +
+   shortcuts:// con "Imprimir PB". */
 async function shareComposite() {
   clearResetTimer();
   if (!compositeBlob) return;
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': compositeBlob })]);
+  } catch (e) { /* sin portapapeles: sigue con Compartir */ }
   const file = new File([compositeBlob], 'sara-sofia-xv.png', { type: 'image/png' });
   if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
       await navigator.share({ files: [file] });
-      showAttract();
+      $('#btn-continue').disabled = true;
+      $('#btn-continue').textContent = '¡Listo!';
+      setTimeout(() => showAttract(), (CFG.timing.returnDelaySeconds || 5) * 1000);
     } catch (err) { /* el invitado cerró el share sheet: se queda en la pantalla de resultado */ }
     return;
   }

@@ -85,15 +85,17 @@ Acciones, en este orden:
 
 ## Qué hace el botón de la cabina
 
-Un solo botón, **Continuar**: abre el share sheet con el montaje y el
-invitado elige ahí:
+Un solo botón, **Continuar**: copia el montaje al portapapeles (respaldo)
+y abre el share sheet con el PNG; el invitado elige ahí:
 
 | En el share sheet | Shortcut | Al regresar |
 |---|---|---|
 | Imprimir PB | Imprimir PB | Pantalla de inicio |
 | Compartir PB | Compartir PB | Pantalla de inicio |
 
-Los dos guardan. Ningún camino descarta la foto. Para otra foto, el
+Tras compartir, la cabina espera 5 segundos (`timing.returnDelaySeconds`
+en `config.json`) y vuelve sola a la pantalla de inicio. Los dos
+Shortcuts guardan. Ningún camino descarta la foto. Para otra foto, el
 invitado toca "Toma tus fotos" de nuevo en la pantalla de inicio.
 
 > Si un Shortcut no se ve en la hoja, busquen en la fila de acciones o
@@ -103,12 +105,15 @@ invitado toca "Toma tus fotos" de nuevo en la pantalla de inicio.
 ## Pruebas antes de la fiesta (con la Epson y el iPad real)
 
 1. Sesión completa con el botón Continuar y cada uno de los dos Shortcuts.
-2. Verificar que **Imprimir PB** y **Compartir PB** salen arriba en la
+2. Verificar que tras compartir la cabina vuelve sola a la pantalla de
+   inicio a los 5 segundos, y que la foto quedó en el portapapeles
+   (pegar en Notas como prueba).
+3. Verificar que **Imprimir PB** y **Compartir PB** salen arriba en la
    lista de acciones (Favoritos) y que WhatsApp, Notas y Recordatorios
    ya no estorban en la fila de apps (AirDrop queda, no se puede quitar).
-3. Cancelar el diálogo de imprimir y verificar que la foto quedó en el
+4. Cancelar el diálogo de imprimir y verificar que la foto quedó en el
    álbum Sara Sofía XV.
-4. Verificar que el regreso a la cabina funciona solo (opción A).
-5. Verificar que la impresión sale en 4×6 sin bordes.
-6. Probar con el iPad en Wi-Fi Direct (sin internet): la PWA debe abrir
+5. Verificar que el regreso a la cabina funciona solo (opción A).
+6. Verificar que la impresión sale en 4×6 sin bordes.
+7. Probar con el iPad en Wi-Fi Direct (sin internet): la PWA debe abrir
    igual, con audios y todo.
